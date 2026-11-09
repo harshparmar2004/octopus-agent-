@@ -21,7 +21,8 @@ class VideoCompositor:
         hook_text: str,
         channel: ChannelProfile,
         output_filename: str,
-        credit_handle: Optional[str] = None
+        credit_handle: Optional[str] = None,
+        highlight_word: Optional[str] = None
     ) -> Optional[str]:
         """
         Takes a raw video and composits it into a 9:16 Instagram Reel with:
@@ -43,7 +44,8 @@ class VideoCompositor:
                 hook_text=hook_text,
                 channel=channel,
                 output_path=overlay_png,
-                credit_handle=credit_handle
+                credit_handle=credit_handle,
+                highlight_word=highlight_word
             )
 
             # 2. Run FFmpeg composition

@@ -41,7 +41,8 @@ class CardRenderer:
         hook_text: str,
         channel: ChannelProfile,
         output_path: Path,
-        credit_handle: Optional[str] = None
+        credit_handle: Optional[str] = None,
+        highlight_word: Optional[str] = None
     ) -> Path:
         """
         Renders a 1080x1920 transparent PNG overlay with:
@@ -125,7 +126,21 @@ class CardRenderer:
         start_y = 360
         line_height = 56
         for i, line in enumerate(wrapped_lines):
-            draw.text((badge_x, start_y + (i * line_height)), line, font=hook_font, fill="#FFFFFF")
+            if highlight_word and highlight_word.lower() in line.lower():
+                words = line.split(" ")
+                cur_x = badge_x
+                for w in words:
+                    clean_w = w.strip(".,!?:;\"'")
+                    color = "#DDF51A" if clean_w.lower() == highlight_word.lower() else "#FFFFFF"
+                    try:
+                        w_font = ImageFont.truetype(self.font_bold_path, 42) if clean_w.lower() == highlight_word.lower() else hook_font
+                    except Exception:
+                        w_font = hook_font
+                    draw.text((cur_x, start_y + (i * line_height)), w + " ", font=w_font, fill=color)
+                    w_bbox = draw.textbbox((cur_x, start_y + (i * line_height)), w + " ", font=w_font)
+                    cur_x = w_bbox[2]
+            else:
+                draw.text((badge_x, start_y + (i * line_height)), line, font=hook_font, fill="#FFFFFF")
 
         # 3. Optional Original Source Credit Tag
         if credit_handle:

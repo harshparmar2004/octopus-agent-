@@ -1,6 +1,6 @@
 {
-  "provider": "grok",
-  "model": "grok-2",
+  "provider": "groq",
+  "model": "llama-3.3-70b-versatile",
   "api_key": "",
   "base_url": "https://api.x.ai/v1",
   "temperature": 0.7,
