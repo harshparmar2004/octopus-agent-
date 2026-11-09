@@ -50,6 +50,20 @@ PROVIDER_DEFAULTS = {
         "base_url": "https://generativelanguage.googleapis.com",
         "env_key": "GEMINI_API_KEY"
     },
+    "groq": {
+        "name": "Groq Cloud (Ultra-Fast Free Tier — Llama & Open Models)",
+        "default_model": "llama-3.3-70b-versatile",
+        "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it", "qwen-2.5-32b"],
+        "base_url": "https://api.groq.com/openai/v1",
+        "env_key": "GROQ_API_KEY"
+    },
+    "ollama": {
+        "name": "Ollama (Local / Self-Hosted Open Weights)",
+        "default_model": "llama3.2",
+        "models": ["llama3.2", "llama3.1", "mistral", "deepseek-r1", "qwen2.5"],
+        "base_url": "http://localhost:11434/v1",
+        "env_key": "OLLAMA_API_KEY"
+    },
     "custom": {
         "name": "Custom / Local OpenAI-Compatible (Ollama, DeepSeek, vLLM)",
         "default_model": "deepseek-chat",
@@ -100,6 +114,11 @@ class LLMManager:
             cfg["provider"] = "claude"
             cfg["model"] = "claude-3-5-sonnet-20241022"
             cfg["api_key"] = os.getenv("ANTHROPIC_API_KEY")
+        elif os.getenv("GROQ_API_KEY"):
+            cfg["provider"] = "groq"
+            cfg["model"] = "llama-3.3-70b-versatile"
+            cfg["api_key"] = os.getenv("GROQ_API_KEY")
+            cfg["base_url"] = "https://api.groq.com/openai/v1"
         elif os.getenv("GEMINI_API_KEY"):
             cfg["provider"] = "gemini"
             cfg["model"] = "gemini-1.5-flash"
@@ -135,12 +154,15 @@ class LLMManager:
         try:
             if api_key in ["demo", "mock", "test"]:
                 time.sleep(0.18)
+                hook = "MAGNETIC FIELDS CAN SUSPEND MATTER WITHOUT FRICTION"
                 return {
                     "success": True,
+                    "status": "connected",
                     "provider": provider,
                     "model": model,
                     "latency_ms": 182,
-                    "sample": '{"hook": "MAGNETIC FIELDS CAN SUSPEND MATTER WITHOUT FRICTION"}',
+                    "sample": f'{{"hook": "{hook}"}}',
+                    "sample_hook": hook,
                     "message": f"Connected to {provider.upper()} ({model}) in 182ms! Handshake verified (Test Mode)."
                 }
 
@@ -149,10 +171,10 @@ class LLMManager:
                 if self.config.get("api_key") and self.config.get("provider") == provider:
                     api_key = self.config["api_key"]
                 else:
-                    return {"success": False, "error": f"Please enter your {provider.upper()} API key to perform live connection test."}
+                    return {"success": False, "status": "error", "error": f"Please enter your {provider.upper()} API key to perform live connection test."}
 
-            if provider in ["openai", "grok", "custom"]:
-                endpoint = (base_url or PROVIDER_DEFAULTS[provider]["base_url"]).rstrip("/") + "/chat/completions"
+            if provider in ["openai", "grok", "groq", "ollama", "custom"]:
+                endpoint = (base_url or PROVIDER_DEFAULTS.get(provider, {}).get("base_url", "https://api.openai.com/v1")).rstrip("/") + "/chat/completions"
                 headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
                 payload = {
                     "model": model,
@@ -166,14 +188,16 @@ class LLMManager:
                     content = data["choices"][0]["message"]["content"]
                     return {
                         "success": True,
+                        "status": "connected",
                         "provider": provider,
                         "model": model,
                         "latency_ms": latency_ms,
                         "sample": content.strip()[:180],
+                        "sample_hook": content.strip()[:180],
                         "message": f"Connected to {provider.upper()} ({model}) in {latency_ms}ms! Handshake verified."
                     }
                 else:
-                    return {"success": False, "error": f"HTTP {res.status_code}: {res.text[:200]}"}
+                    return {"success": False, "status": "error", "error": f"HTTP {res.status_code}: {res.text[:200]}"}
 
             elif provider == "claude":
                 endpoint = "https://api.anthropic.com/v1/messages"
@@ -194,14 +218,16 @@ class LLMManager:
                     content = data["content"][0]["text"]
                     return {
                         "success": True,
+                        "status": "connected",
                         "provider": provider,
                         "model": model,
                         "latency_ms": latency_ms,
                         "sample": content.strip()[:180],
+                        "sample_hook": content.strip()[:180],
                         "message": f"Connected to Claude ({model}) in {latency_ms}ms! Handshake verified."
                     }
                 else:
-                    return {"success": False, "error": f"HTTP {res.status_code}: {res.text[:200]}"}
+                    return {"success": False, "status": "error", "error": f"HTTP {res.status_code}: {res.text[:200]}"}
 
             elif provider == "gemini":
                 endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
@@ -213,16 +239,18 @@ class LLMManager:
                     content = data["candidates"][0]["content"]["parts"][0]["text"]
                     return {
                         "success": True,
+                        "status": "connected",
                         "provider": provider,
                         "model": model,
                         "latency_ms": latency_ms,
                         "sample": content.strip()[:180],
+                        "sample_hook": content.strip()[:180],
                         "message": f"Connected to Gemini ({model}) in {latency_ms}ms! Handshake verified."
                     }
                 else:
-                    return {"success": False, "error": f"HTTP {res.status_code}: {res.text[:200]}"}
+                    return {"success": False, "status": "error", "error": f"HTTP {res.status_code}: {res.text[:200]}"}
 
-            return {"success": False, "error": f"Unsupported provider: {provider}"}
+            return {"success": False, "status": "error", "error": f"Unsupported provider: {provider}"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -265,7 +293,7 @@ Respond strictly with valid JSON schema:
         parsed = None
         if api_key:
             try:
-                if provider in ["openai", "grok", "custom"]:
+                if provider in ["openai", "grok", "groq", "ollama", "custom"]:
                     endpoint = (base_url or PROVIDER_DEFAULTS.get(provider, {}).get("base_url", "https://api.openai.com/v1")).rstrip("/") + "/chat/completions"
                     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
                     payload = {

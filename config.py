@@ -60,8 +60,13 @@ class Settings:
     INSTAGRAM_USER_ID = IG_USER_ID
     META_GRAPH_ACCESS_TOKEN = META_ACCESS_TOKEN
     
-    # LLM Settings (Gemini)
+    # LLM Settings (Groq, Ollama, Gemini, OpenAI, Claude, Grok)
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+    OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "ollama")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+    XAI_API_KEY = os.getenv("XAI_API_KEY", "")
     
     # Storage / Public URL
     STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local_tunnel")

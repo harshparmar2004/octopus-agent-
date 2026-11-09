@@ -25,7 +25,27 @@
           <!-- Provider Selector Tiles -->
           <div class="space-y-2">
             <label class="block text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Select AI Brain Provider:</label>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
+              <!-- Groq (Free Tier / LPU) -->
+              <button type="button" onclick="selectLlmProvider('groq')" id="providerBtn_groq" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">Groq Cloud</span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold">FREE TIER</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Llama 3.3 70B & 3.1 8B</div>
+              </button>
+
+              <!-- Ollama (Local) -->
+              <button type="button" onclick="selectLlmProvider('ollama')" id="providerBtn_ollama" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">Ollama</span>
+                  <span class="text-xs">🦙</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Local Open Models</div>
+              </button>
+
               <!-- Grok -->
               <button type="button" onclick="selectLlmProvider('grok')" id="providerBtn_grok" 
                 class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
@@ -40,7 +60,7 @@
               <button type="button" onclick="selectLlmProvider('openai')" id="providerBtn_openai" 
                 class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-[#1C1917]">OpenAI ChatGPT</span>
+                  <span class="font-bold text-xs text-[#1C1917]">OpenAI</span>
                   <span class="text-xs">🤖</span>
                 </div>
                 <div class="text-[10px] text-[#78716C]">GPT-4o & GPT-4o-mini</div>
@@ -50,7 +70,7 @@
               <button type="button" onclick="selectLlmProvider('claude')" id="providerBtn_claude" 
                 class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-[#1C1917]">Anthropic Claude</span>
+                  <span class="font-bold text-xs text-[#1C1917]">Claude</span>
                   <span class="text-xs">🎭</span>
                 </div>
                 <div class="text-[10px] text-[#78716C]">Claude 3.5 Sonnet</div>
@@ -60,7 +80,7 @@
               <button type="button" onclick="selectLlmProvider('gemini')" id="providerBtn_gemini" 
                 class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-[#1C1917]">Google Gemini</span>
+                  <span class="font-bold text-xs text-[#1C1917]">Gemini</span>
                   <span class="text-xs">✨</span>
                 </div>
                 <div class="text-[10px] text-[#78716C]">Gemini 1.5 & 2.0</div>
@@ -70,10 +90,10 @@
               <button type="button" onclick="selectLlmProvider('custom')" id="providerBtn_custom" 
                 class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-xs text-[#1C1917]">Custom / Local</span>
+                  <span class="font-bold text-xs text-[#1C1917]">Custom / vLLM</span>
                   <span class="text-xs">💻</span>
                 </div>
-                <div class="text-[10px] text-[#78716C]">Ollama, DeepSeek, vLLM</div>
+                <div class="text-[10px] text-[#78716C]">Custom OpenAI URL</div>
               </button>
             </div>
           </div>
@@ -1854,6 +1874,20 @@
 
     // ==================== LLM BRAIN SETTINGS CONTROLLER ====================
     const LLM_PROVIDERS = {
+      groq: {
+        name: "Groq Cloud (Free Tier)",
+        models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it", "qwen-2.5-32b"],
+        defaultModel: "llama-3.3-70b-versatile",
+        defaultBaseUrl: "https://api.groq.com/openai/v1",
+        icon: "⚡"
+      },
+      ollama: {
+        name: "Ollama (Local / Open)",
+        models: ["llama3.2", "llama3.1", "mistral", "deepseek-r1", "qwen2.5"],
+        defaultModel: "llama3.2",
+        defaultBaseUrl: "http://localhost:11434/v1",
+        icon: "🦙"
+      },
       grok: {
         name: "xAI Grok",
         models: ["grok-2", "grok-beta"],
@@ -1891,7 +1925,7 @@
       }
     };
 
-    let selectedLlmProvider = "grok";
+    let selectedLlmProvider = "groq";
     let currentLlmConfig = null;
 
     async function loadLlmSettings() {
@@ -1899,7 +1933,7 @@
         const res = await fetch("/api/settings/llm");
         const cfg = await res.json();
         currentLlmConfig = cfg;
-        selectedLlmProvider = cfg.provider || "grok";
+        selectedLlmProvider = cfg.provider || "groq";
         selectLlmProvider(selectedLlmProvider, false);
 
         const modelSelect = document.getElementById("llmModelSelect");
@@ -1926,7 +1960,7 @@
 
     function selectLlmProvider(providerKey, updateDefaults = true) {
       selectedLlmProvider = providerKey;
-      const providers = ["grok", "openai", "claude", "gemini", "custom"];
+      const providers = ["groq", "ollama", "grok", "openai", "claude", "gemini", "custom"];
       
       providers.forEach(p => {
         const btn = document.getElementById(`providerBtn_${p}`);
@@ -2012,7 +2046,7 @@
           })
         });
         const data = await res.json();
-        if (data.status === "connected" || data.status === "simulated_ok") {
+        if (data.status === "connected" || data.status === "simulated_ok" || data.success === true) {
           testRes.className = "p-3 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block space-y-1";
           testRes.innerHTML = `
             <div class="flex items-center justify-between">
