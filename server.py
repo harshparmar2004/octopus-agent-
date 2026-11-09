@@ -612,6 +612,22 @@ def run_daemon_cycle(background_tasks: BackgroundTasks):
     background_tasks.add_task(daemon.run_full_cycle, dry_run=True)
     return {"status": "started", "message": "24/7 autonomous monitoring cycle running in background"}
 
+@app.get("/api/swarm/status")
+def get_swarm_status():
+    from agents.swarm_coordinator import OctopusSwarmCoordinator
+    coordinator = OctopusSwarmCoordinator()
+    return coordinator.get_swarm_status()
+
+@app.post("/api/swarm/trigger")
+def trigger_swarm_cycle(background_tasks: BackgroundTasks):
+    from agents.swarm_coordinator import OctopusSwarmCoordinator
+    coordinator = OctopusSwarmCoordinator()
+    background_tasks.add_task(coordinator.run_swarm_parallel, dry_run=True)
+    return {
+        "status": "started",
+        "message": "Parallel Multi-Agent Swarm cycle initiated across all niches!"
+    }
+
 @app.post("/api/ingest")
 def ingest_url(req: IngestRequest, background_tasks: BackgroundTasks):
     def worker():

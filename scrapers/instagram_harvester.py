@@ -176,6 +176,14 @@ class InstagramHarvester:
         Downloads high-res MP4 video from an Instagram Reel permalink using yt-dlp.
         """
         out_template = str(self.download_dir / f"{custom_id}_raw.%(ext)s")
+        # Resolve optional proxy and cookie file for anti-ban resilience
+        proxy = getattr(settings, "SCRAPER_PROXY", "") or os.getenv("HTTP_PROXY") or os.getenv("HTTPS_PROXY")
+        cookies_file = getattr(settings, "INSTAGRAM_COOKIES_FILE", "")
+        if not cookies_file:
+            default_cookie = settings.STORAGE_DIR / "cookies.txt"
+            if default_cookie.exists():
+                cookies_file = str(default_cookie)
+
         ydl_opts = {
             "format": "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "outtmpl": out_template,
@@ -183,7 +191,16 @@ class InstagramHarvester:
             "no_warnings": True,
             "merge_output_format": "mp4",
             "match_filter": yt_dlp.utils.match_filter_func("duration <= 90"),
+            "socket_timeout": 20,
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9",
+            }
         }
+        if proxy:
+            ydl_opts["proxy"] = proxy
+        if cookies_file and Path(cookies_file).exists():
+            ydl_opts["cookiefile"] = str(cookies_file)
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:

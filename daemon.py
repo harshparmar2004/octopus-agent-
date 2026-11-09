@@ -219,10 +219,12 @@ class Octopus24x7Daemon:
         return results
 
     def run_full_cycle(self, dry_run: bool = True):
-        logger.info("=== Running Octopus 24/7 Automation Cycle ===")
-        # 1. Instagram Handles
-        ig_results = self.check_monitored_instagram_handles(dry_run=dry_run)
-        logger.info(f"Cycle completed. Processed {len(ig_results)} new Instagram reels.")
+        logger.info("=== Running Octopus 24/7 Multi-Agent Swarm Automation Cycle ===")
+        from agents.swarm_coordinator import OctopusSwarmCoordinator
+        coordinator = OctopusSwarmCoordinator()
+        swarm_report = coordinator.run_swarm_parallel(dry_run=dry_run)
+        logger.info(f"Swarm cycle completed in {swarm_report.get('total_duration_seconds', 0)}s across {swarm_report.get('niches_processed', 0)} niches.")
+        return swarm_report
 
 def clean_handle(h: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_]", "", h.lstrip("@"))

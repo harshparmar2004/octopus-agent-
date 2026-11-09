@@ -71,6 +71,10 @@ class Settings:
     TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
     
+    # Proxy & Scraper Settings (Optional for High-Scale 500+ Account Instagram Scraping)
+    SCRAPER_PROXY = os.getenv("SCRAPER_PROXY", "")
+    INSTAGRAM_COOKIES_FILE = os.getenv("INSTAGRAM_COOKIES_FILE", "")
+    
     # Default active channel
     DEFAULT_CHANNEL_KEY = os.getenv("DEFAULT_CHANNEL", "quantum")
 

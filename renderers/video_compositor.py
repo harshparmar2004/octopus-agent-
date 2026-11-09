@@ -48,6 +48,14 @@ class VideoCompositor:
 
             # 2. Run FFmpeg composition
             # Use -loop 1 on the overlay image and shortest=1 driven by input video stream
+            import platform
+
+            # Dynamic encoder selection: VideoToolbox hardware acceleration on Apple Silicon Mac
+            if platform.system() == "Darwin":
+                vcodec_args = ["-c:v", "h264_videotoolbox", "-b:v", "6500k"]
+            else:
+                vcodec_args = ["-c:v", "libx264", "-preset", "fast", "-crf", "22"]
+
             cmd = [
                 "ffmpeg", "-y",
                 "-i", str(input_path),
@@ -58,10 +66,8 @@ class VideoCompositor:
                 "[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
                 "[with_vid][1:v]overlay=0:0:shortest=1[outv]",
                 "-map", "[outv]",
-                "-map", "0:a?",
-                "-c:v", "libx264",
-                "-preset", "fast",
-                "-crf", "22",
+                "-map", "0:a?"
+            ] + vcodec_args + [
                 "-pix_fmt", "yuv420p",
                 "-c:a", "aac",
                 "-b:a", "192k",

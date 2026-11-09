@@ -10,7 +10,9 @@ DB_PATH = settings.STORAGE_DIR / "octopus_agent.db"
 
 def get_connection():
     settings.STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -244,8 +246,12 @@ def add_or_update_account(account_data: Dict[str, Any]):
     data = dict(account_data)
     if "niche_id" not in data or not data["niche_id"]:
         data["niche_id"] = data.get("niche", "information").lower().replace(" ", "_").split("_")[0]
-    if "profile_pic_url" not in data:
-        data["profile_pic_url"] = None
+    data.setdefault("ig_user_id", None)
+    data.setdefault("access_token", None)
+    data.setdefault("avatar_initials", "OC")
+    data.setdefault("brand_color", "#ea580c")
+    data.setdefault("profile_pic_url", None)
+    data.setdefault("is_active", 1)
     cursor.execute("""
         INSERT INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, profile_pic_url, is_active)
         VALUES (:id, :handle, :display_name, :niche, :niche_id, :ig_user_id, :access_token, :avatar_initials, :brand_color, :profile_pic_url, :is_active)
@@ -488,6 +494,15 @@ def get_network_stats() -> Dict[str, Any]:
 def create_or_update_niche(niche_data: Dict[str, Any]):
     conn = get_connection()
     cursor = conn.cursor()
+    payload = {
+        "id": niche_data["id"],
+        "name": niche_data.get("name", niche_data["id"].capitalize()),
+        "description": niche_data.get("description", ""),
+        "brand_color": niche_data.get("brand_color", "#ea580c"),
+        "avatar_icon": niche_data.get("avatar_icon", "📁"),
+        "default_hashtags": niche_data.get("default_hashtags", ""),
+        "cta_text": niche_data.get("cta_text", "")
+    }
     cursor.execute("""
         INSERT INTO niches (id, name, description, brand_color, avatar_icon, default_hashtags, cta_text)
         VALUES (:id, :name, :description, :brand_color, :avatar_icon, :default_hashtags, :cta_text)
@@ -498,7 +513,7 @@ def create_or_update_niche(niche_data: Dict[str, Any]):
             avatar_icon = excluded.avatar_icon,
             default_hashtags = excluded.default_hashtags,
             cta_text = excluded.cta_text
-    """, niche_data)
+    """, payload)
     conn.commit()
     conn.close()
 
