@@ -122,6 +122,10 @@ class BulkNicheSourcesRequest(BaseModel):
 class TelegramPingRequest(BaseModel):
     chat_id: Optional[str] = None
 
+class TelegramConfigRequest(BaseModel):
+    bot_token: str
+    chat_id: str
+
 class TelegramDispatchStepRequest(BaseModel):
     step: str
     url: Optional[str] = None
@@ -648,6 +652,67 @@ def get_telegram_status():
 def test_telegram_ping(req: TelegramPingRequest):
     res = telegram_bot.ping(target_chat_id=req.chat_id)
     return res
+
+@app.post("/api/telegram/save_config")
+def save_telegram_config(req: TelegramConfigRequest):
+    token = req.bot_token.strip()
+    cid = req.chat_id.strip()
+    
+    settings.TELEGRAM_BOT_TOKEN = token
+    settings.TELEGRAM_CHAT_ID = cid
+    telegram_bot.bot_token = token
+    telegram_bot.chat_id = cid
+    telegram_bot.base_url = f"https://api.telegram.org/bot{token}"
+    
+    # Save/update .env file
+    env_path = settings.BASE_DIR / ".env"
+    existing_lines = []
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            existing_lines = f.readlines()
+            
+    updated_token = False
+    updated_chat = False
+    new_lines = []
+    for line in existing_lines:
+        if line.startswith("TELEGRAM_BOT_TOKEN="):
+            new_lines.append(f"TELEGRAM_BOT_TOKEN={token}\n")
+            updated_token = True
+        elif line.startswith("TELEGRAM_CHAT_ID="):
+            new_lines.append(f"TELEGRAM_CHAT_ID={cid}\n")
+            updated_chat = True
+        else:
+            new_lines.append(line)
+            
+    if not updated_token:
+        new_lines.append(f"TELEGRAM_BOT_TOKEN={token}\n")
+    if not updated_chat:
+        new_lines.append(f"TELEGRAM_CHAT_ID={cid}\n")
+        
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.writelines(new_lines)
+        
+    # Start polling if not already started
+    if not telegram_bot.is_running and telegram_bot.is_configured():
+        telegram_bot.start_background()
+        
+    ping_res = telegram_bot.ping()
+    return {
+        "success": True,
+        "message": "Telegram Bot credentials saved & 24/7 background listener activated!",
+        "status": telegram_bot.get_status_info(),
+        "ping": ping_res
+    }
+
+@app.post("/api/telegram/test")
+def test_telegram_connection():
+    if not telegram_bot.is_configured():
+        return {"success": False, "message": "Telegram Bot is not configured yet. Please enter Bot Token and Chat ID."}
+    res = telegram_bot.ping()
+    if res.get("success"):
+        return {"success": True, "message": "✅ Success! Ping message sent and received on your Telegram app."}
+    else:
+        return {"success": False, "message": f"❌ Could not ping bot: {res.get('error', 'Please check your Bot Token and Chat ID')}"}
 
 @app.post("/api/telegram/dispatch_step")
 def dispatch_telegram_step(req: TelegramDispatchStepRequest):

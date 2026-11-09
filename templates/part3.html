@@ -1749,9 +1749,31 @@
     }
 
     async function testTelegramConnection() {
+      const tokenInput = document.getElementById("settingTelegramToken");
+      const chatInput = document.getElementById("settingTelegramChatId");
+      const token = tokenInput ? tokenInput.value.trim() : "";
+      const chatId = chatInput ? chatInput.value.trim() : "";
+
+      if (token && chatId) {
+        try {
+          const res = await fetch("/api/telegram/save_config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bot_token: token, chat_id: chatId })
+          });
+          const data = await res.json();
+          alert(data.message);
+          loadTelegramStatus();
+          return;
+        } catch (e) {
+          console.error("Save telegram error:", e);
+        }
+      }
+
       const res = await fetch("/api/telegram/test", { method: "POST" });
       const data = await res.json();
       alert(data.message);
+      loadTelegramStatus();
     }
 
     // Modal Helpers
