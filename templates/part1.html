@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Octopus Agent | Cloud Control Center</title>
+  <link rel="icon" type="image/png" href="/assets/octopus_logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #FAF8F5;
+      color: #1C1917;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .cloud-card {
+      background-color: #FFFFFF;
+      border: 1px solid #E6E0D6;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px 0 rgba(28, 25, 23, 0.04);
+    }
+    .cloud-card-hover:hover {
+      border-color: #D4AF98;
+      box-shadow: 0 2px 8px 0 rgba(200, 98, 55, 0.08);
+    }
+    /* Hide scrollbars completely across the dashboard */
+    ::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
+      display: none !important;
+      width: 0px !important;
+      height: 0px !important;
+    }
+    html, body, div, aside, main, .no-scrollbar {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    .nav-item-active {
+      background-color: #FFFFFF !important;
+      color: #1C1917 !important;
+      font-weight: 600;
+      border-top: 1px solid #E8E2D9;
+      border-bottom: 1px solid #E8E2D9;
+      border-radius: 0;
+      box-shadow: 0 1px 2px rgba(28, 25, 23, 0.03);
+    }
+    .nav-item-active svg {
+      color: #C86237 !important;
+    }
+    .nav-item-inactive {
+      color: #3F3F46;
+      border: 1px solid transparent;
+      border-radius: 0;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-item-inactive:hover {
+      background-color: #ECE5DC;
+      color: #1C1917;
+    }
+    .nav-item-inactive svg {
+      color: #71717A;
+    }
+    .nav-item-inactive:hover svg {
+      color: #C86237;
+    }
+    .accent-brand {
+      background-color: #C86237;
+    }
+    .orange-gradient {
+      background-color: #C86237;
+    }
+    .orange-gradient-btn {
+      background-color: #C86237;
+      color: #FFFFFF;
+      border: 1px solid #B8552C;
+      border-radius: 6px;
+      font-weight: 700;
+      transition: background-color 0.15s ease;
+      box-shadow: 0 1px 2px rgba(200, 98, 55, 0.15);
+    }
+    .orange-gradient-btn:hover {
+      background-color: #B5542B;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen overflow-x-hidden no-scrollbar">
+
+  <aside class="w-64 bg-[#F4EFEA] border-r border-[#E6E0D6] flex flex-col justify-between shrink-0 select-none overflow-x-hidden no-scrollbar">
+    <div class="px-4 pt-6 pb-2">
+      <!-- App Brand Header: 2D Octopus Agent Mascot Wearing Headphones (Bigger & Cute) -->
+      <div class="flex items-center gap-3 mb-6 px-1">
+        <div class="relative w-[50px] h-[50px] flex-shrink-0 flex items-center justify-center">
+          <img src="/assets/octopus_logo.png" alt="Octopus Agent" class="w-full h-full object-contain filter drop-shadow-2xs transition-transform duration-200 hover:scale-105">
+        </div>
+        <div>
+          <span class="text-xl font-black tracking-tight text-[#1C1917] leading-none block">Octopus Agent</span>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="space-y-0.5 text-sm">
+        <!-- 1. Overview -->
+        <button onclick="switchTab('overview')" id="tabBtn_overview" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-active transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-[#C86237]" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+            <span>Overview</span>
+          </div>
+        </button>
+
+        <!-- 2. Niche groups -->
+        <button onclick="switchTab('niche_pods')" id="tabBtn_niche_pods" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <circle cx="6" cy="12" r="2.5"/>
+              <circle cx="18" cy="6" r="2.5"/>
+              <circle cx="18" cy="18" r="2.5"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12h3.5a3 3 0 003-3V8.5M8.5 12h3.5a3 3 0 013 3v2.5"/>
+            </svg>
+            <span>Niche groups</span>
+          </div>
+        </button>
+
+        <!-- 3. Accounts -->
+        <button onclick="switchTab('accounts')" id="tabBtn_accounts" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span>Accounts</span>
+          </div>
+          <span id="badgeAccounts" class="text-sm text-[#78716C] font-normal font-sans">15</span>
+        </button>
+
+        <!-- 4. Publish -->
+        <button onclick="switchTab('ingest')" id="tabBtn_ingest" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span>Publish</span>
+          </div>
+        </button>
+
+        <!-- 5. Sources -->
+        <button onclick="switchTab('sources')" id="tabBtn_sources" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="7"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+            </svg>
+            <span>Sources</span>
+          </div>
+          <span id="badgeSources" class="text-sm text-[#78716C] font-normal font-sans">193</span>
+        </button>
+
+        <!-- 6. Reels -->
+        <button onclick="switchTab('reels')" id="tabBtn_reels" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+            </svg>
+            <span>Reels</span>
+          </div>
+          <span id="badgeReels" class="text-sm text-[#78716C] font-normal font-sans">2</span>
+        </button>
+
+        <!-- 7. Activity -->
+        <button onclick="switchTab('broadcasts')" id="tabBtn_broadcasts" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span>Activity</span>
+          </div>
+        </button>
+
+        <!-- Setup Category Header -->
+        <div class="pt-5 pb-1 px-4 text-sm font-medium text-[#78716C]">Setup</div>
+
+        <!-- 8. Workflow (Moved into Setup) -->
+        <button onclick="switchTab('pipeline')" id="tabBtn_pipeline" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+            <span>Workflow</span>
+          </div>
+        </button>
+
+        <!-- 9. Settings -->
+        <button onclick="switchTab('settings')" id="tabBtn_settings" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 0l-1.414 1.414M7.05 16.95l-1.414 1.414M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span>Settings</span>
+          </div>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Monitoring Status & Trigger -->
+    <div class="p-5 border-t border-[#E6E0D6]/60">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#0D9488] shrink-0"></span>
+          <span class="text-sm font-semibold text-[#0F766E]">Monitoring is running</span>
+        </div>
+        <p id="sidebarAccCount" class="text-xs text-[#78716C] pl-4.5">15 of 15 pages online</p>
+      </div>
+      <button onclick="runScrapeMonitoringPass()" class="w-full mt-3.5 bg-white hover:bg-[#FAF8F5] border border-[#E6E0D6] text-[#C86237] font-semibold text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2 shadow-2xs hover:border-[#D4AF98] transition">
+        <svg class="w-4 h-4 text-[#C86237]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span>Run check now</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================== RIGHT MAIN STAGE ==================== -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden">
+    <!-- Top Control Bar -->
+    <header class="h-16 bg-white border-b border-[#E6E0D6] px-8 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <h2 id="stageTitle" class="text-sm font-bold text-[#1C1917]">Overview</h2>
+        <span class="text-[#D6CEC3]">/</span>
+        <span id="stageSubtitle" class="text-xs text-[#78716C]">Cloud Analytics & Live Activity</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Publishing Mode Switch -->
+        <div class="flex items-center gap-2 bg-[#FAF8F5] border border-[#E6E0D6] px-3 py-1.5 rounded-md text-xs">
+          <span class="text-[#78716C] text-[11px] font-semibold">Mode:</span>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="globalDryRunToggle" checked onchange="toggleGlobalMode()" class="rounded text-[#C86237] focus:ring-0">
+            <span id="modeLabel" class="text-[11px] font-bold text-amber-700">Dry-Run Simulation</span>
+          </label>
+        </div>
+
+        <button onclick="loadDashboard()" class="p-2 text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F5] rounded-md border border-[#E6E0D6] text-xs font-semibold transition" title="Refresh Data">
+          🔄 Refresh
+        </button>
+
+        <button onclick="switchTab('ingest')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-md shadow-sm flex items-center gap-1.5">
+          <span>⚡</span> New Reel Fanout
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Workspace Stage (No Scrollbar) -->
+    <div class="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar">
+
+      <!-- ==================== TAB 1: OVERVIEW ==================== -->
+      <section id="view_overview" class="space-y-4">
+        <!-- Sleek, Proportional KPI Metric Cards (Solid White Cloud Theme) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <!-- Card 1: Connected Pages -->
+          <div class="cloud-card rounded-lg p-4 space-y-2.5 hover:border-[#C86237]/50 hover:shadow-sm transition-all duration-150">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Connected Pages</span>
+              <span class="w-7 h-7 rounded-md flex items-center justify-center bg-[#F7EFE9] text-[#C86237] text-xs shadow-2xs">👥</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div id="stat_accounts" class="text-2xl font-black text-[#1C1917] tracking-tight">15</div>
+              <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">● Online</span>
+            </div>
+            <div class="text-[10px] text-[#78716C]">Multi-account matrix network</div>
+          </div>
+
+          <!-- Card 2: Monitored Sources -->
+          <div class="cloud-card rounded-lg p-4 space-y-2.5 hover:border-[#C86237]/50 hover:shadow-sm transition-all duration-150">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Monitored Sources</span>
+              <span class="w-7 h-7 rounded-md flex items-center justify-center bg-[#F7EFE9] text-[#C86237] text-xs shadow-2xs">📸</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div id="stat_sources" class="text-2xl font-black text-[#1C1917] tracking-tight">151</div>
+              <span class="text-[10px] text-[#C86237] font-bold bg-[#F7EFE9] border border-[#E8DCD1] px-2 py-0.5 rounded">Auto-Scrape</span>
+            </div>
+            <div class="text-[10px] text-[#78716C]">Instagram & Reddit feeds</div>
+          </div>
+
+          <!-- Card 3: Tracked Reels -->
+          <div class="cloud-card rounded-lg p-4 space-y-2.5 hover:border-[#C86237]/50 hover:shadow-sm transition-all duration-150">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Tracked Reels</span>
+              <span class="w-7 h-7 rounded-md flex items-center justify-center bg-[#F7EFE9] text-[#C86237] text-xs shadow-2xs">🎬</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div id="stat_reels" class="text-2xl font-black text-[#1C1917] tracking-tight">2</div>
+              <span class="text-[10px] text-[#57534E] font-semibold bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">9:16 Format</span>
+            </div>
+            <div class="text-[10px] text-[#78716C]">Composited with logo badges</div>
+          </div>
+
+          <!-- Card 4: Broadcast Rate -->
+          <div class="cloud-card rounded-lg p-4 space-y-2.5 hover:border-[#C86237]/50 hover:shadow-sm transition-all duration-150">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Broadcast Rate</span>
+              <span class="w-7 h-7 rounded-md flex items-center justify-center bg-[#F7EFE9] text-[#C86237] text-xs shadow-2xs">📡</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div id="stat_rate" class="text-2xl font-black text-[#C86237] tracking-tight">100%</div>
+              <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">● Meta API</span>
+            </div>
+            <div class="text-[10px] text-emerald-700 font-semibold">Verified publishing success</div>
+          </div>
+        </div>
+
+        <!-- Quick Ingest & Broadcast Launchpad (Solid White Cloud Card) -->
+        <div class="cloud-card rounded-lg p-5 space-y-3.5 shadow-xs border border-[#E6E0D6] hover:border-[#D4AF98] transition">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs bg-[#F7EFE9] text-[#C86237] font-bold px-2 py-0.5 rounded border border-[#E8DCD1]">⚡ One-Click Ingest</span>
+                <h3 class="text-xs font-bold text-[#1C1917]">Instant Video Ingest & Network Broadcast</h3>
+              </div>
+              <p class="text-[11px] text-[#78716C] mt-1">One-click network publisher: Paste any viral video link (Instagram Reel, Reddit, YouTube Shorts, or MP4) to composite your branding and immediately fan out to all 15 connected pages without waiting for the scheduled scrape pass.</p>
+            </div>
+            <button onclick="switchTab('niche_pods')" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1 whitespace-nowrap">
+              <span>Open Pods Hub</span>
+              <span>&rarr;</span>
+            </button>
+          </div>
+          <div class="flex gap-2.5">
+            <div class="relative flex-1">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-[#A8A29E]">🔗</span>
+              <input id="quickIngestUrl" type="text" placeholder="Paste Instagram Reel, Reddit, YouTube Shorts, or direct MP4 link..." 
+                class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md pl-8 pr-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] focus:bg-white shadow-2xs transition">
+            </div>
+            <button onclick="submitQuickIngest()" class="orange-gradient-btn px-6 py-2 text-white font-bold text-xs rounded-md shadow-xs whitespace-nowrap flex items-center gap-2 hover:opacity-95 transition">
+              <span>🚀</span>
+              <span>Deploy to Network</span>
+            </button>
+          </div>
+          <div id="quickToast" class="text-xs hidden font-semibold"></div>
+        </div>
+
+        <!-- Recent Broadcast Activity Channel (Solid White Cloud Card) -->
+        <div class="cloud-card rounded-lg p-5 space-y-4 shadow-xs border border-[#E6E0D6]">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-[#E6E0D6]">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span>📡</span>
+                  <span>Live Multi-Account Broadcast Activity Stream</span>
+                </h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Real-Time Sync
+                </span>
+              </div>
+              <p class="text-[11px] text-[#78716C] mt-0.5">Real-time publishing feed showing newly composited reels, brand logos, and status across your accounts matrix.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="loadDashboard()" class="px-2.5 py-1 bg-[#FAF8F5] hover:bg-[#F7EFE9] border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] font-semibold text-[11px] rounded transition">
+                🔄 Refresh Stream
+              </button>
+              <button onclick="switchTab('broadcasts')" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-0.5">
+                <span>View Full Audit Log</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="border border-[#E8DCD1] rounded-md overflow-hidden bg-white shadow-2xs">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-[#FAF8F5] text-[#78716C] uppercase text-[10px] font-bold tracking-wider border-b border-[#E8DCD1]">
+                  <tr>
+                    <th class="p-3">Target Destination Page</th>
+                    <th class="p-3">Reel Hook & Headline</th>
+                    <th class="p-3">Rendered Video</th>
+                    <th class="p-3">Meta Status</th>
+                    <th class="p-3">Broadcast Time</th>
+                    <th class="p-3 text-right">Instagram Link</th>
+                  </tr>
+                </thead>
+                <tbody id="overviewLogsTbody" class="divide-y divide-[#E8DCD1] bg-white">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>

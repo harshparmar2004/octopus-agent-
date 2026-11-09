@@ -1,0 +1,1036 @@
+      <!-- ==================== TAB: NICHE AUTOMATION PODS ==================== -->
+      <section id="view_niche_pods" class="space-y-6 hidden">
+        <!-- Niche Selector Bar -->
+        <div class="cloud-card rounded-lg p-4 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>🐙 Niche Automation Pods Hub</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-[#F7EFE9] text-[#9E441B] font-bold border border-[#E8DCD1]">1-Source ➔ All-Pages</span>
+              </h3>
+              <p class="text-xs text-[#78716C] mt-0.5">Define your niche, connect 10–20+ destination pages, bind competitor source handles, and execute automated multi-page fanout.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <button onclick="openAllNichesModal()" 
+                class="bg-white hover:bg-[#FAF8F5] text-[#1C1917] border border-[#E8DCD1] hover:border-[#C86237]/60 px-3.5 py-1.5 font-bold text-xs rounded-md shadow-xs flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
+                <span>🏛️</span>
+                <span>Browse All Niches</span>
+                <span id="nicheTotalBadgeCount" class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#F7EFE9] text-[#9E441B] font-extrabold border border-[#E8DCD1]">6</span>
+              </button>
+              <button onclick="openCreateNicheModal()" class="orange-gradient-btn px-3.5 py-1.5 text-white font-bold text-xs rounded-md shadow-sm whitespace-nowrap">
+                + Create Custom Niche
+              </button>
+            </div>
+          </div>
+
+          <!-- Niche Tabs / Pill Carousel -->
+          <div id="nichePillsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 border-t border-[#E6E0D6] pt-3">
+            <!-- Dynamically populated niche buttons -->
+          </div>
+        </div>
+
+        <!-- Selected Niche Overview Banner -->
+        <div class="cloud-card rounded-lg p-5 border-l-4 border-[#C86237] flex flex-col md:flex-row justify-between items-start md:items-center gap-4" id="podBanner">
+          <div class="flex items-center gap-3.5">
+            <div id="podIcon" class="w-10 h-10 rounded-md bg-[#F7EFE9] border border-[#E8DCD1] flex items-center justify-center text-xl shadow-sm">
+              💡
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="podTitle" class="text-base font-black text-[#1C1917]">Information & Infotainment</h2>
+                <span id="podIdBadge" class="text-[10px] font-mono px-2 py-0.5 bg-[#FAF8F5] border border-[#E6E0D6] text-[#78716C] rounded">ID: information</span>
+              </div>
+              <p id="podDesc" class="text-xs text-[#78716C] mt-0.5">Viral educational facts, curious knowledge & deep phenomena</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-right text-xs">
+              <div class="font-bold text-[#1C1917]"><span id="podDestCount" class="text-[#C86237]">10</span> Pages Connected</div>
+              <div class="text-[11px] text-[#78716C]"><span id="podSrcCount" class="text-[#C86237]">7</span> Competitor Sources</div>
+            </div>
+          </div>
+        </div>
+
+              <!-- 3 Interlocking Columns: 1. Sources | 2. Engine & Trigger | 3. Connected Pages -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          
+          <!-- Column 1: Sources (4 cols) -->
+          <div class="lg:col-span-4 flex flex-col">
+            <div class="cloud-card rounded-lg p-4 space-y-3 flex flex-col h-[705px]">
+              <div class="flex justify-between items-center border-b border-[#E6E0D6] pb-2 flex-shrink-0">
+                <div>
+                  <h4 class="text-[11px] font-black uppercase text-[#1C1917] tracking-wider flex items-center gap-1.5">
+                    <span>📸</span> 1. Content Sources (<span id="podSourcesCountHeader">0</span>)
+                  </h4>
+                  <p class="text-[10px] text-[#78716C]">Handles to scrape reels from</p>
+                </div>
+                <div class="flex gap-1">
+                  <button onclick="openBulkAddSourcesModal()" class="text-[11px] font-bold text-[#C86237] hover:underline px-1.5 py-0.5">+ Bulk Add</button>
+                </div>
+              </div>
+
+              <!-- Add Source Input -->
+              <div class="flex gap-2 flex-shrink-0">
+                <input id="podSingleSourceInput" type="text" placeholder="@handle to monitor" 
+                  class="flex-1 bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                <button onclick="submitPodSingleSource()" class="orange-gradient-btn px-3 py-1.5 text-white font-bold text-xs rounded-md">+ Add</button>
+              </div>
+
+              <!-- Sources List Container (Fills 100% of column height, scrolls cleanly to the bottom) -->
+              <div id="podSourcesList" class="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
+                <!-- Injected source cards -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Automation Engine & AI Studio (4 cols, Equal Height, Clean Light Cloud Theme) -->
+          <div class="lg:col-span-4 flex flex-col">
+            <div class="cloud-card rounded-lg p-3 space-y-2 flex flex-col justify-between border border-[#D4AF98] h-[705px]">
+              
+              <!-- Header -->
+              <div class="border-b border-[#E6E0D6] pb-1.5 flex-shrink-0">
+                <div class="flex justify-between items-center">
+                  <h4 class="text-[11px] font-black uppercase text-[#1C1917] tracking-wider flex items-center gap-1.5">
+                    <span>⚡</span> 2. Automation Engine
+                  </h4>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    ● Pipeline Active
+                  </span>
+                </div>
+                <p class="text-[10px] text-[#78716C] mt-0.5">Automated source harvest platform, dynamic per-account attribution, and multi-page fanout.</p>
+              </div>
+
+              <!-- Section 1: Content Source Tracking Platform -->
+              <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-2 space-y-1.5">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-[#78716C] tracking-wider flex items-center gap-1">
+                    <span>🌐</span> 1. Source Tracking Platform
+                  </span>
+                  <span id="podSourceModeBadge" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    ● Tracking All Sources
+                  </span>
+                </div>
+
+                <!-- Mode Switcher Tabs -->
+                <div class="grid grid-cols-3 gap-1 p-0.5 bg-white border border-[#E8DCD1] rounded-md text-[10px] font-bold">
+                  <button type="button" id="podSrcModeBtn_all" onclick="switchPodSourceMode('all_sources')" 
+                    class="py-1 px-1.5 rounded text-center transition bg-[#F7EFE9] text-[#C86237] border border-[#C86237]/40 shadow-2xs">
+                    🌐 All Sources
+                  </button>
+                  <button type="button" id="podSrcModeBtn_single" onclick="switchPodSourceMode('single')" 
+                    class="py-1 px-1.5 rounded text-center transition text-[#78716C] hover:text-[#1C1917]">
+                    🎯 Single Handle
+                  </button>
+                  <button type="button" id="podSrcModeBtn_direct" onclick="switchPodSourceMode('direct_url')" 
+                    class="py-1 px-1.5 rounded text-center transition text-[#78716C] hover:text-[#1C1917]">
+                    🔗 Direct URL
+                  </button>
+                </div>
+
+                <!-- Mode Subpanel A: Track All Sources in Niche -->
+                <div id="podModeAllSourcesPanel" class="space-y-1.5 text-xs">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-[#1C1917] font-bold flex items-center gap-1">
+                      <span>🌐</span> All Tracked Sources
+                    </span>
+                    <span id="podSourceChipsCount" class="text-[9px] font-bold text-[#C86237] bg-white px-2 py-0.5 border border-[#E8DCD1] rounded">0 Sources</span>
+                  </div>
+                  <!-- Scrollable Chip List of Monitored Source Handles (Enlarged and Spacious) -->
+                  <div id="podTrackedSourcesChips" class="flex flex-wrap gap-1.5 h-20 overflow-y-auto p-1.5 bg-white border border-[#E8DCD1] rounded-md custom-scroll">
+                    <span class="text-[10px] text-[#A8A29E] italic">Loading active sources...</span>
+                  </div>
+                </div>
+
+                <!-- Mode Subpanel B: Single Source Handle -->
+                <div id="podModeSinglePanel" class="hidden space-y-1 text-xs">
+                  <label class="block text-[10px] text-[#78716C] font-semibold">Specific Harvest Handle:</label>
+                  <select id="podSelectSourceDropdown" class="w-full bg-white border border-[#E8DCD1] rounded-md px-2 py-1 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                    <!-- Injected sources -->
+                  </select>
+                </div>
+
+                <!-- Mode Subpanel C: Direct URL Ingest -->
+                <div id="podModeDirectPanel" class="hidden space-y-1 text-xs">
+                  <label class="block text-[10px] text-[#78716C] font-semibold">Paste Direct Video Link:</label>
+                  <input id="podDirectUrlInput" type="text" placeholder="https://instagram.com/reel/... or Reddit / YT / MP4" 
+                    class="w-full bg-white border border-[#E8DCD1] rounded-md px-2 py-1 text-[11px] text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                </div>
+              </div>
+
+              <!-- Section 2: Dynamic Per-Account Caption Attribution (Follow CTA) -->
+              <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-2 space-y-1.5">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-[#1C1917] tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                    <span>✍️</span> 2. Account Attribution
+                  </span>
+                  <span class="text-[9px] font-mono font-bold text-[#C86237] bg-white px-1.5 py-0.5 rounded border border-[#E8DCD1] shadow-2xs">
+                    @{destination_account}
+                  </span>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex justify-between items-center text-[10px]">
+                    <label class="font-bold text-[#78716C]">Follow CTA Caption Template:</label>
+                    <span class="text-[9px] text-[#A8A29E]">Auto-interpolated</span>
+                  </div>
+                  <div class="relative">
+                    <textarea id="podCtaTemplateInput" rows="2" 
+                      placeholder="Follow @{destination_account} for more daily insights and breakdowns!" 
+                      class="w-full bg-white border border-[#E8DCD1] rounded-md px-2.5 py-1 text-xs text-[#1C1917] font-medium leading-snug focus:outline-none focus:border-[#C86237] shadow-2xs resize-none">Follow @{destination_account} for more daily insights and breakdowns!</textarea>
+                  </div>
+                  <div class="flex items-center justify-between text-[9px] text-[#78716C] px-0.5">
+                    <span class="flex items-center gap-1">
+                      <span class="text-amber-500 font-bold">💡</span>
+                      <span>Substituted per destination page</span>
+                    </span>
+                    <span class="font-mono text-[#C86237] font-semibold">e.g. @octopus.ai</span>
+                  </div>
+                </div>
+
+                <!-- Backend Pipeline AI Intelligence Info Card -->
+                <div class="bg-white border border-[#E8DCD1] rounded-md p-1.5 px-2 space-y-1 shadow-2xs">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                      <span>🤖</span> Autonomous AI Pipeline
+                    </span>
+                    <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                      ● Automated
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-1 text-[10px]">
+                    <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded px-1.5 py-0.5 flex items-center gap-1 text-[#44403C]">
+                      <span class="text-emerald-600 font-bold text-xs">✓</span>
+                      <span class="font-semibold truncate">Caption Tracking</span>
+                    </div>
+                    <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded px-1.5 py-0.5 flex items-center gap-1 text-[#44403C]">
+                      <span class="text-emerald-600 font-bold text-xs">✓</span>
+                      <span class="font-semibold truncate">Viral Hook AI</span>
+                    </div>
+                    <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded px-1.5 py-0.5 flex items-center gap-1 text-[#44403C]">
+                      <span class="text-emerald-600 font-bold text-xs">✓</span>
+                      <span class="font-semibold truncate">Smart Hashtags</span>
+                    </div>
+                    <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded px-1.5 py-0.5 flex items-center gap-1 text-[#44403C]">
+                      <span class="text-emerald-600 font-bold text-xs">✓</span>
+                      <span class="font-semibold truncate">Anti-Shadowban</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 3: Adaptive Video Fit & Format -->
+              <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-2 space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase text-[#78716C] tracking-wider">3. Adaptive Video Fit & Format</span>
+                  <span class="text-[9px] font-mono font-bold text-[#C86237]">1080x1920 (9:16 Canvas)</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label class="block text-[10px] font-bold text-[#78716C] mb-0.5">Input Video Handling:</label>
+                    <select id="podRatioSelect" class="w-full bg-white border border-[#E8DCD1] rounded-md px-2 py-0.5 text-[11px] font-semibold text-[#1C1917]">
+                      <option value="auto">Auto-Fit Any (16:9, 1:1, 4:5, 9:16)</option>
+                      <option value="16:9">16:9 Widescreen (Matte Center)</option>
+                      <option value="1:1">1:1 Square (Center Fit)</option>
+                      <option value="9:16">9:16 Vertical (Native Fit)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-[#78716C] mb-0.5">Branding Mode:</label>
+                    <select id="podBrandingModeSelect" class="w-full bg-white border border-[#E8DCD1] rounded-md px-2 py-0.5 text-[11px] font-semibold text-[#1C1917]">
+                      <option value="dynamic">Dynamic Logo Per Destination</option>
+                      <option value="niche_master">Niche Master Pod Logo</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-0.5 text-[10px]">
+                  <span class="text-[#78716C] font-semibold">Anti-Duplicate Protection:</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                    ● Unique Binary Hash per Destination
+                  </span>
+                </div>
+              </div>
+
+              <!-- Real-time Status / Saved Notification Banner -->
+              <div id="podRunStatusBox" class="hidden p-1.5 px-2.5 bg-emerald-50 border border-emerald-200 rounded-md text-[11px] text-emerald-900 flex items-center justify-between gap-1.5 flex-shrink-0">
+                <div class="flex items-center gap-1.5 truncate">
+                  <span id="podRunStatusIcon">✅</span>
+                  <span id="podRunStatusTitle" class="font-bold whitespace-nowrap">Setup Saved!</span>
+                  <span id="podRunStatusMsg" class="text-[10px] text-emerald-700 truncate">Settings updated.</span>
+                </div>
+                <button type="button" onclick="document.getElementById('podRunStatusBox').classList.add('hidden')" class="text-emerald-700 hover:text-emerald-950 font-bold px-1 text-xs">&times;</button>
+              </div>
+
+              <!-- Dual Action Buttons: Save Pod Setup + Execute Broadcast -->
+              <div class="pt-0.5 grid grid-cols-1 sm:grid-cols-12 gap-2 flex-shrink-0">
+                <!-- Save Configuration Button (4 cols) -->
+                <button type="button" onclick="savePodAutomationConfig()" id="savePodConfigBtn" 
+                  class="sm:col-span-4 py-2 px-2 bg-[#F7EFE9] hover:bg-[#F2E5DA] text-[#9E441B] border border-[#E8DCD1] font-bold text-xs rounded-md shadow-2xs flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+                  <span>💾</span> Save Setup
+                </button>
+
+                <!-- Execute Broadcast Button (8 cols) -->
+                <button type="button" onclick="runCurrentPodPipeline()" id="runPodPipelineBtn" 
+                  class="sm:col-span-8 py-2 px-3 orange-gradient-btn text-white font-extrabold text-xs rounded-md shadow-xs flex items-center justify-center gap-2 hover:opacity-95 transition whitespace-nowrap">
+                  <span>🚀</span> Broadcast to <span id="podRunDestCount">10</span> Pages
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Column 3: Destination Pages (4 cols) -->
+          <div class="lg:col-span-4 flex flex-col">
+            <div class="cloud-card rounded-lg p-4 space-y-3 flex flex-col h-[705px]">
+              <div class="flex justify-between items-start border-b border-[#E6E0D6] pb-2 flex-shrink-0">
+                <div>
+                  <h4 class="text-[11px] font-black uppercase text-[#1C1917] tracking-wider flex items-center gap-1">
+                    <span>👥</span> 3. Connected Pages (<span id="podPageCountHeader">10</span>)
+                  </h4>
+                  <p class="text-[10px] text-[#78716C]">Receiving accounts</p>
+                </div>
+                <div class="flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                  <button onclick="openBulkAddAccountsModal()" class="text-[#C86237] hover:underline px-1 py-0.5">+ Bulk</button>
+                  <span class="text-[#D6CEBF]">|</span>
+                  <button onclick="openAddAccountModal()" class="text-[#1C1917] hover:underline px-1 py-0.5">+ Single</button>
+                </div>
+              </div>
+
+              <!-- Connected Pages List Container (Fills 100% of column height, scrolls cleanly to the bottom) -->
+              <div id="podAccountsList" class="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
+                <!-- Injected page cards -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: INTERNAL PIPELINE ENGINE (DEDICATED WORKSPACE) ==================== -->
+      <section id="view_pipeline" class="space-y-6 hidden">
+
+        <!-- TOP: Telegram Autonomous Remote Command Center -->
+        <div class="cloud-card rounded-xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-5">
+          <!-- Header Bar -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-[#E8DCD1]">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] shrink-0 border border-[#2AABEE]/20">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-bold text-[#1C1917]">Telegram Autonomous Remote Command Center</h3>
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="tgBotStatusText">BOT ONLINE & LISTENING</span>
+                  </span>
+                </div>
+                <p class="text-xs text-[#78716C] mt-0.5">Control your entire multi-account network remotely from Telegram: send any reel link ➔ pick niche ➔ 1-click fan out to all pages.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="hidden sm:flex flex-col items-end text-right pr-2">
+                <span class="text-[11px] font-bold text-[#1C1917]" id="tgBotUsernameDisplay">@OctopusAgentBot</span>
+                <span class="text-[10px] text-[#78716C]" id="tgChatStatusDisplay">Admin Chat Linked</span>
+              </div>
+              <button onclick="pingTelegramBot()" class="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold text-xs rounded-md flex items-center gap-1.5 transition">
+                <span>📡 Ping Bot</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Telegram Interactive Flow Console Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Left 7 cols: Interactive Simulator & Live Chat Bubble Feed -->
+            <div class="lg:col-span-7 space-y-4">
+              <!-- Inbound URL Bar -->
+              <div class="p-3.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase text-[#78716C] tracking-wider">
+                  <span>1. Inbound Reel Link (Simulate or Paste from Telegram)</span>
+                  <span class="text-[#C86237]">Any Platform</span>
+                </div>
+                <div class="flex gap-2">
+                  <input id="tgSimUrlInput" type="text" value="https://www.instagram.com/reel/C8q_viral_physics" placeholder="Paste Instagram Reel, YouTube Shorts, or TikTok link..." class="flex-1 bg-white border border-[#E6E0D6] rounded-md px-3 py-2 text-xs text-[#1C1917] font-mono focus:outline-none focus:border-[#C86237]">
+                  <button onclick="submitTgSimulatorUrl()" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-md shadow-xs flex items-center gap-1.5 whitespace-nowrap">
+                    <span>Send Link ➔</span>
+                  </button>
+                </div>
+                <!-- Quick samples -->
+                <div class="flex items-center gap-2 pt-1 text-[11px] text-[#78716C] overflow-x-auto no-scrollbar">
+                  <span class="shrink-0 font-medium">Quick Test:</span>
+                  <button onclick="setTgSimSample('https://www.instagram.com/reel/C7x9_science', 'information')" class="px-2 py-0.5 rounded bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-medium text-[10px] transition shrink-0">💡 Science Facts</button>
+                  <button onclick="setTgSimSample('https://www.reddit.com/r/physicsgifs/casimir_effect', 'quantum')" class="px-2 py-0.5 rounded bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-medium text-[10px] transition shrink-0">⚛️ Quantum Casimir</button>
+                  <button onclick="setTgSimSample('https://youtube.com/shorts/robotics_agility', 'robotics')" class="px-2 py-0.5 rounded bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-medium text-[10px] transition shrink-0">🦾 Humanoid Robot</button>
+                </div>
+              </div>
+
+              <!-- Interactive Telegram Chat Feed Simulator -->
+              <div class="rounded-lg border border-[#E8DCD1] bg-[#FAF8F5]/80 p-4 min-h-[340px] flex flex-col justify-between space-y-3 font-sans">
+                <!-- Chat Bubbles Container -->
+                <div id="tgChatBubbles" class="space-y-3 text-xs overflow-y-auto max-h-[380px] pr-1">
+                  <!-- Bubble 1: Welcome / Idle -->
+                  <div class="flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-full bg-[#CF6032] flex items-center justify-center text-white text-xs font-bold shrink-0">🐙</div>
+                    <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-3 max-w-[85%] shadow-2xs space-y-1.5">
+                      <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                        <span>Octopus Agent</span>
+                        <span class="text-[10px] font-normal text-[#A8A29E]">14:30</span>
+                      </div>
+                      <p class="text-[#44403C]">Welcome to the <strong>Octopus Mobile Command Center</strong>. Send any reel link below and I will ask which niche pod to publish to, then fan out to all pages in one tap!</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Simulator Control Indicator -->
+                <div class="pt-2 border-t border-[#E8DCD1] flex justify-between items-center text-[11px] text-[#78716C]">
+                  <span id="tgSimStepIndicator">Ready for reel link</span>
+                  <button onclick="resetTgSimulator()" class="text-[#C86237] hover:underline font-semibold text-[10px]">Clear Console</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right 5 cols: Telemetry & Inbound Dispatch Log -->
+            <div class="lg:col-span-5 space-y-4">
+              <!-- Bot Config Details -->
+              <div class="p-3.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-2.5">
+                <div class="flex justify-between items-center pb-2 border-b border-[#E8DCD1]">
+                  <span class="text-[10px] font-bold uppercase text-[#78716C] tracking-wider">Bot Integration Telemetry</span>
+                  <span class="text-[10px] font-mono text-[#0F766E] font-bold bg-[#E6F4F1] px-2 py-0.5 rounded">CONNECTED</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span class="text-[#78716C] block text-[10px]">Target Chat:</span>
+                    <span class="font-bold text-[#1C1917]" id="tgTelChat">Harsh (Admin)</span>
+                  </div>
+                  <div>
+                    <span class="text-[#78716C] block text-[10px]">Dispatch Flow:</span>
+                    <span class="font-bold text-[#C86237]">2-Step Niche ➔ All</span>
+                  </div>
+                  <div>
+                    <span class="text-[#78716C] block text-[10px]">Connected Niches:</span>
+                    <span class="font-bold text-[#1C1917]">6 Active Pods</span>
+                  </div>
+                  <div>
+                    <span class="text-[#78716C] block text-[10px]">Total Pages:</span>
+                    <span class="font-bold text-emerald-700">15 Destination Pages</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Dispatches Table -->
+              <div class="p-3.5 rounded-lg border border-[#E8DCD1] bg-white space-y-2.5 shadow-2xs">
+                <div class="flex justify-between items-center pb-2 border-b border-[#E8DCD1]">
+                  <span class="text-[10px] font-bold uppercase text-[#78716C] tracking-wider">Recent Telegram Inbound Logs</span>
+                  <button onclick="loadTelegramLogs()" class="text-[10px] text-[#C86237] font-semibold hover:underline">Refresh</button>
+                </div>
+                <div id="tgDispatchLogsList" class="space-y-2 max-h-[260px] overflow-y-auto no-scrollbar pr-1">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top KPI Telemetry Banner -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+          <div class="cloud-card p-3.5 rounded-lg space-y-1">
+            <div class="flex justify-between items-center text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+              <span>Pipeline Stages</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <div class="text-xl font-black text-[#1C1917]">5 Steps</div>
+            <div class="text-[10px] text-emerald-700 font-semibold">1-Source ➔ All-Pages</div>
+          </div>
+
+          <div class="cloud-card p-3.5 rounded-lg space-y-1">
+            <div class="flex justify-between items-center text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+              <span>Active Brain</span>
+              <span id="pipeBrainStatusPill" class="text-[10px] text-[#9E441B] font-bold bg-[#F7EFE9] px-1.5 py-0.2 rounded border border-[#E8DCD1]">ONLINE</span>
+            </div>
+            <div class="text-xl font-black text-[#C86237]" id="pipeBrainName">GEMINI-FLASH</div>
+            <div class="text-[10px] text-[#78716C]" id="pipeBrainLatency">~185ms Latency</div>
+          </div>
+
+          <div class="cloud-card p-3.5 rounded-lg space-y-1">
+            <div class="flex justify-between items-center text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+              <span>Current Pod</span>
+              <span class="text-[10px] text-[#78716C] font-bold bg-[#FAF8F5] px-1.5 py-0.2 rounded border border-[#E8DCD1]">10 Pages</span>
+            </div>
+            <div class="text-xl font-black text-[#1C1917]" id="pipeCurrentPodName">Information</div>
+            <div class="text-[10px] text-[#78716C]">Cluster #information</div>
+          </div>
+
+          <div class="cloud-card p-3.5 rounded-lg space-y-1">
+            <div class="flex justify-between items-center text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+              <span>Compositor Canvas</span>
+              <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">1080p</span>
+            </div>
+            <div class="text-xl font-black text-[#1C1917]">9:16 Vertical</div>
+            <div class="text-[10px] text-[#78716C]">1080×1920 MP4</div>
+          </div>
+
+          <div class="cloud-card p-3.5 rounded-lg space-y-1">
+            <div class="flex justify-between items-center text-[10px] text-[#78716C] font-bold uppercase tracking-wider">
+              <span>Engine Daemon</span>
+              <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">24/7 ACTIVE</span>
+            </div>
+            <div class="text-xl font-black text-emerald-600">● RUNNING</div>
+            <div class="text-[10px] text-[#78716C]">Multi-Threaded Queue</div>
+          </div>
+        </div>
+
+        <!-- Pipeline Parameter Controls & Execution Toolbar -->
+        <div class="cloud-card rounded-lg p-4 space-y-3 shadow-xs">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-[#E8DCD1]">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs bg-[#F7EFE9] text-[#C86237] font-bold px-2 py-0.5 rounded border border-[#E8DCD1]">⚡ Autonomous Orchestrator</span>
+                <h3 class="text-sm font-bold text-[#1C1917]">Pipeline Execution & Parameter Controls</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Interactive Step Inspector
+                </span>
+              </div>
+              <p class="text-[11px] text-[#78716C] mt-0.5">Select your input source, target destination pod, LLM parameters, and run the pipeline or edit intermediate outputs live.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="fetchPipelineState(true)" class="text-xs font-semibold text-[#78716C] hover:text-[#1C1917] px-2.5 py-1.5 rounded-md bg-[#FAF8F5] border border-[#E8DCD1] transition">
+                🔄 Refresh State
+              </button>
+              <button onclick="triggerPipelineRun()" id="executePipelineBtn" class="orange-gradient-btn px-4 py-1.5 text-white font-bold text-xs rounded-md shadow-sm flex items-center gap-1.5">
+                <span>⚡ Run Full Pipeline Now</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Control Selectors Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+            <!-- Source Reel Selector -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[#78716C] tracking-wider mb-1">1. Target Competitor Source</label>
+              <select id="pipelineSourceSelect" onchange="onPipelineSourceChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-medium focus:outline-none focus:border-[#C86237]">
+                <option value="@dailyfacts">📸 @dailyfacts (Infotainment)</option>
+                <option value="@physicsfun">🧲 @physicsfun (Physics & Mechanics)</option>
+                <option value="@science">🔬 @science (Discoveries)</option>
+                <option value="@engineering">⚙️ @engineering (Robotics & Tech)</option>
+                <option value="@space.discovery">🚀 @space.discovery (Cosmos)</option>
+                <option value="custom">🔗 Enter Custom Reel URL...</option>
+              </select>
+              <input id="pipelineCustomUrlInput" type="text" placeholder="https://instagram.com/reel/..." class="hidden w-full mt-1.5 bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+
+            <!-- Target Destination Pod Selector -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[#78716C] tracking-wider mb-1">2. Target Destination Pod</label>
+              <select id="pipelinePodSelect" onchange="onPipelinePodChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-medium focus:outline-none focus:border-[#C86237]">
+                <option value="information">💡 Information & Infotainment (10 Pages)</option>
+                <option value="quantum">⚛️ Quantum Physics & Mechanics (10 Pages)</option>
+                <option value="ai">🤖 Artificial Intelligence (10 Pages)</option>
+                <option value="robotics">🦾 Robotics & Automation (10 Pages)</option>
+                <option value="space">🚀 Space & Cosmos (10 Pages)</option>
+                <option value="biotech">🧬 BioTech & Life Sciences (10 Pages)</option>
+              </select>
+            </div>
+
+            <!-- Aspect Fit Mode Selector -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[#78716C] tracking-wider mb-1">3. Aspect Ratio Ingest Mode</label>
+              <select id="pipelineAspectSelect" onchange="onPipelineAspectChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-medium focus:outline-none focus:border-[#C86237]">
+                <option value="pillarbox">🎞️ 1:1 Centered Pillarbox (Default)</option>
+                <option value="blur_fill">🌫️ Dynamic Ambient Blur Fill</option>
+                <option value="smart_crop">✂️ 9:16 Smart Dynamic Crop</option>
+              </select>
+            </div>
+
+            <!-- LLM Copywriting Persona -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-[#78716C] tracking-wider mb-1">4. LLM Copywriting Voice</label>
+              <select id="pipelineVoiceSelect" onchange="onPipelineVoiceChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-medium focus:outline-none focus:border-[#C86237]">
+                <option value="curiosity">🔥 Viral Curiosity & Hook</option>
+                <option value="technical">🔬 In-Depth Science & Physics</option>
+                <option value="punchy">⚡ Punchy & Minimalist Fact</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-Step Horizontal Interactive Pipeline Strip -->
+        <div class="cloud-card rounded-lg p-4 space-y-3 shadow-xs">
+          <div class="flex justify-between items-center pb-2 border-b border-[#E8DCD1]">
+            <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+              <span>⚡ 1-Source ➔ All-Pages Autonomous Pipeline Architecture</span>
+            </h4>
+            <span id="pipelineActiveStepBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FAF8F5] text-[#57534E] border border-[#E8DCD1]">
+              Inspecting: Step 3 (LLM Brain)
+            </span>
+          </div>
+
+          <!-- Left-to-Right 5 Step Boxes -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
+            <!-- Step 1: Scrape Source Reel -->
+            <div onclick="selectPipelineStep(1)" id="pipeStepBox_1" 
+              class="pipe-step-card p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer transition hover:border-[#C86237] space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase">Step 1</span>
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">● Done</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                <span>📸</span>
+                <span>Scrape Source</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] truncate" id="pipeStep1Sub">@dailyfacts (1080p)</div>
+            </div>
+
+            <!-- Step 2: Media Analysis & Ingest -->
+            <div onclick="selectPipelineStep(2)" id="pipeStepBox_2" 
+              class="pipe-step-card p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer transition hover:border-[#C86237] space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase">Step 2</span>
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">● Fitted</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                <span>🎞️</span>
+                <span>Aspect & Audio</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] truncate" id="pipeStep2Sub">1:1 ➔ 9:16 Auto-Fit</div>
+            </div>
+
+            <!-- Step 3: LLM Brain Synthesizer -->
+            <div onclick="selectPipelineStep(3)" id="pipeStepBox_3" 
+              class="pipe-step-card p-2.5 rounded-lg border border-[#C86237] bg-[#F7EFE9] ring-2 ring-[#C86237]/20 cursor-pointer transition space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#C86237] uppercase">Step 3</span>
+                <span class="text-[#9E441B] font-bold bg-[#F7EFE9] px-1.5 py-0.2 rounded border border-[#E8DCD1]">● Brain Active</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                <span>🧠</span>
+                <span>LLM Brain Studio</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] truncate" id="pipeStep3Sub">Grok / GPT Hook & Text</div>
+            </div>
+
+            <!-- Step 4: 9:16 Video Compositor -->
+            <div onclick="selectPipelineStep(4)" id="pipeStepBox_4" 
+              class="pipe-step-card p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer transition hover:border-[#C86237] space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase">Step 4</span>
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">● Rendered</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                <span>🎨</span>
+                <span>9:16 Compositor</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] truncate" id="pipeStep4Sub">Logo Top + Headline</div>
+            </div>
+
+            <!-- Step 5: Multi-Tentacle Fanout -->
+            <div onclick="selectPipelineStep(5)" id="pipeStepBox_5" 
+              class="pipe-step-card p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer transition hover:border-[#C86237] space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase">Step 5</span>
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">● 10 Pages Ready</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                <span>🚀</span>
+                <span>Multi-Page Fanout</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] truncate" id="pipeStep5Sub">Simultaneous 10-Post</div>
+            </div>
+          </div>
+
+          <!-- Interactive Live Step Inspection Drawer -->
+          <div id="pipelineDrawerContent" class="bg-white border border-[#E8DCD1] rounded-lg p-3.5 space-y-3">
+            <!-- Dynamically populated by JS selectPipelineStep() -->
+          </div>
+        </div>
+
+        <!-- Live Pipeline Terminal Log -->
+        <div class="cloud-card rounded-lg p-4 space-y-2 bg-[#FAF8F5]">
+          <div class="flex justify-between items-center text-xs border-b border-[#E8DCD1] pb-2">
+            <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+              <span>📟</span>
+              <span>Pipeline Daemon Execution Log</span>
+            </div>
+            <span class="font-mono text-[10px] text-[#78716C]">Stream: Active (Port 8000)</span>
+          </div>
+          <div id="pipeTerminalLog" class="font-mono text-[11px] text-[#57534E] space-y-1 bg-white border border-[#E8DCD1] rounded p-3 max-h-36 overflow-y-auto leading-relaxed">
+            <div class="text-emerald-700">[SYSTEM] 🐙 Octopus Agent Pipeline Engine Online. All 5 execution nodes initialized.</div>
+            <div class="text-[#78716C]">[STEP 1] Ingested competitor source @dailyfacts: Shortcode DF_2026_98 (1080x1080 1:1, 14.2s duration).</div>
+            <div class="text-[#78716C]">[STEP 2] Aspect ratio transformation: 1080x1080 ➔ 1080x1920 9:16 Canvas with lossless AAC stereo.</div>
+            <div class="text-[#78716C]">[STEP 3] LLM Brain prompt synthesized viral curiosity hook & 3 structured educational paragraphs.</div>
+            <div class="text-[#78716C]">[STEP 4] FFmpeg VideoCompositor assembled 9:16 vertical canvas with profile logo badge & headline.</div>
+            <div class="text-emerald-700">[STEP 5] Multi-Tentacle Fanout Engine generated 10 unique binary hashes for destination cluster.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: ACCOUNTS MATRIX ==================== -->
+      <section id="view_accounts" class="space-y-6 hidden">
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>Connected Accounts Matrix</span>
+                <span id="matrixTotalBadge" class="text-[10px] px-2 py-0.5 rounded bg-[#F7EFE9] text-[#9E441B] font-bold border border-[#E8DCD1]">5 Pages</span>
+              </h3>
+              <p class="text-xs text-[#78716C] mt-0.5">Control hundreds of Instagram accounts simultaneously. Every reel renders with that page's specific logo and branding.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="openAddAccountModal()" class="orange-gradient-btn px-3.5 py-1.5 text-white font-bold text-xs rounded-md shadow-sm">
+                + Add Single Account
+              </button>
+              <button onclick="switchTab('settings')" class="px-3.5 py-1.5 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E6E0D6] text-[#1C1917] font-semibold text-xs rounded-md transition">
+                🚀 Auto-Import from Meta API
+              </button>
+            </div>
+          </div>
+
+          <!-- Small KPI Stat Boxes (Total Pages, Total Niches, Active, Not Active, Connected) -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+            <!-- 1. Total Pages -->
+            <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Total Pages</span>
+                <span class="text-xs">📱</span>
+              </div>
+              <div id="matrixStatPages" class="text-xl font-black text-[#1C1917]">15</div>
+              <div class="text-[10px] text-[#78716C]">Total accounts</div>
+            </div>
+
+            <!-- 2. Total Niches -->
+            <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Total Niches</span>
+                <span class="text-xs">💡</span>
+              </div>
+              <div id="matrixStatNiches" class="text-xl font-black text-[#C86237]">6</div>
+              <div class="text-[10px] text-[#78716C]">Niche clusters</div>
+            </div>
+
+            <!-- 3. Total Active Status -->
+            <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Active Status</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <div id="matrixStatActive" class="text-xl font-black text-emerald-700">15</div>
+              <div class="text-[10px] text-emerald-600 font-semibold">● 100% Operational</div>
+            </div>
+
+            <!-- 4. Total Not Active Status -->
+            <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Not Active</span>
+                <span class="text-xs text-[#A8A29E]">⏸️</span>
+              </div>
+              <div id="matrixStatInactive" class="text-xl font-black text-[#78716C]">0</div>
+              <div class="text-[10px] text-[#A8A29E]">Paused / Inactive</div>
+            </div>
+
+            <!-- 5. Total Connected -->
+            <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Total Connected</span>
+                <span class="text-xs text-[#9E441B]">🔗</span>
+              </div>
+              <div id="matrixStatConnected" class="text-xl font-black text-[#9E441B]">15</div>
+              <div class="text-[10px] text-[#9E441B] font-semibold">Meta API / Ready</div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Bar -->
+          <div class="flex flex-col sm:flex-row gap-3 pt-1">
+            <input id="accSearchInput" onkeyup="filterAccounts()" type="text" placeholder="Search by handle or display name..." 
+              class="flex-1 bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3.5 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            <select id="accNicheFilter" onchange="filterAccounts()" class="bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs text-[#1C1917]">
+              <option value="all">All Niches</option>
+              <option value="information">Information & Infotainment</option>
+              <option value="quantum">Quantum Physics</option>
+              <option value="ai">Artificial Intelligence</option>
+              <option value="robotics">Robotics</option>
+              <option value="space">Space</option>
+              <option value="biotech">BioTech</option>
+            </select>
+          </div>
+
+          <!-- Accounts Matrix Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#FAF8F5] text-[#78716C] uppercase text-[10px] font-bold tracking-wider border-b border-[#E6E0D6]">
+                <tr>
+                  <th class="p-3 w-8"><input type="checkbox" id="selectAllAccounts" onchange="toggleSelectAllAccounts(this)" class="rounded text-[#C86237]"></th>
+                  <th class="p-3">Page Handle & Logo</th>
+                  <th class="p-3">Display Name</th>
+                  <th class="p-3">Niche Category</th>
+                  <th class="p-3">Meta IG User ID</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="accountsMatrixTbody" class="divide-y divide-[#E6E0D6]">
+                <!-- Injected Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: INGEST & FANOUT STUDIO ==================== -->
+      <section id="view_ingest" class="space-y-6 hidden">
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <div>
+            <h3 class="text-sm font-bold text-[#1C1917]">⚡ Multi-Account Fanout Studio</h3>
+            <p class="text-xs text-[#78716C] mt-0.5">Ingest a viral clip from Reddit, YouTube, or direct MP4. The system renders tailored 9:16 variations for each account with their specific logo and broadcasts simultaneously.</p>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-[#1C1917]">1. Video Source Link</label>
+            <input id="fanoutUrl" type="text" placeholder="https://www.reddit.com/r/physicsgifs/... or YouTube Shorts or direct MP4..." 
+              class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3.5 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+          </div>
+
+          <!-- Destination Accounts Selector -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="block text-xs font-bold text-[#1C1917]">2. Select Destination Accounts (Tentacles)</label>
+              <button onclick="selectAllFanoutCheckboxes(true)" class="text-[11px] text-[#C86237] font-semibold hover:underline">Select All</button>
+            </div>
+            <div id="fanoutAccountCheckboxes" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-[#FAF8F5] border border-[#E6E0D6] rounded-md max-h-48 overflow-y-auto">
+              <!-- Injected checkboxes -->
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-[#E6E0D6]">
+            <div class="flex items-center gap-3 text-xs text-[#78716C]">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" id="fanoutAutoPublishCheck" class="rounded text-[#C86237]">
+                Auto-publish immediately after rendering
+              </label>
+            </div>
+
+            <button onclick="submitFanoutStudio()" class="orange-gradient-btn px-5 py-2 text-white font-bold text-xs rounded-md shadow-sm">
+              🐙 Render & Broadcast to Selected Pages
+            </button>
+          </div>
+          <div id="fanoutToast" class="text-xs hidden font-bold"></div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: TARGET SOURCES & SCRAPER ==================== -->
+      <section id="view_sources" class="space-y-6 hidden">
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <!-- Card Header & Add Source Bar -->
+          <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-3 border-b border-[#E8DCD1]">
+            <div class="flex items-center gap-2.5">
+              <span class="text-base">📸</span>
+              <h3 class="text-sm font-bold text-[#1C1917]">Monitored Target Sources & Scraper</h3>
+              <span id="sourcesTotalBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-[#F7EFE9] text-[#9E441B] font-bold border border-[#E8DCD1]">151 Sources</span>
+            </div>
+
+            <!-- Inline Add Source Form -->
+            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full xl:w-auto justify-end">
+              <select id="addSrcType" class="bg-white border border-[#E8DCD1] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-semibold focus:outline-none focus:border-[#C86237] shadow-xs cursor-pointer hover:border-[#C86237]/60">
+                <option value="instagram_handle">📸 Instagram Reel</option>
+                <option value="reddit_sub">👾 Subreddit Clip</option>
+              </select>
+
+              <select id="addSrcCategory" class="bg-white border border-[#E8DCD1] rounded-md px-2.5 py-1.5 text-xs text-[#1C1917] font-semibold focus:outline-none focus:border-[#C86237] shadow-xs cursor-pointer hover:border-[#C86237]/60">
+                <option value="information">💡 Information</option>
+                <option value="quantum">⚛️ Quantum</option>
+                <option value="ai">🤖 AI</option>
+                <option value="robotics">🦾 Robotics</option>
+                <option value="space">🚀 Space</option>
+                <option value="biotech">🧬 BioTech</option>
+              </select>
+
+              <div class="relative w-44 sm:w-52">
+                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#A8A29E] text-xs font-bold">@</span>
+                <input id="addSrcValue" type="text" onkeydown="if(event.key==='Enter') submitAddSource()" placeholder="handle (e.g. dailyfacts)" 
+                  class="w-full bg-white border border-[#E8DCD1] rounded-md pl-7 pr-3 py-1.5 text-xs text-[#1C1917] font-semibold focus:outline-none focus:border-[#C86237] shadow-xs">
+              </div>
+
+              <button onclick="submitAddSource()" class="orange-gradient-btn px-3.5 py-1.5 text-white font-bold text-xs rounded-md shadow-xs whitespace-nowrap flex items-center gap-1.5 shrink-0 hover:opacity-95 transition">
+                <span class="text-sm leading-none font-bold">+</span>
+                <span>Add Source</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Top Source Type & KPI Stat Boxes -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+            <!-- 1. Total Sources -->
+            <div onclick="setSourceTypeFilter('all')" class="bg-white border border-[#E8DCD1] rounded-lg p-3 space-y-1 cursor-pointer hover:border-[#C86237]/60 shadow-xs transition">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Total Sources</span>
+                <span class="text-xs">📊</span>
+              </div>
+              <div id="statSourcesTotal" class="text-xl font-black text-[#1C1917]">74</div>
+              <div class="text-[10px] text-[#78716C]">Monitored endpoints</div>
+            </div>
+
+            <!-- 2. Instagram Handles -->
+            <div onclick="setSourceTypeFilter('instagram_handle')" class="bg-white border border-[#E8DCD1] rounded-lg p-3 space-y-1 cursor-pointer hover:border-[#C86237]/60 shadow-xs transition">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Instagram Handles</span>
+                <span class="text-xs">📸</span>
+              </div>
+              <div id="statSourcesIg" class="text-xl font-black text-[#C86237]">71</div>
+              <div class="text-[10px] text-[#9E441B] font-semibold">Click to filter IG feeds</div>
+            </div>
+
+            <!-- 3. Subreddit Feeds -->
+            <div onclick="setSourceTypeFilter('reddit_sub')" class="bg-white border border-[#E8DCD1] rounded-lg p-3 space-y-1 cursor-pointer hover:border-[#C86237]/60 shadow-xs transition">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Subreddit Feeds</span>
+                <span class="text-xs">👾</span>
+              </div>
+              <div id="statSourcesReddit" class="text-xl font-black text-[#78716C]">3</div>
+              <div class="text-[10px] text-[#78716C]">Click to filter Reddit</div>
+            </div>
+
+            <!-- 4. Monitored Niches -->
+            <div class="bg-white border border-[#E8DCD1] rounded-lg p-3 space-y-1 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Active Niches</span>
+                <span class="text-xs">💡</span>
+              </div>
+              <div id="statSourcesNiches" class="text-xl font-black text-[#1C1917]">5</div>
+              <div class="text-[10px] text-[#78716C]">Niche clusters covered</div>
+            </div>
+
+            <!-- 5. Autonomous Daemon -->
+            <div class="bg-white border border-[#E8DCD1] rounded-lg p-3 space-y-1 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Scraper Engine</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <div class="text-xl font-black text-emerald-700">● 24/7 Active</div>
+              <div class="text-[10px] text-emerald-600 font-semibold">Auto-scrapes every 2 hrs</div>
+            </div>
+          </div>
+
+          <!-- Interactive Search & Niche Filter Toolbar -->
+          <div class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between pt-1">
+            <div class="flex flex-1 flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+              <!-- Search Input -->
+              <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A8A29E] text-xs">🔍</span>
+                <input id="srcSearchInput" onkeyup="filterSources()" type="text" placeholder="Search competitor handle, category, or keyword..." 
+                  class="w-full bg-white border border-[#E8DCD1] rounded-md pl-8 pr-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] shadow-xs">
+              </div>
+
+              <!-- Niche Filter Dropdown -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider whitespace-nowrap">Niche:</span>
+                <select id="srcNicheFilter" onchange="filterSources()" class="bg-white border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs text-[#1C1917] font-semibold focus:outline-none focus:border-[#C86237] shadow-xs cursor-pointer">
+                  <option value="all">All Niches</option>
+                  <option value="information">💡 Information & Infotainment</option>
+                  <option value="quantum">⚛️ Quantum Physics</option>
+                  <option value="ai">🤖 Artificial Intelligence</option>
+                  <option value="robotics">🦾 Robotics</option>
+                  <option value="space">🚀 Space Exploration</option>
+                  <option value="biotech">🧬 BioTech</option>
+                </select>
+              </div>
+
+              <!-- Source Type Dropdown -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider whitespace-nowrap">Type:</span>
+                <select id="srcTypeFilter" onchange="filterSources()" class="bg-white border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs text-[#1C1917] font-semibold focus:outline-none focus:border-[#C86237] shadow-xs cursor-pointer">
+                  <option value="all">All Types</option>
+                  <option value="instagram_handle">📸 Instagram Handles</option>
+                  <option value="reddit_sub">👾 Subreddits</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filter Status & Reset -->
+            <div class="flex items-center gap-2 justify-between sm:justify-end">
+              <span id="srcFilteredCount" class="text-xs text-[#78716C] font-semibold whitespace-nowrap">Showing 74 of 74</span>
+              <button onclick="resetSourceFilters()" class="text-[11px] text-[#C86237] hover:underline font-bold px-1.5 py-0.5">Reset</button>
+            </div>
+          </div>
+
+          <!-- Sources Table -->
+          <div class="overflow-x-auto border border-[#E8DCD1] rounded-lg">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#FAF8F5] text-[#78716C] uppercase text-[10px] font-bold tracking-wider border-b border-[#E8DCD1]">
+                <tr>
+                  <th class="p-3 w-40">Source Type</th>
+                  <th class="p-3">Handle / Identifier</th>
+                  <th class="p-3">Niche Category</th>
+                  <th class="p-3">Triggered Destination Page</th>
+                  <th class="p-3">Last Scraped Reel</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sourcesTbody" class="divide-y divide-[#E8DCD1] bg-white">
+                <!-- Injected Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: REELS ==================== -->
+      <section id="view_reels" class="space-y-6 hidden">
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917]">🎬 Master Reels Vault</h3>
+              <p class="text-xs text-[#78716C] mt-0.5">Browse all rendered 9:16 vertical reels with custom logos, play previews, or deploy them across the network.</p>
+            </div>
+            <span id="reelsCountBadge" class="text-xs text-[#78716C] font-semibold bg-[#FAF8F5] border border-[#E8DCD1] px-2.5 py-1 rounded">2 Reels</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#FAF8F5] text-[#78716C] uppercase text-[10px] font-bold tracking-wider border-b border-[#E6E0D6]">
+                <tr>
+                  <th class="p-3">Task ID</th>
+                  <th class="p-3">Headline Hook</th>
+                  <th class="p-3">Source</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3">9:16 Video</th>
+                  <th class="p-3 text-right">Fanout Broadcast</th>
+                </tr>
+              </thead>
+              <tbody id="reelsLibraryTbody" class="divide-y divide-[#E6E0D6]">
+                <!-- Injected Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB: BROADCAST AUDIT LOGS / ACTIVITY ==================== -->
+      <section id="view_broadcasts" class="space-y-6 hidden">
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <div>
+            <h3 class="text-sm font-bold text-[#1C1917]">📡 Broadcast Audit Logs</h3>
+            <p class="text-xs text-[#78716C] mt-0.5">Live audit trail of every reel deployed to each Instagram account with timestamps and direct links.</p>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#FAF8F5] text-[#78716C] uppercase text-[10px] font-bold tracking-wider border-b border-[#E6E0D6]">
+                <tr>
+                  <th class="p-2.5">Target Destination Page</th>
+                  <th class="p-2.5">Reel Hook & Headline</th>
+                  <th class="p-2.5">Rendered 9:16 Video</th>
+                  <th class="p-2.5">Meta Status</th>
+                  <th class="p-2.5">Broadcast Time</th>
+                  <th class="p-2.5 text-right">Instagram Link</th>
+                </tr>
+              </thead>
+              <tbody id="broadcastAuditTbody" class="divide-y divide-[#E6E0D6]">
+                <!-- Injected Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>

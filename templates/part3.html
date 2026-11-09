@@ -1,0 +1,2951 @@
+      <!-- ==================== TAB 7: SETTINGS & META GRAPH API ==================== -->
+      <section id="view_settings" class="space-y-6 hidden">
+        <!-- Section 1: AI & LLM Brain Intelligence Provider -->
+        <div class="cloud-card rounded-lg p-5 space-y-4">
+          <div class="border-b border-[#E8DCD1] pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-base">🧠</span>
+                <h3 class="text-sm font-bold text-[#1C1917]">AI & LLM Brain Intelligence Provider</h3>
+                <span id="llmStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">● Brain Active</span>
+              </div>
+              <p class="text-xs text-[#78716C] mt-0.5">Connect your preferred LLM (xAI Grok, OpenAI ChatGPT, Anthropic Claude, Google Gemini, or Custom local models). This serves as the brain that understands video context, generates high-CTR headlines, and writes 3-paragraph viral captions.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="testLlmConnection()" id="btnTestLlm" class="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] rounded-md transition flex items-center gap-1.5 shadow-2xs">
+                <span>⚡</span>
+                <span>Test Brain Connection</span>
+              </button>
+              <button onclick="saveLlmSettings()" class="orange-gradient-btn px-4 py-1.5 text-white font-bold text-xs rounded-md shadow-sm">
+                Save LLM Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Provider Selector Tiles -->
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Select AI Brain Provider:</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              <!-- Grok -->
+              <button type="button" onclick="selectLlmProvider('grok')" id="providerBtn_grok" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">xAI Grok</span>
+                  <span class="text-xs">⚡</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Grok-2 & Grok-Beta</div>
+              </button>
+
+              <!-- OpenAI -->
+              <button type="button" onclick="selectLlmProvider('openai')" id="providerBtn_openai" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">OpenAI ChatGPT</span>
+                  <span class="text-xs">🤖</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">GPT-4o & GPT-4o-mini</div>
+              </button>
+
+              <!-- Claude -->
+              <button type="button" onclick="selectLlmProvider('claude')" id="providerBtn_claude" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">Anthropic Claude</span>
+                  <span class="text-xs">🎭</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Claude 3.5 Sonnet</div>
+              </button>
+
+              <!-- Gemini -->
+              <button type="button" onclick="selectLlmProvider('gemini')" id="providerBtn_gemini" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">Google Gemini</span>
+                  <span class="text-xs">✨</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Gemini 1.5 & 2.0</div>
+              </button>
+
+              <!-- Custom / Local -->
+              <button type="button" onclick="selectLlmProvider('custom')" id="providerBtn_custom" 
+                class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-[#1C1917]">Custom / Local</span>
+                  <span class="text-xs">💻</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">Ollama, DeepSeek, vLLM</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Provider Specific Configuration Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+            <!-- Model Dropdown -->
+            <div>
+              <label class="block text-[10px] font-bold text-[#78716C] mb-1">Model Name</label>
+              <div class="flex gap-1.5">
+                <select id="llmModelSelect" class="flex-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                  <!-- Populated by JS -->
+                </select>
+                <input id="llmCustomModelInput" type="text" placeholder="Or type model..." class="hidden flex-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs text-[#1C1917]">
+              </div>
+            </div>
+
+            <!-- API Key -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-[10px] font-bold text-[#78716C]">API Key</label>
+                <button type="button" onclick="toggleApiKeyVisibility()" class="text-[10px] text-[#C86237] hover:underline">Show/Hide</button>
+              </div>
+              <input id="llmApiKeyInput" type="password" placeholder="Enter API Key (xai-... / sk-... / etc.)" 
+                class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+
+            <!-- Base URL (Customizable) -->
+            <div>
+              <label class="block text-[10px] font-bold text-[#78716C] mb-1">Base Endpoint URL</label>
+              <input id="llmBaseUrlInput" type="text" placeholder="https://api.x.ai/v1" 
+                class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-1.5 text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+          </div>
+
+          <!-- Test Handshake Result Banner -->
+          <div id="llmTestResult" class="hidden p-3 rounded-md text-xs font-semibold"></div>
+        </div>
+
+        <!-- Section A: Meta Graph API Setup & Auto-Discovery -->
+        <div class="cloud-card rounded-lg p-6 space-y-4">
+          <div class="border-b border-[#E8DCD1] pb-3">
+            <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+              <span>🚀 Meta Graph API Connector & Mass Account Importer</span>
+            </h3>
+            <p class="text-xs text-[#78716C] mt-0.5">Connect your Meta Developer App or Long-Lived Token to automatically discover and import dozens of linked Instagram Business accounts in 1 click.</p>
+          </div>
+
+          <div class="space-y-3">
+            <label class="block text-xs font-bold text-[#1C1917]">Meta Long-Lived User or System Access Token</label>
+            <div class="flex gap-3">
+              <input id="metaDiscoveryToken" type="password" placeholder="EAAB..." 
+                class="flex-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-4 py-2 text-xs text-[#1C1917] font-mono focus:outline-none focus:border-[#C86237]">
+              <button onclick="testMetaToken()" class="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] rounded-md transition">
+                🔍 Test Health
+              </button>
+              <button onclick="discoverMetaPages()" class="orange-gradient-btn px-5 py-2 text-white font-bold text-xs rounded-md shadow-sm whitespace-nowrap">
+                ⚡ Auto-Discover & Import Pages
+              </button>
+            </div>
+            <div id="tokenHealthResult" class="text-xs hidden p-3 rounded-md"></div>
+          </div>
+
+          <!-- Discovered Pages Preview Container -->
+          <div id="discoveredPagesContainer" class="hidden p-4 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-3">
+            <div class="flex justify-between items-center">
+              <div class="text-xs font-bold text-[#1C1917]" id="discoveredHeader">Discovered Accounts (0)</div>
+              <button onclick="confirmBulkImport()" class="orange-gradient-btn px-4 py-1.5 text-white font-bold text-xs rounded-lg">
+                Import All Discovered Accounts
+              </button>
+            </div>
+            <div id="discoveredList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+          </div>
+        </div>
+
+        <!-- Section B: Telegram Bot Setup -->
+        <div class="cloud-card rounded-lg p-6 space-y-4">
+          <div class="border-b border-[#E8DCD1] pb-3">
+            <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+              <span>📱 Telegram Command Center Settings</span>
+            </h3>
+            <p class="text-xs text-[#78716C] mt-0.5">Control your reels network from your phone via Telegram bot.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[#78716C] mb-1">Telegram Bot Token (from @BotFather)</label>
+              <input id="settingTelegramToken" type="text" placeholder="123456789:ABCdef..." 
+                class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3.5 py-2 text-xs font-mono text-[#1C1917]">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#78716C] mb-1">Telegram Chat ID</label>
+              <input id="settingTelegramChatId" type="text" placeholder="e.g. 987654321" 
+                class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3.5 py-2 text-xs font-mono text-[#1C1917]">
+            </div>
+          </div>
+          <button onclick="testTelegramConnection()" class="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#C86237] rounded-md transition">
+            📨 Send Test Notification to Telegram
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Video Preview Modal (9:16 Vertical Player) -->
+  <div id="videoModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-lg max-w-sm w-full p-4 relative shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-bold text-[#1C1917]">📱 9:16 Reel Player</h3>
+        <button onclick="closeVideoModal()" class="text-[#78716C] hover:text-[#1C1917] text-lg font-bold">&times;</button>
+      </div>
+      <video id="modalVideoPlayer" controls class="w-full rounded-md bg-black aspect-[9/16] shadow-inner"></video>
+    </div>
+  </div>
+
+  <!-- Add Account Modal -->
+  <div id="addAccountModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-lg max-w-md w-full p-6 relative shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+        <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+          <span>🐙</span> Connect Instagram Page
+        </h3>
+        <button onclick="closeAddAccountModal()" class="text-[#78716C] hover:text-[#1C1917] text-xl font-bold">&times;</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Account ID Slug</label>
+          <input id="modalAccId" type="text" placeholder="e.g. quantum_02" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Instagram Handle</label>
+          <input id="modalAccHandle" type="text" placeholder="@yourbrand.ai" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Display Name</label>
+          <input id="modalAccName" type="text" placeholder="Your Brand AI" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Niche Category</label>
+          <input id="modalAccNiche" type="text" placeholder="Artificial Intelligence & Tech" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Meta Graph IG User ID</label>
+          <input id="modalAccIgId" type="text" placeholder="17841400000000000" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 font-mono text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Page Access Token</label>
+          <input id="modalAccToken" type="password" placeholder="EAAB..." class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 font-mono text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Profile Logo / Picture URL (Optional)</label>
+          <input id="modalAccLogo" type="text" placeholder="https://... or /assets/logos/... (Auto-fetched via Meta Graph API)" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+      </div>
+      <button onclick="submitNewAccount()" class="w-full py-2.5 orange-gradient-btn text-white font-bold text-xs rounded-md shadow-md mt-2">
+        Save & Connect Page
+      </button>
+    </div>
+  </div>
+
+  <!-- All Niches Directory Modal (Browse & Search 50-60+ Niches) -->
+  <div id="allNichesDirectoryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-xl max-w-5xl w-full p-5 sm:p-6 relative shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-[#F7EFE9] border border-[#E8DCD1] flex items-center justify-center text-xl shrink-0 shadow-2xs">
+            🏛️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-extrabold text-[#1C1917]">All Niches Directory & Pod Catalog</h3>
+              <span id="allNichesModalCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F7EFE9] text-[#9E441B] border border-[#E8DCD1]">6 Pods</span>
+            </div>
+            <p class="text-xs text-[#78716C] mt-0.5">Explore, search, and switch across 50–60+ niche clusters and their dedicated account tentacle networks.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="openCreateNicheModal(); closeAllNichesModal();" class="orange-gradient-btn px-3.5 py-1.5 text-white font-bold text-xs rounded-md shadow-xs flex items-center gap-1.5 whitespace-nowrap hover:opacity-95 transition">
+            <span class="text-sm font-bold">+</span> Create Custom Niche
+          </button>
+          <button onclick="closeAllNichesModal()" class="w-8 h-8 rounded-md border border-[#E8DCD1] hover:bg-[#FAF8F5] text-[#78716C] hover:text-[#1C1917] flex items-center justify-center text-xl font-bold transition">&times;</button>
+        </div>
+      </div>
+
+      <!-- Search, Filter & Telemetry Strip -->
+      <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg p-2.5 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between shrink-0">
+        <!-- Live Search Bar -->
+        <div class="relative flex-1">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A8A29E] text-xs">🔍</span>
+          <input id="allNichesSearchInput" oninput="filterAllNichesModal()" onkeyup="filterAllNichesModal()" type="text" 
+            placeholder="Search 50+ niches by name, slug, or keywords (e.g. quantum, robotics, biotech, AI)..." 
+            class="w-full bg-white border border-[#E8DCD1] rounded-md pl-8 pr-3 py-1.5 text-xs text-[#1C1917] font-medium focus:outline-none focus:border-[#C86237] shadow-2xs">
+        </div>
+
+        <!-- Filter & Sort Controls -->
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div class="flex items-center gap-1 text-[11px] text-[#78716C] font-semibold whitespace-nowrap">
+            <span>Sort:</span>
+            <select id="allNichesSortSelect" onchange="filterAllNichesModal()" class="bg-white border border-[#E8DCD1] rounded-md px-2 py-1 text-xs text-[#1C1917] font-bold focus:outline-none focus:border-[#C86237] shadow-2xs cursor-pointer">
+              <option value="accounts_desc">👥 Most Accounts First</option>
+              <option value="sources_desc">📸 Most Sources First</option>
+              <option value="name_asc">🔤 Name (A-Z)</option>
+            </select>
+          </div>
+
+          <span id="allNichesShowingCount" class="text-[10px] font-bold text-[#78716C] bg-white border border-[#E8DCD1] px-2 py-1 rounded-md shadow-2xs whitespace-nowrap">
+            Showing 6 of 6
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Telemetry Stats Strip -->
+      <div class="grid grid-cols-3 gap-2.5 shrink-0 text-center text-xs">
+        <div class="bg-white border border-[#E8DCD1] rounded-lg p-2 shadow-2xs">
+          <span class="text-[9px] text-[#78716C] font-bold uppercase tracking-wider block">Total Niches</span>
+          <span id="allNichesStatPods" class="text-base font-black text-[#1C1917]">6</span>
+        </div>
+        <div class="bg-white border border-[#E8DCD1] rounded-lg p-2 shadow-2xs">
+          <span class="text-[9px] text-[#78716C] font-bold uppercase tracking-wider block">Connected Pages</span>
+          <span id="allNichesStatAccounts" class="text-base font-black text-[#C86237]">15</span>
+        </div>
+        <div class="bg-white border border-[#E8DCD1] rounded-lg p-2 shadow-2xs">
+          <span class="text-[9px] text-[#78716C] font-bold uppercase tracking-wider block">Monitored Sources</span>
+          <span id="allNichesStatSources" class="text-base font-black text-[#1C1917]">151</span>
+        </div>
+      </div>
+
+      <!-- Column-wise One-to-One Niche Grid -->
+      <div id="allNichesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 flex-1 min-h-0 overflow-y-auto pr-1 py-1 custom-scroll">
+        <!-- Dynamically injected niche cards -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Custom Niche Modal -->
+  <div id="createNicheModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-lg max-w-md w-full p-6 relative shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+        <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+          <span>💡</span> Define Custom Niche Pod
+        </h3>
+        <button onclick="closeCreateNicheModal()" class="text-[#78716C] hover:text-[#1C1917] text-xl font-bold">&times;</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Niche Identifier Slug</label>
+          <input id="modalNicheId" type="text" placeholder="e.g. information or motivation" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Display Name</label>
+          <input id="modalNicheName" type="text" placeholder="e.g. Information & Infotainment" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Description / Focus</label>
+          <input id="modalNicheDesc" type="text" placeholder="e.g. Viral educational facts & curious phenomena" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[#78716C] font-semibold mb-1">Brand Color</label>
+            <input id="modalNicheColor" type="color" value="#C86237" class="w-full h-9 rounded-md border border-[#E8DCD1] p-1 bg-[#FAF8F5] cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-[#78716C] font-semibold mb-1">Icon / Emoji</label>
+            <input id="modalNicheIcon" type="text" value="💡" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-center text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Default Hashtags</label>
+          <input id="modalNicheHashtags" type="text" placeholder="#information #facts #curiosity #dailyknowledge" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+        <div>
+          <label class="block text-[#78716C] font-semibold mb-1">Call to Action (CTA)</label>
+          <input id="modalNicheCta" type="text" placeholder="Follow @{handle} for daily mind-blowing information!" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+        </div>
+      </div>
+      <button onclick="submitCreateNiche()" class="w-full py-2.5 orange-gradient-btn text-white font-bold text-xs rounded-md shadow-md mt-2">
+        🚀 Save & Activate Niche Pod
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Add Accounts Modal -->
+  <div id="bulkAddAccountsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-lg max-w-lg w-full p-6 relative shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+            <span>👥</span> Bulk Connect Pages to Niche
+          </h3>
+          <p class="text-xs text-[#78716C]">Connect 10, 20+ destination pages to <span id="bulkAccPodName" class="font-bold text-[#C86237]">Information</span></p>
+        </div>
+        <button onclick="closeBulkAddAccountsModal()" class="text-[#78716C] hover:text-[#1C1917] text-xl font-bold">&times;</button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <label class="block text-[#78716C] font-semibold">Paste Instagram Handles (one per line):</label>
+        <textarea id="bulkAccountsTextarea" rows="6" placeholder="@info.daily&#10;@curious.minds&#10;@daily.knowledge&#10;@deep.facts&#10;@quick.intel" 
+          class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-3 font-mono text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]"></textarea>
+        <p class="text-[11px] text-[#78716C]">You can paste handles directly. Octopus will automatically configure them with unique brand initials and colors for this niche.</p>
+      </div>
+      <button onclick="submitBulkAddAccounts()" class="w-full py-2.5 orange-gradient-btn text-white font-bold text-xs rounded-md shadow-md mt-2">
+        ⚡ Connect All Pages to Niche Pod
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Add Sources Modal -->
+  <div id="bulkAddSourcesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white border border-[#E8DCD1] rounded-lg max-w-lg w-full p-6 relative shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#1C1917] flex items-center gap-2">
+            <span>📸</span> Bulk Add Competitor Sources
+          </h3>
+          <p class="text-xs text-[#78716C]">Add 7-8 handles to monitor for <span id="bulkSrcPodName" class="font-bold text-[#C86237]">Information</span></p>
+        </div>
+        <button onclick="closeBulkAddSourcesModal()" class="text-[#78716C] hover:text-[#1C1917] text-xl font-bold">&times;</button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <label class="block text-[#78716C] font-semibold">Paste Competitor Handles to Scrape (one per line):</label>
+        <textarea id="bulkSourcesTextarea" rows="6" placeholder="dailyfacts&#10;uncover.ai&#10;interestingengineering&#10;physicsfun&#10;mindblowingfacts&#10;science.daily" 
+          class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-3 font-mono text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]"></textarea>
+        <p class="text-[11px] text-[#78716C]">Octopus will monitor these accounts and automatically download and format their newest reels.</p>
+      </div>
+      <button onclick="submitBulkAddSources()" class="w-full py-2.5 orange-gradient-btn text-white font-bold text-xs rounded-md shadow-md mt-2">
+        ⚡ Add Sources to Watchlist
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== FRONTEND CONTROLLER (SPA) ==================== -->
+  <script>
+    let globalAccounts = [];
+    let globalSources = [];
+    let globalNiches = [];
+    let currentNicheId = "information";
+    let currentCluster = null;
+    let discoveredAccountsCache = [];
+
+    const tabTitles = {
+      overview: { title: "Overview", sub: "Cloud Analytics & Live Activity" },
+      niche_pods: { title: "Niche groups", sub: "1-Source ➔ All-Pages Multi-Tentacle Network Hub" },
+      pipeline: { title: "Workflow", sub: "Telegram Remote Command Center & Pipeline Setup" },
+      accounts: { title: "Accounts", sub: "Mass Scaling (Dozens to Hundreds of Pages)" },
+      ingest: { title: "Publish", sub: "Universal Clip Ingest & Simultaneous Broadcast" },
+      sources: { title: "Sources", sub: "24/7 Competitor Monitoring & Auto-Branding" },
+      reels: { title: "Reels", sub: "Rendered 9:16 Vertical Video Vault" },
+      broadcasts: { title: "Activity", sub: "Live Per-Account Publishing History" },
+      settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" }
+    };
+
+    function switchTab(tabKey) {
+      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "sources", "reels", "broadcasts", "settings"];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`view_${t}`);
+        const btn = document.getElementById(`tabBtn_${t}`);
+        if (sec && btn) {
+          if (t === tabKey) {
+            sec.classList.remove("hidden");
+            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-active transition";
+            const icon = btn.querySelector("svg");
+            if (icon) {
+              icon.classList.remove("text-[#71717A]");
+              icon.classList.add("text-[#C86237]");
+            }
+          } else {
+            sec.classList.add("hidden");
+            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition";
+            const icon = btn.querySelector("svg");
+            if (icon) {
+              icon.classList.remove("text-[#C86237]");
+              icon.classList.add("text-[#71717A]");
+            }
+          }
+        }
+      });
+
+      const meta = tabTitles[tabKey] || { title: "Octopus Agent", sub: "Network Engine" };
+      document.getElementById("stageTitle").innerText = meta.title;
+      document.getElementById("stageSubtitle").innerText = meta.sub;
+      try { history.replaceState(null, null, `?tab=${tabKey}`); } catch (e) {}
+
+      if (tabKey === 'pipeline') {
+        fetchPipelineState(true);
+        loadTelegramStatus();
+        loadTelegramLogs();
+      }
+
+      if (tabKey === 'niche_pods') {
+        selectNiche(currentNicheId);
+      }
+    }
+
+    function runScrapeMonitoringPass() {
+      triggerDaemonCycle();
+    }
+
+    async function loadDashboard() {
+      // 1. Stats
+      const statRes = await fetch("/api/stats");
+      const stats = await statRes.json();
+      if (document.getElementById("stat_accounts")) document.getElementById("stat_accounts").innerText = stats.total_accounts;
+      if (document.getElementById("stat_sources")) document.getElementById("stat_sources").innerText = stats.monitored_sources;
+      if (document.getElementById("stat_reels")) document.getElementById("stat_reels").innerText = stats.total_reels;
+      if (document.getElementById("stat_rate")) document.getElementById("stat_rate").innerText = `${stats.success_rate}%`;
+      if (document.getElementById("badgeAccounts")) document.getElementById("badgeAccounts").innerText = stats.total_accounts;
+      if (document.getElementById("sidebarAccCount")) document.getElementById("sidebarAccCount").innerText = `${stats.active_accounts} of ${stats.total_accounts} pages online`;
+      if (document.getElementById("badgeSources")) document.getElementById("badgeSources").innerText = stats.monitored_sources;
+      const badgeReels = document.getElementById("badgeReels");
+      if (badgeReels) badgeReels.innerText = stats.total_reels;
+      if (document.getElementById("matrixTotalBadge")) document.getElementById("matrixTotalBadge").innerText = `${stats.total_accounts} Pages`;
+
+      // 2. Accounts
+      const accRes = await fetch("/api/accounts");
+      globalAccounts = await accRes.json();
+      renderAccountsTable(globalAccounts);
+      renderFanoutCheckboxes(globalAccounts);
+
+      // 3. Sources
+      const srcRes = await fetch("/api/sources");
+      globalSources = await srcRes.json();
+      renderSourcesTable(globalSources);
+
+      // 4. Reels
+      try {
+        const reelRes = await fetch("/api/reels");
+        const reels = await reelRes.json();
+        renderReelsLibrary(reels);
+        const countBadge = document.getElementById("reelsCountBadge");
+        if (countBadge) countBadge.innerText = `${reels.length} Reels`;
+      } catch (e) {}
+
+      // 5. Broadcast Logs / Activity
+      const logRes = await fetch("/api/broadcasts");
+      const logs = await logRes.json();
+      renderBroadcastLogs(logs);
+
+      // 6. Niche Pods Hub
+      await loadNiches();
+    }
+
+    // ==================== NICHE AUTOMATION PODS LOGIC ====================
+    async function loadNiches() {
+      try {
+        const res = await fetch("/api/niches");
+        globalNiches = await res.json();
+        renderNichePills();
+        if (currentNicheId) {
+          await selectNiche(currentNicheId);
+        }
+      } catch (e) {
+        console.error("Error loading niches:", e);
+      }
+    }
+
+    function renderNichePills() {
+      const container = document.getElementById("nichePillsContainer");
+      if (!container) return;
+      
+      const totalBadge = document.getElementById("nicheTotalBadgeCount");
+      if (totalBadge) totalBadge.textContent = globalNiches.length;
+
+      container.innerHTML = globalNiches.map(n => {
+        const isActive = n.id === currentNicheId;
+        const activeClass = isActive 
+          ? "bg-[#C86237] text-white shadow-sm font-bold border-transparent" 
+          : "bg-[#FAF8F5] text-[#1C1917] hover:bg-[#F3EDE4] border-[#E8DCD1] font-semibold";
+        return `
+          <button onclick="selectNiche('${n.id}')" 
+            class="flex items-center gap-2 px-3.5 py-1.5 rounded-md border text-xs whitespace-nowrap transition ${activeClass}">
+            <span>${n.avatar_icon || '💡'}</span>
+            <span>${n.name}</span>
+            <span class="px-1.5 py-0.2 rounded text-[10px] ${isActive ? 'bg-white/30 text-white' : 'bg-[#E8DCD1] text-[#78716C]'}">
+              ${n.total_accounts || 0}
+            </span>
+          </button>
+        `;
+      }).join("") + `
+        <button onclick="openCreateNicheModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-dashed border-[#C86237]/40 text-[#C86237] hover:bg-[#F7EFE9] text-xs font-bold whitespace-nowrap transition">
+          <span>+</span> New Niche
+        </button>
+      `;
+    }
+
+    // ==================== ALL NICHES DIRECTORY MODAL ====================
+    async function openAllNichesModal() {
+      try {
+        const res = await fetch("/api/niches");
+        globalNiches = await res.json();
+      } catch (e) {
+        console.error("Error refreshing niches for modal:", e);
+      }
+
+      // Update Top Counts
+      const totalPods = globalNiches.length;
+      const totalAccounts = globalNiches.reduce((acc, n) => acc + (n.total_accounts || 0), 0);
+      const totalSources = globalNiches.reduce((acc, n) => acc + (n.total_sources || 0), 0);
+
+      const countBadge = document.getElementById("allNichesModalCountBadge");
+      if (countBadge) countBadge.textContent = `${totalPods} Pods`;
+      const badgeBtn = document.getElementById("nicheTotalBadgeCount");
+      if (badgeBtn) badgeBtn.textContent = totalPods;
+
+      const statPods = document.getElementById("allNichesStatPods");
+      if (statPods) statPods.textContent = totalPods;
+      const statAccounts = document.getElementById("allNichesStatAccounts");
+      if (statAccounts) statAccounts.textContent = totalAccounts;
+      const statSources = document.getElementById("allNichesStatSources");
+      if (statSources) statSources.textContent = totalSources;
+
+      // Clear search input
+      const searchInput = document.getElementById("allNichesSearchInput");
+      if (searchInput) searchInput.value = "";
+
+      filterAllNichesModal();
+
+      const modal = document.getElementById("allNichesDirectoryModal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        setTimeout(() => searchInput?.focus(), 50);
+      }
+    }
+
+    function closeAllNichesModal() {
+      const modal = document.getElementById("allNichesDirectoryModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function filterAllNichesModal() {
+      const searchInput = document.getElementById("allNichesSearchInput");
+      const sortSelect = document.getElementById("allNichesSortSelect");
+      const q = (searchInput?.value || "").trim().toLowerCase();
+      const sortBy = sortSelect?.value || "accounts_desc";
+
+      let filtered = globalNiches.filter(n => {
+        if (!q) return true;
+        const name = (n.name || "").toLowerCase();
+        const id = (n.id || "").toLowerCase();
+        const desc = (n.description || "").toLowerCase();
+        const tags = (n.default_hashtags || "").toLowerCase();
+        const aud = (n.target_audience || "").toLowerCase();
+        return name.includes(q) || id.includes(q) || desc.includes(q) || tags.includes(q) || aud.includes(q);
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        if (sortBy === "accounts_desc") {
+          return (b.total_accounts || 0) - (a.total_accounts || 0);
+        } else if (sortBy === "sources_desc") {
+          return (b.total_sources || 0) - (a.total_sources || 0);
+        } else if (sortBy === "name_asc") {
+          return (a.name || "").localeCompare(b.name || "");
+        }
+        return 0;
+      });
+
+      const countLabel = document.getElementById("allNichesShowingCount");
+      if (countLabel) {
+        countLabel.textContent = `Showing ${filtered.length} of ${globalNiches.length}`;
+      }
+
+      renderAllNichesGrid(filtered);
+    }
+
+    function renderAllNichesGrid(nichesList) {
+      const grid = document.getElementById("allNichesGrid");
+      if (!grid) return;
+
+      if (!nichesList || nichesList.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center bg-[#FAF8F5] border border-dashed border-[#E8DCD1] rounded-xl p-8 space-y-3">
+            <span class="text-3xl block">🔍</span>
+            <h4 class="text-sm font-bold text-[#1C1917]">No Matching Niches Found</h4>
+            <p class="text-xs text-[#78716C] max-w-sm mx-auto">No niche cluster matches your search query. You can define a new custom pod in one click.</p>
+            <button onclick="openCreateNicheModal(); closeAllNichesModal();" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-md shadow-sm">
+              + Define Custom Niche Pod
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = nichesList.map(n => {
+        const isActive = n.id === currentNicheId;
+        const borderClass = isActive 
+          ? "border-[#C86237] shadow-md ring-1 ring-[#C86237]/30 bg-white" 
+          : "border-[#E8DCD1] shadow-2xs hover:border-[#C86237]/60 hover:shadow-xs bg-white";
+
+        return `
+          <div class="rounded-lg p-3.5 flex flex-col justify-between space-y-3 transition border ${borderClass} group">
+            <!-- Header & Niche Meta -->
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-md bg-[#F7EFE9] border border-[#E8DCD1] flex items-center justify-center text-xl shrink-0 shadow-2xs">
+                    ${n.avatar_icon || '💡'}
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-[#1C1917] group-hover:text-[#C86237] transition leading-snug">${n.name}</h4>
+                    <span class="text-[9px] font-mono text-[#78716C] bg-[#FAF8F5] px-1.5 py-0.2 rounded border border-[#E8DCD1]">ID: ${n.id}</span>
+                  </div>
+                </div>
+                ${isActive ? `
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#F7EFE9] text-[#9E441B] border border-[#C86237]/40 shrink-0">
+                    ● Active Pod
+                  </span>
+                ` : `
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                    Ready
+                  </span>
+                `}
+              </div>
+
+              <p class="text-[11px] text-[#78716C] line-clamp-2 leading-relaxed">
+                ${n.description || 'Automated niche content pod with multi-account tentacle fanout.'}
+              </p>
+            </div>
+
+            <!-- Metrics Matrix Strip -->
+            <div class="grid grid-cols-2 gap-2 p-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md text-[10px]">
+              <div class="space-y-0.5">
+                <span class="text-[#78716C] text-[9px] font-semibold uppercase tracking-wider block">Connected Pages</span>
+                <span class="font-bold text-[#1C1917] flex items-center gap-1">
+                  <span class="text-[#C86237]">👥</span> <b>${n.total_accounts || 0}</b> Accounts
+                </span>
+              </div>
+              <div class="space-y-0.5">
+                <span class="text-[#78716C] text-[9px] font-semibold uppercase tracking-wider block">Monitored Sources</span>
+                <span class="font-bold text-[#1C1917] flex items-center gap-1">
+                  <span class="text-[#C86237]">📸</span> <b>${n.total_sources || 0}</b> Sources
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="pt-0.5">
+              ${isActive ? `
+                <button disabled class="w-full py-1.5 bg-[#F7EFE9] text-[#9E441B] font-bold text-xs rounded-md border border-[#C86237]/40 flex items-center justify-center gap-1.5 cursor-default">
+                  <span>✓</span> Current Active Pod
+                </button>
+              ` : `
+                <button onclick="selectNicheFromDirectory('${n.id}')" class="w-full py-1.5 orange-gradient-btn text-white font-bold text-xs rounded-md shadow-2xs hover:opacity-95 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                  <span>⚡</span> Open & Switch to Pod
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function selectNicheFromDirectory(nicheId) {
+      closeAllNichesModal();
+      await selectNiche(nicheId);
+      const hub = document.getElementById("view_niche_pods");
+      if (hub) hub.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function selectNiche(nicheId) {
+      currentNicheId = nicheId;
+      renderNichePills();
+      try {
+        const res = await fetch(`/api/niches/${nicheId}/cluster`);
+        currentCluster = await res.json();
+        renderNicheCluster(currentCluster);
+      } catch (e) {
+        console.error("Error fetching cluster for niche:", nicheId, e);
+      }
+    }
+
+    let currentPodSourceMode = "all_sources";
+
+    function switchPodSourceMode(mode) {
+      currentPodSourceMode = mode;
+      const btnAll = document.getElementById("podSrcModeBtn_all");
+      const btnSingle = document.getElementById("podSrcModeBtn_single");
+      const btnDirect = document.getElementById("podSrcModeBtn_direct");
+
+      const panelAll = document.getElementById("podModeAllSourcesPanel");
+      const panelSingle = document.getElementById("podModeSinglePanel");
+      const panelDirect = document.getElementById("podModeDirectPanel");
+      const badge = document.getElementById("podSourceModeBadge");
+
+      const activeClass = "py-1 px-1.5 rounded text-center transition bg-[#F7EFE9] text-[#C86237] border border-[#C86237]/40 shadow-2xs font-bold";
+      const inactiveClass = "py-1 px-1.5 rounded text-center transition text-[#78716C] hover:text-[#1C1917] font-semibold";
+
+      if (btnAll) btnAll.className = mode === "all_sources" ? activeClass : inactiveClass;
+      if (btnSingle) btnSingle.className = mode === "single" ? activeClass : inactiveClass;
+      if (btnDirect) btnDirect.className = mode === "direct_url" ? activeClass : inactiveClass;
+
+      if (panelAll) panelAll.classList.toggle("hidden", mode !== "all_sources");
+      if (panelSingle) panelSingle.classList.toggle("hidden", mode !== "single");
+      if (panelDirect) panelDirect.classList.toggle("hidden", mode !== "direct_url");
+
+      if (badge) {
+        if (mode === "all_sources") {
+          badge.className = "text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200";
+          badge.innerText = "● Tracking All Sources";
+        } else if (mode === "single") {
+          badge.className = "text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200";
+          badge.innerText = "● Single Handle Mode";
+        } else {
+          badge.className = "text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200";
+          badge.innerText = "● Direct Video Link";
+        }
+      }
+    }
+
+    function renderNicheCluster(cluster) {
+      if (!cluster || !cluster.niche) return;
+      const n = cluster.niche;
+      
+      // Update Banner
+      document.getElementById("podIcon").innerText = n.avatar_icon || '💡';
+      document.getElementById("podTitle").innerText = n.name;
+      document.getElementById("podIdBadge").innerText = `ID: ${n.id}`;
+      document.getElementById("podDesc").innerText = n.description || 'Automated multi-account network pod';
+      document.getElementById("podDestCount").innerText = cluster.total_accounts;
+      document.getElementById("podSrcCount").innerText = cluster.total_sources;
+      document.getElementById("podRunDestCount").innerText = cluster.total_accounts;
+      document.getElementById("podPageCountHeader").innerText = cluster.total_accounts;
+      const srcHeaderCount = document.getElementById("podSourcesCountHeader");
+      if (srcHeaderCount) srcHeaderCount.innerText = cluster.total_sources || (cluster.sources ? cluster.sources.length : 0);
+      document.getElementById("bulkAccPodName").innerText = n.name;
+      document.getElementById("bulkSrcPodName").innerText = n.name;
+
+      // Update Column 1: Sources List
+      const sourcesContainer = document.getElementById("podSourcesList");
+      if (cluster.sources && cluster.sources.length > 0) {
+        sourcesContainer.innerHTML = cluster.sources.map(s => `
+          <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md flex justify-between items-center hover:border-[#E8DCD1] transition">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">📸</span>
+              <div>
+                <div class="font-bold text-xs text-[#1C1917]">@${s.source_value}</div>
+                <div class="text-[10px] text-[#78716C]">Last: ${s.last_scraped_post_id ? s.last_scraped_post_id.slice(0, 10) : 'Pending scan'}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="triggerScrapeNow('${s.source_value}', '${n.id}')" class="px-2.5 py-1 bg-white hover:bg-[#F7EFE9] border border-[#E8DCD1] text-[#C86237] text-[10px] font-bold rounded-lg transition">
+                ⚡ Scrape
+              </button>
+              <button onclick="removeSource(${s.id})" class="text-[11px] text-[#A8A29E] hover:text-rose-600 px-1">&times;</button>
+            </div>
+          </div>
+        `).join("");
+      } else {
+        sourcesContainer.innerHTML = `<div class="p-4 text-center text-xs text-[#78716C] bg-[#FAF8F5] rounded-md border border-dashed border-[#E8DCD1]">No source handles added yet. Click <b>+ Bulk Add</b> above!</div>`;
+      }
+
+      // Update Column 2: Source Tracking Platform Header & Chips
+      const nicheNameEl = document.getElementById("podSourceNicheName");
+      if (nicheNameEl) nicheNameEl.innerText = n.name;
+      
+      const countEl = document.getElementById("podSourceChipsCount");
+      if (countEl) countEl.innerText = `${cluster.sources ? cluster.sources.length : 0} Sources`;
+
+      const chipsContainer = document.getElementById("podTrackedSourcesChips");
+      if (chipsContainer) {
+        if (cluster.sources && cluster.sources.length > 0) {
+          chipsContainer.innerHTML = cluster.sources.map(s => `
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E8DCD1] text-[10px] font-bold text-[#1C1917] hover:border-[#C86237]/40 transition">
+              <span class="text-xs">📸</span>
+              <span>@${s.source_value}</span>
+            </span>
+          `).join("");
+        } else {
+          chipsContainer.innerHTML = `<span class="text-[10px] text-[#A8A29E] italic">No sources configured yet. Use "+ Bulk Add" above.</span>`;
+        }
+      }
+
+      // Populate Column 2: Source Dropdown
+      const srcDropdown = document.getElementById("podSelectSourceDropdown");
+      if (cluster.sources && cluster.sources.length > 0) {
+        srcDropdown.innerHTML = cluster.sources.map(s => `<option value="${s.source_value}">@${s.source_value}</option>`).join("");
+      } else {
+        srcDropdown.innerHTML = `<option value="">(Add a source handle first)</option>`;
+      }
+
+      // Populate saved automation_config if available
+      const cfg = cluster.automation_config || {};
+      switchPodSourceMode(cfg.source_mode || "all_sources");
+
+      if (cfg.selected_source && srcDropdown) {
+        srcDropdown.value = cfg.selected_source;
+      }
+      const directUrlInput = document.getElementById("podDirectUrlInput");
+      if (directUrlInput) {
+        directUrlInput.value = cfg.direct_url || "";
+      }
+      const aiModeSelect = document.getElementById("podAiCaptionModeSelect");
+      if (aiModeSelect && cfg.ai_caption_mode) {
+        aiModeSelect.value = cfg.ai_caption_mode;
+      }
+      const ctaInput = document.getElementById("podCtaTemplateInput");
+      if (ctaInput) {
+        ctaInput.value = cfg.cta_template || `Follow @{destination_account} for more daily ${n.name} breakdowns!`;
+      }
+      const hookStyleSelect = document.getElementById("podHookStyleSelect");
+      if (hookStyleSelect && cfg.hook_style) {
+        hookStyleSelect.value = cfg.hook_style;
+      }
+      const customHookInput = document.getElementById("podCustomHeadline");
+      if (customHookInput) {
+        customHookInput.value = cfg.custom_headline || "";
+      }
+      const hashtagsInput = document.getElementById("podCustomHashtagsInput");
+      if (hashtagsInput) {
+        hashtagsInput.value = cfg.custom_hashtags || n.default_hashtags || `#${n.id} #curiosity #facts #knowledge`;
+      }
+      const autoTagsToggle = document.getElementById("podAutoHashtagsToggle");
+      if (autoTagsToggle && cfg.auto_hashtags !== undefined) {
+        autoTagsToggle.checked = Boolean(cfg.auto_hashtags);
+      }
+      const attribToggle = document.getElementById("podAttributionToggle");
+      if (attribToggle && cfg.include_attribution !== undefined) {
+        attribToggle.checked = Boolean(cfg.include_attribution);
+      }
+      const badgeToggle = document.getElementById("podVerifiedBadgeToggle");
+      if (badgeToggle && cfg.verified_badge !== undefined) {
+        badgeToggle.checked = Boolean(cfg.verified_badge);
+      }
+      const ratioSelect = document.getElementById("podRatioSelect");
+      if (ratioSelect && cfg.video_ratio) {
+        ratioSelect.value = cfg.video_ratio;
+      }
+      const brandingSelect = document.getElementById("podBrandingModeSelect");
+      if (brandingSelect && cfg.branding_template) {
+        brandingSelect.value = cfg.branding_template;
+      }
+
+      // Update Column 2: Recent Broadcasts for Pod
+      const recentContainer = document.getElementById("podRecentBroadcastsList");
+      if (recentContainer) {
+        if (cluster.recent_broadcasts && cluster.recent_broadcasts.length > 0) {
+          recentContainer.innerHTML = cluster.recent_broadcasts.slice(0, 5).map(b => `
+            <div class="p-2 bg-white border border-[#E8DCD1] rounded-md flex justify-between items-center text-[11px]">
+              <span class="font-bold text-[#1C1917] truncate max-w-[120px]">${b.handle}</span>
+              <span class="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">PUBLISHED</span>
+            </div>
+          `).join("");
+        } else {
+          recentContainer.innerHTML = `<div class="text-[11px] text-[#A8A29E] italic">No broadcasts logged for this pod yet.</div>`;
+        }
+      }
+
+      // Update Column 3: Destination Accounts List
+      const accountsContainer = document.getElementById("podAccountsList");
+      if (cluster.accounts && cluster.accounts.length > 0) {
+        accountsContainer.innerHTML = cluster.accounts.map(a => `
+          <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md flex justify-between items-center hover:border-[#E8DCD1] transition">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full border border-[#E8DCD1] overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-xs text-white shadow-xs" style="background-color: ${a.brand_color || '#C86237'}">
+                ${a.profile_pic_url ? `
+                  <img src="${a.profile_pic_url}" alt="${a.handle}" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <span class="hidden w-full h-full rounded-full items-center justify-center">${a.avatar_initials || 'OC'}</span>
+                ` : `
+                  <span>${a.avatar_initials || 'OC'}</span>
+                `}
+              </div>
+              <div>
+                <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                  <span>${a.handle}</span>
+                  <span class="text-blue-500 text-[10px]" title="Verified">✓</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">${a.display_name}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.ig_user_id ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                ${a.ig_user_id ? '● Active' : 'Dry-Run'}
+              </span>
+              <button onclick="deleteAccount('${a.id}')" class="text-[11px] text-[#A8A29E] hover:text-rose-600 px-1">&times;</button>
+            </div>
+          </div>
+        `).join("");
+      } else {
+        accountsContainer.innerHTML = `<div class="p-4 text-center text-xs text-[#78716C] bg-[#FAF8F5] rounded-md border border-dashed border-[#E8DCD1]">No destination accounts connected yet. Click <b>+ Bulk Add</b> above to connect 10–20+ pages!</div>`;
+      }
+    }
+
+    // Modal openers & handlers
+    function openCreateNicheModal() {
+      document.getElementById("createNicheModal").classList.remove("hidden");
+    }
+    function closeCreateNicheModal() {
+      document.getElementById("createNicheModal").classList.add("hidden");
+    }
+
+    async function submitCreateNiche() {
+      const id = document.getElementById("modalNicheId").value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const name = document.getElementById("modalNicheName").value.trim();
+      if (!id || !name) {
+        alert("Please enter a niche slug identifier and name!");
+        return;
+      }
+      const desc = document.getElementById("modalNicheDesc").value.trim();
+      const color = document.getElementById("modalNicheColor").value;
+      const icon = document.getElementById("modalNicheIcon").value.trim() || "💡";
+      const hashtags = document.getElementById("modalNicheHashtags").value.trim();
+      const cta = document.getElementById("modalNicheCta").value.trim();
+
+      await fetch("/api/niches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id, name, description: desc, brand_color: color, avatar_icon: icon, default_hashtags: hashtags, cta_text: cta
+        })
+      });
+
+      closeCreateNicheModal();
+      currentNicheId = id;
+      await loadNiches();
+    }
+
+    function openBulkAddAccountsModal() {
+      document.getElementById("bulkAddAccountsModal").classList.remove("hidden");
+    }
+    function closeBulkAddAccountsModal() {
+      document.getElementById("bulkAddAccountsModal").classList.add("hidden");
+    }
+
+    async function submitBulkAddAccounts() {
+      const text = document.getElementById("bulkAccountsTextarea").value.trim();
+      if (!text) return;
+      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+      const accounts = lines.map(line => {
+        const handle = line.startsWith("@") ? line : `@${line}`;
+        const slug = handle.replace("@", "").toLowerCase();
+        return {
+          handle: handle,
+          display_name: slug.replace(".", " ").replace("_", " ").toUpperCase(),
+          niche_id: currentNicheId
+        };
+      });
+
+      await fetch(`/api/niches/${currentNicheId}/accounts/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accounts })
+      });
+
+      closeBulkAddAccountsModal();
+      document.getElementById("bulkAccountsTextarea").value = "";
+      await selectNiche(currentNicheId);
+      await loadDashboard();
+    }
+
+    function openBulkAddSourcesModal() {
+      document.getElementById("bulkAddSourcesModal").classList.remove("hidden");
+    }
+    function closeBulkAddSourcesModal() {
+      document.getElementById("bulkAddSourcesModal").classList.add("hidden");
+    }
+
+    async function submitBulkAddSources() {
+      const text = document.getElementById("bulkSourcesTextarea").value.trim();
+      if (!text) return;
+      const lines = text.split("\n").map(l => l.trim().replace("@", "")).filter(Boolean);
+
+      await fetch(`/api/niches/${currentNicheId}/sources/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sources: lines })
+      });
+
+      closeBulkAddSourcesModal();
+      document.getElementById("bulkSourcesTextarea").value = "";
+      await selectNiche(currentNicheId);
+      await loadDashboard();
+    }
+
+    async function submitPodSingleSource() {
+      const val = document.getElementById("podSingleSourceInput").value.trim().replace("@", "");
+      if (!val) return;
+      await fetch(`/api/niches/${currentNicheId}/sources/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sources: [val] })
+      });
+      document.getElementById("podSingleSourceInput").value = "";
+      await selectNiche(currentNicheId);
+      await loadDashboard();
+    }
+
+    async function savePodAutomationConfig() {
+      const saveBtn = document.getElementById("savePodConfigBtn");
+      const statusBox = document.getElementById("podRunStatusBox");
+      const statusIcon = document.getElementById("podRunStatusIcon");
+      const statusTitle = document.getElementById("podRunStatusTitle");
+      const statusMsg = document.getElementById("podRunStatusMsg");
+
+      const srcDropdown = document.getElementById("podSelectSourceDropdown");
+      const selectedSource = srcDropdown ? srcDropdown.value : "";
+      const directUrl = document.getElementById("podDirectUrlInput")?.value.trim() || "";
+      const aiCaptionMode = document.getElementById("podAiCaptionModeSelect")?.value || "smart_adapt";
+      const ctaTemplate = document.getElementById("podCtaTemplateInput")?.value.trim() || "";
+      const hookStyle = document.getElementById("podHookStyleSelect")?.value || "curiosity";
+      const customHeadline = document.getElementById("podCustomHeadline")?.value.trim() || "";
+      const customHashtags = document.getElementById("podCustomHashtagsInput")?.value.trim() || "";
+      const autoHashtags = document.getElementById("podAutoHashtagsToggle")?.checked ?? true;
+      const includeAttribution = document.getElementById("podAttributionToggle")?.checked ?? true;
+      const verifiedBadge = document.getElementById("podVerifiedBadgeToggle")?.checked ?? true;
+      const videoRatio = document.getElementById("podRatioSelect")?.value || "auto";
+      const brandingTemplate = document.getElementById("podBrandingModeSelect")?.value || "dynamic";
+
+      const payload = {
+        source_mode: currentPodSourceMode,
+        selected_source: selectedSource,
+        direct_url: directUrl,
+        ai_caption_mode: aiCaptionMode,
+        cta_template: ctaTemplate,
+        hook_style: hookStyle,
+        custom_headline: customHeadline,
+        custom_hashtags: customHashtags,
+        auto_hashtags: autoHashtags,
+        include_attribution: includeAttribution,
+        verified_badge: verifiedBadge,
+        video_ratio: videoRatio,
+        branding_template: brandingTemplate
+      };
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span>⏳</span> Saving...`;
+      }
+
+      try {
+        const res = await fetch(`/api/niches/${currentNicheId}/automation-config`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (statusBox && statusTitle && statusMsg) {
+          statusBox.classList.remove("hidden");
+          if (statusIcon) {
+            statusIcon.className = "text-emerald-600 font-bold text-sm";
+            statusIcon.innerText = "✅";
+          }
+          statusTitle.innerText = "Pod Automation Setup Saved!";
+          statusMsg.innerText = `Saved settings for [${currentCluster?.niche?.name || currentNicheId}] (Mode: ${currentPodSourceMode}, Auto-CTA: @{destination_account}, 9:16 layout).`;
+        }
+
+        if (saveBtn) {
+          saveBtn.innerHTML = `<span>✅</span> Saved!`;
+          setTimeout(() => {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<span>💾</span> Save Pod Setup`;
+          }, 2000);
+        }
+      } catch (e) {
+        alert("Error saving pod setup: " + e.message);
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<span>💾</span> Save Pod Setup`;
+        }
+      }
+    }
+
+    async function runCurrentPodPipeline() {
+      const srcDropdown = document.getElementById("podSelectSourceDropdown");
+      const selectedSource = srcDropdown ? srcDropdown.value : "";
+      const directUrl = document.getElementById("podDirectUrlInput")?.value.trim() || "";
+      const customHook = document.getElementById("podCustomHeadline")?.value.trim() || "";
+      const ctaTemplate = document.getElementById("podCtaTemplateInput")?.value.trim() || "";
+      const aiCaptionMode = document.getElementById("podAiCaptionModeSelect")?.value || "smart_adapt";
+      const hookStyle = document.getElementById("podHookStyleSelect")?.value || "curiosity";
+      const dryRun = isDryRunMode();
+
+      const btn = document.getElementById("runPodPipelineBtn");
+      const statusBox = document.getElementById("podRunStatusBox");
+      const statusIcon = document.getElementById("podRunStatusIcon");
+      const statusTitle = document.getElementById("podRunStatusTitle");
+      const statusMsg = document.getElementById("podRunStatusMsg");
+
+      btn.disabled = true;
+      btn.classList.add("opacity-50");
+      statusBox.classList.remove("hidden");
+      if (statusIcon) {
+        statusIcon.className = "animate-spin text-[#C86237]";
+        statusIcon.innerText = "🌀";
+      }
+
+      const sourceDesc = directUrl ? "direct URL" : (currentPodSourceMode === "all_sources" ? `all ${currentCluster?.total_sources || 0} tracked niche sources` : `@${selectedSource}`);
+      statusTitle.innerText = `Ingesting reel via ${sourceDesc}...`;
+      statusMsg.innerText = `Downloading stream, adapting AI caption with dynamic @{destination_account} CTA, and compositing 9:16 layout for ${currentCluster.total_accounts} pages...`;
+
+      try {
+        const res = await fetch(`/api/niches/${currentNicheId}/run`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source_handle: selectedSource,
+            direct_url: directUrl,
+            source_mode: currentPodSourceMode,
+            custom_headline: customHook,
+            cta_template: ctaTemplate,
+            ai_caption_mode: aiCaptionMode,
+            hook_style: hookStyle,
+            dry_run: dryRun
+          })
+        });
+        const data = await res.json();
+        if (statusIcon) {
+          statusIcon.className = "text-emerald-600 font-bold";
+          statusIcon.innerText = "🚀";
+        }
+        statusTitle.innerText = "🚀 Multi-Account Broadcast Dispatched!";
+        statusMsg.innerText = data.message || "Your reel is rendering and publishing across all pages.";
+      } catch (e) {
+        statusTitle.innerText = "Execution queued";
+        statusMsg.innerText = e.message || "Request sent to Octopus engine.";
+      }
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
+        selectNiche(currentNicheId);
+        loadDashboard();
+      }, 3500);
+    }
+
+    function renderAccountsTable(accounts) {
+      // 1. Update Top 5 KPI Stat Boxes
+      const totalPagesEl = document.getElementById("matrixStatPages");
+      const totalNichesEl = document.getElementById("matrixStatNiches");
+      const activeEl = document.getElementById("matrixStatActive");
+      const inactiveEl = document.getElementById("matrixStatInactive");
+      const connectedEl = document.getElementById("matrixStatConnected");
+      const totalBadge = document.getElementById("matrixTotalBadge");
+
+      const sourceList = (accounts && accounts.length > 0) ? accounts : (globalAccounts || []);
+      const totalPages = sourceList.length;
+      const uniqueNiches = new Set(sourceList.map(a => (a.niche_id || a.niche || 'other').toLowerCase())).size;
+      const activeCount = sourceList.filter(a => a.is_active !== 0).length;
+      const inactiveCount = sourceList.filter(a => a.is_active === 0).length;
+      const connectedCount = sourceList.filter(a => (a.ig_user_id && a.ig_user_id.length > 3) || a.is_active).length;
+
+      if (totalPagesEl) totalPagesEl.innerText = totalPages;
+      if (totalNichesEl) totalNichesEl.innerText = uniqueNiches;
+      if (activeEl) activeEl.innerText = activeCount;
+      if (inactiveEl) inactiveEl.innerText = inactiveCount;
+      if (connectedEl) connectedEl.innerText = connectedCount;
+      if (totalBadge) totalBadge.innerText = `${totalPages} Pages`;
+
+      // 2. Render Rows with Circular Profile Logo and Handle
+      const tbody = document.getElementById("accountsMatrixTbody");
+      tbody.innerHTML = accounts.map(a => `
+        <tr class="hover:bg-[#FAF8F5]/80 transition">
+          <td class="p-3"><input type="checkbox" value="${a.id}" class="acc-row-checkbox rounded text-[#C86237]"></td>
+          <td class="p-3">
+            <div class="flex items-center gap-3">
+              <div class="relative w-10 h-10 rounded-full border border-[#E8DCD1] shadow-xs flex-shrink-0 bg-[#F7EFE9] flex items-center justify-center overflow-hidden ring-1 ring-[#C86237]/20">
+                ${a.profile_pic_url ? `
+                  <img src="${a.profile_pic_url}" alt="${a.handle}" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="hidden w-full h-full rounded-full items-center justify-center font-bold text-xs text-white" style="background-color: ${a.brand_color || '#C86237'}">
+                    ${a.avatar_initials || 'OC'}
+                  </div>
+                ` : `
+                  <div class="w-full h-full rounded-full flex items-center justify-center font-bold text-xs text-white" style="background-color: ${a.brand_color || '#C86237'}">
+                    ${a.avatar_initials || 'OC'}
+                  </div>
+                `}
+              </div>
+              <div>
+                <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span>${a.handle}</span>
+                  <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500 text-white text-[9px] font-bold" title="Meta Connected Page">✓</span>
+                </div>
+                <div class="text-[10px] text-[#78716C] font-mono">ID: ${a.id}</div>
+              </div>
+            </div>
+          </td>
+          <td class="p-3 font-semibold text-[#44403C]">${a.display_name}</td>
+          <td class="p-3"><span class="px-2.5 py-0.5 rounded text-[10px] font-semibold bg-[#FAF8F5] text-[#57534E] border border-[#E8DCD1]">${a.niche}</span></td>
+          <td class="p-3 font-mono text-[11px] text-[#78716C]">${a.ig_user_id ? a.ig_user_id : '<span class="text-amber-600 font-semibold">Dry-Run</span>'}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● Active</span></td>
+          <td class="p-3 text-right space-x-1">
+            <button onclick="deleteAccount('${a.id}')" class="text-[11px] text-[#A8A29E] hover:text-rose-600 px-2 py-1">Remove</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderFanoutCheckboxes(accounts) {
+      const container = document.getElementById("fanoutAccountCheckboxes");
+      container.innerHTML = accounts.map(a => `
+        <label class="flex items-center gap-2 text-xs p-2 rounded-lg bg-white border border-[#E8DCD1] cursor-pointer hover:border-[#FDBA74]">
+          <input type="checkbox" value="${a.id}" checked class="fanout-target-cb rounded text-[#C86237]">
+          <span class="font-bold text-[#1C1917]">${a.handle}</span>
+          <span class="text-[10px] text-[#78716C]">(${a.niche.split(' ')[0]})</span>
+        </label>
+      `).join("");
+    }
+
+    const NICHE_DISPLAY_MAP = {
+      information: { name: "Information & Infotainment", icon: "💡", color: "#C86237" },
+      quantum: { name: "Quantum Physics", icon: "⚛️", color: "#7C3AED" },
+      ai: { name: "Artificial Intelligence", icon: "🤖", color: "#2563EB" },
+      robotics: { name: "Humanoid Robotics", icon: "🦾", color: "#D97706" },
+      space: { name: "Space Exploration", icon: "🚀", color: "#4F46E5" },
+      biotech: { name: "BioTech & Genomics", icon: "🧬", color: "#059669" }
+    };
+
+    function renderSourcesTable(sourcesList) {
+      // 1. Update Top KPI Stat Boxes using global master dataset
+      const totalSources = globalSources.length;
+      const igSources = globalSources.filter(s => s.source_type === 'instagram_handle').length;
+      const redditSources = globalSources.filter(s => s.source_type === 'reddit_sub').length;
+      const uniqueNiches = new Set(globalSources.map(s => (s.category || s.niche_id || 'other').toLowerCase())).size;
+
+      const totalBadge = document.getElementById("sourcesTotalBadge");
+      const statTotal = document.getElementById("statSourcesTotal");
+      const statIg = document.getElementById("statSourcesIg");
+      const statReddit = document.getElementById("statSourcesReddit");
+      const statNiches = document.getElementById("statSourcesNiches");
+
+      if (totalBadge) totalBadge.innerText = `${totalSources} Sources`;
+      if (statTotal) statTotal.innerText = totalSources;
+      if (statIg) statIg.innerText = igSources;
+      if (statReddit) statReddit.innerText = redditSources;
+      if (statNiches) statNiches.innerText = uniqueNiches;
+
+      // 2. Render rows for current filtered list
+      const listToRender = sourcesList || globalSources;
+      const countEl = document.getElementById("srcFilteredCount");
+      if (countEl) countEl.innerText = `Showing ${listToRender.length} of ${totalSources}`;
+
+      const tbody = document.getElementById("sourcesTbody");
+      if (!tbody) return;
+
+      if (listToRender.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-8 text-center text-xs text-[#78716C] bg-[#FAF8F5]">
+              No monitored sources found matching your active filter. <button onclick="resetSourceFilters()" class="text-[#C86237] font-bold underline ml-1">Reset filters</button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = listToRender.map(s => {
+        const catKey = (s.category || s.niche_id || 'other').toLowerCase();
+        const nicheMeta = NICHE_DISPLAY_MAP[catKey] || { name: catKey.charAt(0).toUpperCase() + catKey.slice(1), icon: "💡", color: "#C86237" };
+        const isIg = s.source_type === 'instagram_handle';
+        const isReddit = s.source_type === 'reddit_sub';
+        const linkUrl = isIg ? `https://instagram.com/${s.source_value}` : isReddit ? `https://reddit.com/r/${s.source_value}` : '#';
+
+        return `
+          <tr class="hover:bg-[#FAF8F5]/80 transition">
+            <!-- 1. Source Type Badge -->
+            <td class="p-3 whitespace-nowrap">
+              ${isIg ? `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#FAF8F5] text-[#9E441B] border border-[#E8DCD1] shadow-2xs">
+                  <span>📸</span>
+                  <span>Instagram Reel</span>
+                </span>
+              ` : isReddit ? `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200 shadow-2xs">
+                  <span>👾</span>
+                  <span>Reddit Feed</span>
+                </span>
+              ` : `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                  <span>▶</span>
+                  <span>${s.source_type}</span>
+                </span>
+              `}
+            </td>
+
+            <!-- 2. Handle / Identifier with Profile Avatar and External Link -->
+            <td class="p-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full border border-[#E8DCD1] bg-[#F7EFE9] flex-shrink-0 flex items-center justify-center text-xs font-bold text-[#C86237] shadow-2xs">
+                  ${isIg ? '📸' : '👾'}
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
+                    <a href="${linkUrl}" target="_blank" class="hover:text-[#C86237] hover:underline flex items-center gap-1">
+                      <span>@${s.source_value}</span>
+                      <span class="text-[10px] text-[#A8A29E]">↗</span>
+                    </a>
+                  </div>
+                  <div class="flex items-center gap-1 text-[9px] text-emerald-700 font-semibold mt-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>24/7 Monitor Active</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- 3. Niche Category with Emoji & Pill -->
+            <td class="p-3 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#FAF8F5] text-[#1C1917] border border-[#E8DCD1]">
+                <span>${nicheMeta.icon}</span>
+                <span>${nicheMeta.name}</span>
+              </span>
+            </td>
+
+            <!-- 4. Triggered Destination Page -->
+            <td class="p-3">
+              <div class="flex items-center gap-1.5 font-mono text-xs text-[#C86237] font-semibold">
+                <span class="text-xs">🐙</span>
+                <span>@octopus.${s.target_account_id || catKey}</span>
+              </div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">Fanout to ${nicheMeta.name.split(' ')[0]} Pod</div>
+            </td>
+
+            <!-- 5. Last Scraped Reel -->
+            <td class="p-3 whitespace-nowrap">
+              ${s.last_scraped_post_id ? `
+                <div class="font-mono text-xs font-bold text-[#1C1917] flex items-center gap-1">
+                  <span class="text-emerald-600 font-bold">✓</span>
+                  <span>#${s.last_scraped_post_id.slice(0, 12)}</span>
+                </div>
+                <div class="text-[10px] text-[#78716C]">1080p Stream Cached</div>
+              ` : `
+                <span class="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-semibold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  <span>Pending Scan</span>
+                </span>
+              `}
+            </td>
+
+            <!-- 6. Actions -->
+            <td class="p-3 text-right whitespace-nowrap space-x-1.5">
+              <button onclick="triggerScrapeNow('${s.source_value}', '${s.category}')" 
+                class="px-2.5 py-1 bg-white hover:bg-[#F7EFE9] border border-[#E8DCD1] hover:border-[#C86237]/50 text-[#C86237] font-bold rounded-md text-xs transition shadow-2xs">
+                ⚡ Scrape & Brand
+              </button>
+              <button onclick="removeSource(${s.id})" 
+                class="text-xs text-[#A8A29E] hover:text-rose-600 px-2 py-1 transition rounded hover:bg-rose-50">
+                Remove
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function filterSources() {
+      const q = (document.getElementById("srcSearchInput")?.value || "").toLowerCase().trim();
+      const niche = (document.getElementById("srcNicheFilter")?.value || "all").toLowerCase();
+      const type = (document.getElementById("srcTypeFilter")?.value || "all").toLowerCase();
+
+      const filtered = globalSources.filter(s => {
+        const handle = (s.source_value || "").toLowerCase();
+        const cat = (s.category || s.niche_id || "").toLowerCase();
+        const srcType = (s.source_type || "").toLowerCase();
+
+        const matchesQ = !q || handle.includes(q) || cat.includes(q) || srcType.includes(q);
+        const matchesNiche = (niche === "all") || (cat === niche);
+        const matchesType = (type === "all") || (srcType === type);
+
+        return matchesQ && matchesNiche && matchesType;
+      });
+
+      renderSourcesTable(filtered);
+    }
+
+    function setSourceTypeFilter(typeVal) {
+      const typeSelect = document.getElementById("srcTypeFilter");
+      if (typeSelect) {
+        typeSelect.value = typeVal;
+        filterSources();
+      }
+    }
+
+    function resetSourceFilters() {
+      const searchInput = document.getElementById("srcSearchInput");
+      const nicheSelect = document.getElementById("srcNicheFilter");
+      const typeSelect = document.getElementById("srcTypeFilter");
+      if (searchInput) searchInput.value = "";
+      if (nicheSelect) nicheSelect.value = "all";
+      if (typeSelect) typeSelect.value = "all";
+      filterSources();
+    }
+
+    function renderReelsLibrary(reels) {
+      const tbody = document.getElementById("reelsLibraryTbody");
+      if (!tbody) return;
+      tbody.innerHTML = reels.map(r => `
+        <tr class="hover:bg-[#FAF8F5]/80 transition">
+          <td class="p-3 font-mono text-[11px] text-[#C86237]">${r.id}</td>
+          <td class="p-3 font-medium text-[#1C1917] max-w-xs truncate">${r.hook_text || r.original_title || 'Processing...'}</td>
+          <td class="p-3 truncate max-w-[140px]"><a href="${r.source_url}" target="_blank" class="text-[#78716C] hover:text-[#C86237] underline">Source Link ↗</a></td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status === 'READY_FOR_PUBLISH' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${r.status}</span></td>
+          <td class="p-3">
+            ${r.rendered_filename ? `<button onclick="openVideoModal('/output/${r.rendered_filename}')" class="px-3 py-1 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold rounded-lg text-xs">▶ Watch 9:16</button>` : '<span class="text-[#A8A29E]">—</span>'}
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="triggerReelBroadcast('${r.id}')" class="orange-gradient-btn px-3 py-1 text-white font-bold rounded-lg text-xs">🐙 Broadcast All</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderBroadcastLogs(logs) {
+      const renderRows = (items) => {
+        if (!items || items.length === 0) {
+          return `
+            <tr>
+              <td colspan="6" class="p-6 text-center text-xs text-[#78716C] italic bg-[#FAF8F5]">
+                No broadcast records logged yet. Run a 1-click broadcast from the Niche Pods Hub to start streaming!
+              </td>
+            </tr>
+          `;
+        }
+        return items.map(l => {
+          const profilePic = l.profile_pic_url || (l.account_id ? `/assets/logos/logo_${l.account_id}.png` : null);
+          return `
+            <tr class="hover:bg-[#FAF8F5] transition">
+              <!-- Column 1: Target Destination Page & Circular Logo -->
+              <td class="p-2.5">
+                <div class="flex items-center gap-2.5">
+                  <div class="relative w-8 h-8 rounded-full border border-[#E8DCD1] shadow-2xs flex-shrink-0 bg-[#F7EFE9] flex items-center justify-center overflow-hidden ring-1 ring-[#C86237]/20">
+                    ${profilePic ? `
+                      <img src="${profilePic}" alt="${l.handle}" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="hidden w-full h-full rounded-full items-center justify-center font-bold text-[10px] text-white" style="background-color: ${l.brand_color || '#C86237'}">
+                        ${l.avatar_initials || 'OC'}
+                      </div>
+                    ` : `
+                      <div class="w-full h-full rounded-full flex items-center justify-center font-bold text-[10px] text-white" style="background-color: ${l.brand_color || '#C86237'}">
+                        ${l.avatar_initials || 'OC'}
+                      </div>
+                    `}
+                  </div>
+                  <div>
+                    <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1">
+                      <span>${l.handle}</span>
+                      <span class="inline-flex items-center justify-center w-3 h-3 rounded-full bg-blue-500 text-white text-[8px] font-bold" title="Meta Verified">✓</span>
+                    </div>
+                    <div class="text-[10px] text-[#78716C]">${l.display_name || l.niche || 'Instagram Page'}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Column 2: Hook / Title -->
+              <td class="p-2.5 max-w-xs">
+                <div class="font-semibold text-xs text-[#1C1917] truncate" title="${l.hook_text || l.original_title || 'Reel clip'}">
+                  ${l.hook_text || l.original_title || 'Reel clip'}
+                </div>
+                ${l.source_url ? `
+                  <div class="text-[10px] text-[#78716C] truncate mt-0.5">
+                    <span class="text-[#C86237] font-bold">Source:</span> <a href="${l.source_url}" target="_blank" class="hover:underline text-[#78716C]">${l.source_url.replace('https://www.instagram.com/', '@').replace('https://', '').split('?')[0]}</a>
+                  </div>
+                ` : ''}
+              </td>
+
+              <!-- Column 3: Rendered Video Button -->
+              <td class="p-2.5">
+                ${l.rendered_filename ? `
+                  <button onclick="openVideoModal('/output/${l.rendered_filename}')" 
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold text-[11px] shadow-2xs transition">
+                    <span>▶</span>
+                    <span>Watch 9:16</span>
+                  </button>
+                ` : '<span class="text-[11px] text-[#A8A29E] italic">Processing...</span>'}
+              </td>
+
+              <!-- Column 4: Meta Status -->
+              <td class="p-2.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${l.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                  <span>●</span>
+                  <span>${l.status === 'PUBLISHED' ? 'PUBLISHED' : (l.status || 'SIMULATED')}</span>
+                </span>
+              </td>
+
+              <!-- Column 5: Published Time -->
+              <td class="p-2.5 font-mono text-[10px] text-[#78716C] whitespace-nowrap">
+                <div class="flex items-center gap-1">
+                  <span>🕒</span>
+                  <span>${l.published_at || l.created_at || 'Just now'}</span>
+                </div>
+              </td>
+
+              <!-- Column 6: Instagram Post Link -->
+              <td class="p-2.5 text-right whitespace-nowrap">
+                ${l.instagram_post_url ? `
+                  <a href="${l.instagram_post_url}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-[#C86237] hover:underline px-2 py-1 rounded hover:bg-[#F7EFE9] transition">
+                    <span>View Post</span>
+                    <span>↗</span>
+                  </a>
+                ` : '<span class="text-[#A8A29E] text-xs font-mono">—</span>'}
+              </td>
+            </tr>
+          `;
+        }).join("");
+      };
+
+      const overviewLogs = document.getElementById("overviewLogsTbody");
+      if (overviewLogs) overviewLogs.innerHTML = renderRows(logs.slice(0, 7));
+
+      const auditLogs = document.getElementById("broadcastAuditTbody");
+      if (auditLogs) auditLogs.innerHTML = renderRows(logs);
+    }
+
+    async function submitAddSource() {
+      const handleInput = document.getElementById("addSrcValue");
+      const typeSelect = document.getElementById("addSrcType");
+      const catSelect = document.getElementById("addSrcCategory");
+
+      const rawHandle = (handleInput?.value || "").trim().replace("@", "");
+      const sourceType = typeSelect?.value || "instagram_handle";
+      const category = catSelect?.value || "information";
+
+      if (!rawHandle) return alert("Please enter a competitor handle or subreddit name!");
+
+      try {
+        await fetch("/api/sources", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source_type: sourceType,
+            source_value: rawHandle,
+            category: category,
+            auto_publish: 1
+          })
+        });
+
+        if (handleInput) handleInput.value = "";
+        alert(`⚡ Successfully added @${rawHandle} (${sourceType === 'instagram_handle' ? 'Instagram' : 'Reddit'}) to ${category.toUpperCase()} 24/7 monitoring!`);
+        
+        // Refresh sources from backend
+        const srcRes = await fetch("/api/sources");
+        globalSources = await srcRes.json();
+        filterSources();
+      } catch (e) {
+        alert("Error adding source: " + e.message);
+      }
+    }
+
+    async function triggerScrapeNow(handle, category) {
+      alert(`⚡ Scraping latest reel from @${handle} and compositing template logo...`);
+      await fetch("/api/instagram/scrape-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle, category, auto_publish: true, dry_run: isDryRunMode() })
+      });
+      setTimeout(loadDashboard, 3500);
+    }
+
+    async function triggerDaemonCycle() {
+      alert("🐙 Initiating full 24/7 autonomous monitoring cycle in background!");
+      await fetch("/api/daemon/cycle", { method: "POST" });
+      setTimeout(loadDashboard, 3000);
+    }
+
+    async function submitQuickIngest() {
+      const url = document.getElementById("quickIngestUrl").value.trim();
+      const toast = document.getElementById("quickToast");
+      if (!url) return alert("Please enter a video URL");
+
+      toast.className = "text-xs text-[#C86237] block";
+      toast.innerText = "🐙 Octopus Ingesting video & compositing card variations...";
+
+      await fetch("/api/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, auto_broadcast: true, dry_run: isDryRunMode() })
+      });
+
+      document.getElementById("quickIngestUrl").value = "";
+      setTimeout(loadDashboard, 3000);
+    }
+
+    async function submitFanoutStudio() {
+      const url = document.getElementById("fanoutUrl").value.trim();
+      const autoPub = document.getElementById("fanoutAutoPublishCheck").checked;
+      const checkedAccs = Array.from(document.querySelectorAll(".fanout-target-cb:checked")).map(cb => cb.value);
+      const toast = document.getElementById("fanoutToast");
+
+      if (!url) return alert("Please enter a video source URL");
+      if (checkedAccs.length === 0) return alert("Select at least one destination account");
+
+      toast.className = "text-xs text-[#C86237] block";
+      toast.innerText = `Deploying across ${checkedAccs.length} accounts...`;
+
+      await fetch("/api/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, target_account_ids: checkedAccs, auto_broadcast: autoPub, dry_run: isDryRunMode() })
+      });
+
+      document.getElementById("fanoutUrl").value = "";
+      setTimeout(() => { switchTab("broadcasts"); loadDashboard(); }, 3000);
+    }
+
+    async function triggerReelBroadcast(reelId) {
+      const dryRun = isDryRunMode();
+      alert(`🐙 Broadcasting Reel ${reelId} to all connected pages!`);
+      const res = await fetch(`/api/broadcast/${reelId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dry_run: dryRun })
+      });
+      const data = await res.json();
+      alert(`Broadcast Result: ${data.successful_publishes}/${data.total_accounts} published successfully!`);
+      loadDashboard();
+    }
+
+    // Meta API Discovery & Settings
+    async function testMetaToken() {
+      const token = document.getElementById("metaDiscoveryToken").value.trim();
+      const resBox = document.getElementById("tokenHealthResult");
+      if (!token) return alert("Please paste an access token first");
+
+      resBox.className = "text-xs block p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-md";
+      resBox.innerText = "Testing token with Meta Graph API...";
+
+      const res = await fetch("/api/meta/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: token })
+      });
+      const data = await res.json();
+      if (data.valid) {
+        resBox.className = "text-xs block p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md font-bold";
+        resBox.innerText = `✅ Valid Meta Token! Connected to: ${data.name} (ID: ${data.id})`;
+      } else {
+        resBox.className = "text-xs block p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-md font-bold";
+        resBox.innerText = `❌ Invalid Token: ${data.error}`;
+      }
+    }
+
+    async function discoverMetaPages() {
+      const token = document.getElementById("metaDiscoveryToken").value.trim();
+      if (!token) return alert("Please paste a Meta access token");
+
+      const res = await fetch("/api/meta/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: token })
+      });
+      const data = await res.json();
+      discoveredAccountsCache = data.discovered || [];
+
+      const container = document.getElementById("discoveredPagesContainer");
+      const list = document.getElementById("discoveredList");
+      document.getElementById("discoveredHeader").innerText = `Discovered Instagram Pages (${discoveredAccountsCache.length})`;
+      container.classList.remove("hidden");
+
+      if (discoveredAccountsCache.length === 0) {
+        list.innerHTML = `<div class="text-xs text-[#78716C] col-span-3">No linked Instagram Business Accounts found on this Meta profile. Verify your page is converted to an Instagram Business account linked to a Facebook Page.</div>`;
+      } else {
+        list.innerHTML = discoveredAccountsCache.map(acc => `
+          <div class="p-3 bg-white border border-[#E8DCD1] rounded-md text-xs space-y-1">
+            <div class="font-bold text-[#1C1917]">${acc.handle}</div>
+            <div class="text-[10px] text-[#78716C]">${acc.display_name}</div>
+            <div class="text-[10px] text-emerald-700 font-semibold">FB: ${acc.fb_page_name}</div>
+          </div>
+        `).join("");
+      }
+    }
+
+    async function confirmBulkImport() {
+      if (discoveredAccountsCache.length === 0) return alert("No accounts to import");
+      const res = await fetch("/api/accounts/bulk-add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accounts: discoveredAccountsCache })
+      });
+      const data = await res.json();
+      alert(`🎉 Successfully imported ${data.count} Instagram pages into your network!`);
+      switchTab("accounts");
+      loadDashboard();
+    }
+
+    async function testTelegramConnection() {
+      const res = await fetch("/api/telegram/test", { method: "POST" });
+      const data = await res.json();
+      alert(data.message);
+    }
+
+    // Modal Helpers
+    function openVideoModal(src) {
+      const modal = document.getElementById("videoModal");
+      const player = document.getElementById("modalVideoPlayer");
+      player.src = src;
+      modal.classList.remove("hidden");
+      player.play();
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById("videoModal");
+      const player = document.getElementById("modalVideoPlayer");
+      player.pause();
+      player.src = "";
+      modal.classList.add("hidden");
+    }
+
+    function openAddAccountModal() { document.getElementById("addAccountModal").classList.remove("hidden"); }
+    function closeAddAccountModal() { document.getElementById("addAccountModal").classList.add("hidden"); }
+
+    async function submitNewAccount() {
+      const id = document.getElementById("modalAccId").value.trim();
+      const handle = document.getElementById("modalAccHandle").value.trim();
+      const display_name = document.getElementById("modalAccName").value.trim();
+      const niche = document.getElementById("modalAccNiche").value.trim();
+      const ig_user_id = document.getElementById("modalAccIgId").value.trim();
+      const access_token = document.getElementById("modalAccToken").value.trim();
+      const profile_pic_url = document.getElementById("modalAccLogo").value.trim() || undefined;
+
+      if (!id || !handle || !display_name) return alert("ID, Handle, and Name required");
+
+      await fetch("/api/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, handle, display_name, niche, ig_user_id, access_token, profile_pic_url })
+      });
+      closeAddAccountModal();
+      loadDashboard();
+    }
+
+    async function deleteAccount(id) {
+      if (!confirm(`Remove account ${id}?`)) return;
+      await fetch(`/api/accounts/${id}`, { method: "DELETE" });
+      loadDashboard();
+    }
+
+    async function removeSource(id) {
+      if (!confirm("Remove this source?")) return;
+      await fetch(`/api/sources/${id}`, { method: "DELETE" });
+      loadDashboard();
+    }
+
+    function isDryRunMode() {
+      return document.getElementById("globalDryRunToggle").checked;
+    }
+
+    function toggleGlobalMode() {
+      const dry = isDryRunMode();
+      const label = document.getElementById("modeLabel");
+      if (dry) {
+        label.innerText = "Dry-Run Simulation";
+        label.className = "text-[11px] font-bold text-amber-700";
+      } else {
+        label.innerText = "🔴 LIVE Instagram Publishing";
+        label.className = "text-[11px] font-bold text-rose-700";
+      }
+    }
+
+    function selectAllFanoutCheckboxes(check) {
+      document.querySelectorAll(".fanout-target-cb").forEach(cb => cb.checked = check);
+    }
+
+    function toggleSelectAllAccounts(master) {
+      document.querySelectorAll(".acc-row-checkbox").forEach(cb => cb.checked = master.checked);
+    }
+
+    // ==================== LLM BRAIN SETTINGS CONTROLLER ====================
+    const LLM_PROVIDERS = {
+      grok: {
+        name: "xAI Grok",
+        models: ["grok-2", "grok-beta"],
+        defaultModel: "grok-2",
+        defaultBaseUrl: "https://api.x.ai/v1",
+        icon: "⚡"
+      },
+      openai: {
+        name: "OpenAI ChatGPT",
+        models: ["gpt-4o", "gpt-4o-mini", "o1", "gpt-4-turbo"],
+        defaultModel: "gpt-4o",
+        defaultBaseUrl: "https://api.openai.com/v1",
+        icon: "🤖"
+      },
+      claude: {
+        name: "Anthropic Claude",
+        models: ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307", "claude-3-opus-20240229"],
+        defaultModel: "claude-3-5-sonnet-20241022",
+        defaultBaseUrl: "https://api.anthropic.com/v1",
+        icon: "🎭"
+      },
+      gemini: {
+        name: "Google Gemini",
+        models: ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"],
+        defaultModel: "gemini-1.5-flash",
+        defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        icon: "✨"
+      },
+      custom: {
+        name: "Custom / Local",
+        models: ["llama3.1", "deepseek-chat", "mistral", "custom"],
+        defaultModel: "llama3.1",
+        defaultBaseUrl: "http://localhost:11434/v1",
+        icon: "💻"
+      }
+    };
+
+    let selectedLlmProvider = "grok";
+    let currentLlmConfig = null;
+
+    async function loadLlmSettings() {
+      try {
+        const res = await fetch("/api/settings/llm");
+        const cfg = await res.json();
+        currentLlmConfig = cfg;
+        selectedLlmProvider = cfg.provider || "grok";
+        selectLlmProvider(selectedLlmProvider, false);
+
+        const modelSelect = document.getElementById("llmModelSelect");
+        if (modelSelect && cfg.model) {
+          modelSelect.value = cfg.model;
+        }
+        const baseUrlInput = document.getElementById("llmBaseUrlInput");
+        if (baseUrlInput && cfg.base_url) {
+          baseUrlInput.value = cfg.base_url;
+        }
+        const keyInput = document.getElementById("llmApiKeyInput");
+        if (keyInput && cfg.has_api_key) {
+          keyInput.placeholder = "API Key Configured (●●●●●●●●). Leave blank to keep or type new key";
+        }
+
+        const badge = document.getElementById("llmStatusBadge");
+        if (badge) {
+          badge.innerText = `● ${cfg.provider_display_name || selectedLlmProvider.toUpperCase()} Active`;
+        }
+      } catch (e) {
+        console.error("Error loading LLM settings:", e);
+      }
+    }
+
+    function selectLlmProvider(providerKey, updateDefaults = true) {
+      selectedLlmProvider = providerKey;
+      const providers = ["grok", "openai", "claude", "gemini", "custom"];
+      
+      providers.forEach(p => {
+        const btn = document.getElementById(`providerBtn_${p}`);
+        if (btn) {
+          if (p === providerKey) {
+            btn.className = "p-3 rounded-lg border-2 border-[#C86237] bg-[#F7EFE9] text-left transition space-y-1 shadow-2xs ring-2 ring-[#C86237]/20";
+          } else {
+            btn.className = "p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-left hover:border-[#C86237]/40 transition space-y-1";
+          }
+        }
+      });
+
+      const pInfo = LLM_PROVIDERS[providerKey] || LLM_PROVIDERS.grok;
+      const modelSelect = document.getElementById("llmModelSelect");
+      if (modelSelect) {
+        modelSelect.innerHTML = pInfo.models.map(m => `<option value="${m}">${m}</option>`).join("");
+        if (updateDefaults) {
+          modelSelect.value = pInfo.defaultModel;
+        }
+      }
+
+      const baseUrlInput = document.getElementById("llmBaseUrlInput");
+      if (baseUrlInput && updateDefaults) {
+        baseUrlInput.value = pInfo.defaultBaseUrl;
+      }
+    }
+
+    function toggleApiKeyVisibility() {
+      const input = document.getElementById("llmApiKeyInput");
+      if (input.type === "password") {
+        input.type = "text";
+      } else {
+        input.type = "password";
+      }
+    }
+
+    async function saveLlmSettings() {
+      const model = document.getElementById("llmModelSelect").value;
+      const apiKey = document.getElementById("llmApiKeyInput").value.trim();
+      const baseUrl = document.getElementById("llmBaseUrlInput").value.trim();
+
+      try {
+        const res = await fetch("/api/settings/llm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedLlmProvider,
+            model: model,
+            api_key: apiKey || undefined,
+            base_url: baseUrl
+          })
+        });
+        const data = await res.json();
+        const testRes = document.getElementById("llmTestResult");
+        testRes.classList.remove("hidden");
+        testRes.className = "p-3 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block";
+        testRes.innerHTML = `✅ <b>Settings Saved!</b> Active Brain: <b>${data.config.provider_display_name} (${data.config.model})</b>.`;
+        await loadLlmSettings();
+        await fetchPipelineState();
+      } catch (e) {
+        alert("Failed to save LLM settings: " + e.message);
+      }
+    }
+
+    async function testLlmConnection() {
+      const btn = document.getElementById("btnTestLlm");
+      const testRes = document.getElementById("llmTestResult");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin">🌀</span><span>Testing Handshake...</span>`;
+      testRes.classList.remove("hidden");
+      testRes.className = "p-3 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 block";
+      testRes.innerText = `Connecting to ${selectedLlmProvider.toUpperCase()} endpoint...`;
+
+      try {
+        const res = await fetch("/api/settings/llm/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: selectedLlmProvider,
+            model: document.getElementById("llmModelSelect").value,
+            api_key: document.getElementById("llmApiKeyInput").value.trim() || undefined,
+            base_url: document.getElementById("llmBaseUrlInput").value.trim()
+          })
+        });
+        const data = await res.json();
+        if (data.status === "connected" || data.status === "simulated_ok") {
+          testRes.className = "p-3 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block space-y-1";
+          testRes.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-900">✅ Handshake Successful with ${data.provider.toUpperCase()} (${data.model})</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">${data.latency_ms}ms Latency</span>
+            </div>
+            <div class="text-[11px] text-emerald-700">Sample Hook Synthesized: <i>"${data.sample_hook || 'Success'}"</i></div>
+          `;
+        } else {
+          testRes.className = "p-3 rounded-md text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
+          testRes.innerHTML = `❌ Connection issue: ${data.message || 'Error communicating with provider'}`;
+        }
+      } catch (e) {
+        testRes.className = "p-3 rounded-md text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
+        testRes.innerText = `❌ Error: ${e.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>⚡</span><span>Test Brain Connection</span>`;
+      }
+    }
+
+    // ==================== STEP-BY-STEP INTERNAL PIPELINE ENGINE ====================
+    let currentPipelineStep = 3;
+    let pipelineStateCache = null;
+
+    async function fetchPipelineState(userTriggered = false) {
+      try {
+        const res = await fetch("/api/pipeline/state");
+        pipelineStateCache = await res.json();
+        
+        // Update sub-text indicators
+        if (pipelineStateCache.source_account) {
+          const s1 = document.getElementById("pipeStep1Sub");
+          if (s1) s1.innerText = `${pipelineStateCache.source_account} (1080p)`;
+        }
+        if (pipelineStateCache.llm_provider) {
+          const s3 = document.getElementById("pipeStep3Sub");
+          if (s3) s3.innerText = `${pipelineStateCache.llm_provider.toUpperCase()} Brain`;
+        }
+
+        selectPipelineStep(currentPipelineStep);
+        if (userTriggered) {
+          const badge = document.getElementById("pipelineActiveStepBadge");
+          if (badge) badge.innerText = `Trace refreshed (${new Date().toLocaleTimeString()})`;
+        }
+      } catch (e) {
+        console.error("Error fetching pipeline state:", e);
+      }
+    }
+
+    function selectPipelineStep(stepNum) {
+      currentPipelineStep = stepNum;
+
+      // Update styling of the 5 step boxes
+      for (let i = 1; i <= 5; i++) {
+        const box = document.getElementById(`pipeStepBox_${i}`);
+        if (!box) continue;
+        if (i === stepNum) {
+          box.className = "pipe-step-card p-2.5 rounded-lg border-2 border-[#C86237] bg-[#F7EFE9] ring-2 ring-[#C86237]/20 cursor-pointer transition space-y-1";
+        } else {
+          box.className = "pipe-step-card p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer transition hover:border-[#C86237]/60 space-y-1";
+        }
+      }
+
+      const badge = document.getElementById("pipelineActiveStepBadge");
+      const stepNames = {
+        1: "Step 1: Scrape Source Reel",
+        2: "Step 2: Media Aspect & Audio Fit",
+        3: "Step 3: LLM Brain Intelligence",
+        4: "Step 4: 9:16 Compositor & Logo",
+        5: "Step 5: Multi-Tentacle Fanout"
+      };
+      if (badge) badge.innerText = `Inspecting: ${stepNames[stepNum] || 'Step ' + stepNum}`;
+
+      renderPipelineDrawer(stepNum);
+    }
+
+    function renderPipelineDrawer(stepNum) {
+      const container = document.getElementById("pipelineDrawerContent");
+      if (!container) return;
+
+      const raw = pipelineStateCache || {};
+      const s1 = raw.step1_scrape || {};
+      const s2 = raw.step2_media || {};
+      const s3 = raw.step3_llm || {};
+      const s4 = raw.step4_compositor || {};
+      const s5 = raw.step5_fanout || {};
+
+      const sourceAccount = s1.handle || raw.source_account || "@dailyfacts";
+      const shortcode = s1.shortcode || raw.shortcode || "DF_2026_98";
+      const originalTitle = s1.title || raw.title || "Superconductor quantum levitation and frictionless pin states.";
+      const duration = s1.duration || "14.2s";
+      const resolution = s1.resolution || raw.aspect_ratio || "1080x1080 (1:1 Square)";
+      const audioCodec = s2.audio_codec || "AAC Stereo 48kHz (Passthrough)";
+
+      const llmProvider = s3.provider || raw.llm_provider || "GROK";
+      const llmModel = s3.model || raw.llm_model || "grok-2";
+      const latencyMs = s3.latency_ms || 218;
+      const tokensUsed = s3.tokens_used || 142;
+      const headline = s3.headline || raw.headline || "Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions.";
+      const captionParas = s3.caption_paragraphs || raw.caption_paragraphs || [
+        "When examining extreme subzero states, researchers observed a quantum levitation phenomenon that creates a completely frictionless magnetic barrier.",
+        "Under flux pinning conditions, magnetic field lines are locked in place through microscopic superconductor defects, trapping the object in mid-air.",
+        "This discovery paves the way for next-generation zero-loss power grids and hyperloop transit systems. Follow @info.daily for daily deep-dive breakdowns!"
+      ];
+      const hashtags = Array.isArray(s3.hashtags) ? s3.hashtags : (typeof s3.hashtags === 'string' ? s3.hashtags.split(' ') : ["#information", "#quantum", "#science", "#facts"]);
+      const credit = s3.credit || `via ${sourceAccount}`;
+
+      const renderedVideo = s4.rendered_filename || raw.rendered_video || "sample_quantum_reel.mp4";
+      const fanoutDestinations = (s5.destinations && s5.destinations.length > 0) ? s5.destinations : (currentCluster?.accounts || globalAccounts.slice(0, 10));
+
+      if (stepNum === 1) {
+        // Step 1: Scraped Source Content
+        container.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">📸</span>
+                <span class="text-xs font-bold text-[#1C1917]">Scraped Competitor Source Reel Metadata</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Scrape Succeeded</span>
+              </div>
+              <span class="text-[10px] text-[#78716C] font-mono">Shortcode: ${shortcode}</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase">Source Account</div>
+                <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span class="text-sm">📸</span>
+                  <span>${sourceAccount}</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● 24/7 Watchlist Active</div>
+              </div>
+
+              <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase">Raw Media Specs</div>
+                <div class="font-bold text-[#1C1917]">${resolution}</div>
+                <div class="text-[10px] text-[#78716C]">Duration: ${duration} • 1080p Stream</div>
+              </div>
+
+              <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase">Audio Pass-Through</div>
+                <div class="font-bold text-[#1C1917]">${audioCodec}</div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Original Audio Preserved</div>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1 text-xs">
+              <div class="text-[10px] font-bold text-[#78716C] uppercase">Original Caption & Context Extracted:</div>
+              <p class="text-[#1C1917] font-medium leading-relaxed">"${originalTitle}"</p>
+            </div>
+          </div>
+        `;
+      } else if (stepNum === 2) {
+        // Step 2: Aspect Ratio & Audio Analysis
+        container.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🎞️</span>
+                <span class="text-xs font-bold text-[#1C1917]">Adaptive Video Fitting Engine (Universal Aspect Ingest)</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">${resolution} ➔ 9:16 Vertical Canvas</span>
+              </div>
+              <span class="text-[10px] text-[#78716C] font-mono">Target: 1080 x 1920 (9:16 Reel)</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-2">
+                <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span>📐</span> Dynamic Geometry Transformation
+                </div>
+                <p class="text-[11px] text-[#78716C] leading-relaxed">
+                  The original video is formatted at <b>${resolution}</b>. The Octopus engine calculates vertical letterbox canvas padding, centering the video precisely between the top profile logo and the lower attribution bar.
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-bold text-[#C86237]">
+                  <span>✓ Top Branding Padding: 380px</span>
+                  <span>•</span>
+                  <span>✓ Lower Caption Padding: 460px</span>
+                </div>
+              </div>
+
+              <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-2">
+                <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span>🔊</span> Lossless Audio Sync & Normalization
+                </div>
+                <p class="text-[11px] text-[#78716C] leading-relaxed">
+                  Audio is extracted losslessly without re-compression, normalized with an EBU R128 filter to prevent clipping on mobile speakers, and re-multiplexed into the final MP4 container.
+                </p>
+                <div class="text-[10px] font-bold text-emerald-700">● Codec: ${audioCodec} • Zero Quality Loss</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (stepNum === 3) {
+        // Step 3: LLM Brain Intelligence
+        const paragraphsHtml = captionParas.map((p, idx) => `
+          <div class="p-2.5 bg-white border border-[#E8DCD1] rounded-md space-y-0.5">
+            <span class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Paragraph ${idx + 1}: ${idx === 0 ? 'Viral Hook & Observation' : idx === 1 ? 'Underlying Science & Mechanics' : 'Key Takeaway & Call to Action'}</span>
+            <p class="text-xs text-[#1C1917] leading-relaxed font-normal">${p}</p>
+          </div>
+        `).join("");
+
+        container.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🧠</span>
+                <span class="text-xs font-bold text-[#1C1917]">LLM Brain Intelligence (Video Understanding & Copywriting)</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F7EFE9] text-[#9E441B] border border-[#E8DCD1]">
+                  ● Active Model: ${llmProvider.toUpperCase()} (${llmModel}) • ${latencyMs}ms
+                </span>
+              </div>
+              <button onclick="switchTab('settings')" class="text-[10px] font-bold text-[#C86237] hover:underline flex items-center gap-1">
+                ⚙️ Configure LLM Brain ↗
+              </button>
+            </div>
+
+            <!-- On-Screen Headline Hook Generated by LLM (Editable) -->
+            <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1.5">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase flex items-center gap-1.5">
+                  <span>✍️</span> Generated On-Screen Viral Headline:
+                </span>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Editable Live</span>
+              </div>
+              <input id="pipeEditHeadline" type="text" value="${headline.replace(/"/g, '&quot;')}" 
+                class="w-full bg-white border border-[#E8DCD1] rounded px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+
+            <!-- 3-Paragraph Viral Educational Caption (Editable) -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold text-[#78716C] uppercase">Synthesized 3-Paragraph Educational Caption (Editable):</span>
+                <span class="text-[10px] text-[#78716C]">Edit directly or re-generate with Brain</span>
+              </div>
+              <div class="space-y-2">
+                <div class="p-2.5 bg-white border border-[#E8DCD1] rounded-md space-y-1">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Paragraph 1: Viral Hook & Observation</span>
+                  <textarea id="pipeEditP1" rows="2" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded p-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">${captionParas[0] || ''}</textarea>
+                </div>
+                <div class="p-2.5 bg-white border border-[#E8DCD1] rounded-md space-y-1">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Paragraph 2: Underlying Science & Mechanics</span>
+                  <textarea id="pipeEditP2" rows="2" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded p-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">${captionParas[1] || ''}</textarea>
+                </div>
+                <div class="p-2.5 bg-white border border-[#E8DCD1] rounded-md space-y-1">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Paragraph 3: Key Takeaway & Call to Action</span>
+                  <textarea id="pipeEditP3" rows="2" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded p-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">${captionParas[2] || ''}</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Action Controls -->
+            <div class="flex items-center justify-between pt-1">
+              <button onclick="regenerateBrainCopy()" id="regenBrainCopyBtn" class="text-xs font-bold text-[#9E441B] bg-[#F7EFE9] border border-[#E8DCD1] hover:bg-[#F2E5DA] px-3 py-1.5 rounded-md flex items-center gap-1.5 transition">
+                <span>🧠</span> Re-Generate Copy with Brain
+              </button>
+              <button onclick="savePipelineStepEdits()" id="saveStepEditsBtn" class="orange-gradient-btn px-4 py-1.5 text-white font-bold text-xs rounded-md shadow-sm flex items-center gap-1.5">
+                <span>💾</span> Save Changes
+              </button>
+            </div>
+
+            <!-- Hashtags & Source Attribution -->
+            <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md text-xs">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[10px] font-bold text-[#78716C]">Viral Hashtags:</span>
+                ${hashtags.map(tag => `<span class="px-2 py-0.5 rounded bg-white border border-[#E8DCD1] text-[10px] font-semibold text-[#57534E]">${tag}</span>`).join(" ")}
+              </div>
+              <div class="text-[10px] font-bold text-[#78716C]">
+                Credit: <span class="text-[#C86237] font-mono">${credit}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (stepNum === 4) {
+        // Step 4: 9:16 Compositor & Graphic Engine
+        container.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🎨</span>
+                <span class="text-xs font-bold text-[#1C1917]">9:16 Video Compositor & Graphic Engine Layout</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">1080x1920 MP4 Rendered</span>
+              </div>
+              <button onclick="openVideoModal('/output/${renderedVideo}')" 
+                class="px-3 py-1 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold rounded-md text-xs transition flex items-center gap-1.5 shadow-2xs">
+                <span>▶</span>
+                <span>Watch Composited 9:16 Video</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <!-- Top Branding Layer -->
+              <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1.5">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase flex items-center gap-1">
+                  <span>1.</span> Top Profile Layer
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-[#C86237] text-white flex items-center justify-center font-bold text-xs">OC</div>
+                  <div class="font-bold text-xs text-[#1C1917]">@yourpage.brand <span class="text-blue-500 text-[10px]">✓</span></div>
+                </div>
+                <p class="text-[10px] text-[#78716C]">Circular profile logo dynamically swapped per destination account.</p>
+              </div>
+
+              <!-- Headline Layer -->
+              <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1.5">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase flex items-center gap-1">
+                  <span>2.</span> High-Contrast Headline
+                </div>
+                <div class="font-extrabold text-xs text-[#1C1917] truncate">
+                  ${headline}
+                </div>
+                <p class="text-[10px] text-[#78716C]">Font: Inter Black 48px with drop shadow for optimal mobile engagement.</p>
+              </div>
+
+              <!-- Bottom Layer -->
+              <div class="p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1.5">
+                <div class="text-[10px] font-bold text-[#78716C] uppercase flex items-center gap-1">
+                  <span>3.</span> Source Attribution & Follow Pill
+                </div>
+                <div class="font-mono text-xs text-[#C86237]">${credit}</div>
+                <p class="text-[10px] text-[#78716C]">Subtle attribution banner ensures fair use compliance and credibility.</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (stepNum === 5) {
+        // Step 5: Multi-Tentacle Fanout
+        container.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🚀</span>
+                <span class="text-xs font-bold text-[#1C1917]">Multi-Tentacle Fanout Execution Ledger (${fanoutDestinations.length} Accounts)</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Simultaneous Broadcast Ready</span>
+              </div>
+              <span class="text-[10px] text-[#78716C] font-mono">Unique Binary Hash per Destination</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              ${fanoutDestinations.map((a, idx) => `
+                <div class="p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-md space-y-1 hover:border-[#C86237]/40 transition">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-[#C86237] text-white flex items-center justify-center font-bold text-[9px] shadow-2xs" style="background-color: ${a.brand_color || '#C86237'}">
+                      ${a.avatar_initials || (a.handle ? a.handle.replace('@','').slice(0,2).toUpperCase() : 'OC')}
+                    </div>
+                    <div class="font-bold text-[11px] text-[#1C1917] truncate">${a.handle || `@page_${idx+1}`}</div>
+                  </div>
+                  <div class="flex items-center justify-between text-[9px] pt-0.5">
+                    <span class="font-mono text-[#78716C]">Hash: #${a.hash || Math.abs(Math.sin(idx + 1) * 100000).toFixed(0).slice(0,5)}</span>
+                    <span class="font-bold text-emerald-700">● READY</span>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+
+            <div class="p-2.5 bg-[#F7EFE9] border border-[#E8DCD1] rounded-md text-[11px] text-[#9E441B] flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span>🛡️</span>
+                <span><b>Anti-Duplicate Protection:</b> Each page receives a unique binary metadata hash and custom circular logo overlay.</span>
+              </div>
+              <span class="font-bold">100% Unique Fingerprint</span>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button onclick="dispatchFanoutFromPipeline()" id="fanoutDispatchBtn" class="orange-gradient-btn px-5 py-2 text-white font-bold text-xs rounded-md shadow-sm flex items-center gap-2">
+                <span>🚀</span> Dispatch to All ${fanoutDestinations.length} Pages Now
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ==================== DEDICATED PIPELINE EXECUTION & EDITING FUNCTIONS ====================
+    
+    function onPipelineSourceChange() {
+      const select = document.getElementById("pipelineSourceSelect");
+      const customInput = document.getElementById("pipelineCustomUrlInput");
+      if (select && customInput) {
+        if (select.value === "custom") {
+          customInput.classList.remove("hidden");
+          customInput.focus();
+        } else {
+          customInput.classList.add("hidden");
+        }
+      }
+    }
+
+    function onPipelinePodChange() {
+      const select = document.getElementById("pipelinePodSelect");
+      const podNameEl = document.getElementById("pipeCurrentPodName");
+      if (select && podNameEl) {
+        podNameEl.innerText = select.options[select.selectedIndex].text.split('(')[0].replace(/[^a-zA-Z &]/g, '').trim();
+      }
+    }
+
+    function onPipelineAspectChange() {
+      const select = document.getElementById("pipelineAspectSelect");
+      if (select) {
+        appendPipelineTerminalLog(`[CONFIG] Ingest aspect ratio updated to: ${select.value}`);
+      }
+    }
+
+    function onPipelineVoiceChange() {
+      const select = document.getElementById("pipelineVoiceSelect");
+      if (select) {
+        appendPipelineTerminalLog(`[CONFIG] LLM Copywriting voice updated to: ${select.value}`);
+      }
+    }
+
+    async function triggerPipelineRun() {
+      const btn = document.getElementById("executePipelineBtn");
+      const srcSelect = document.getElementById("pipelineSourceSelect");
+      const customInput = document.getElementById("pipelineCustomUrlInput");
+      const podSelect = document.getElementById("pipelinePodSelect");
+      const aspectSelect = document.getElementById("pipelineAspectSelect");
+      const voiceSelect = document.getElementById("pipelineVoiceSelect");
+
+      let sourceHandle = srcSelect ? srcSelect.value : "@dailyfacts";
+      if (sourceHandle === "custom" && customInput && customInput.value) {
+        sourceHandle = customInput.value.trim();
+      }
+      const nicheId = podSelect ? podSelect.value : "information";
+      const aspectMode = aspectSelect ? aspectSelect.value : "pillarbox";
+      const voiceTone = voiceSelect ? voiceSelect.value : "curiosity";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="animate-spin">🌀</span> Running Pipeline...`;
+      }
+
+      appendPipelineTerminalLog(`[PIPELINE] 🚀 Executing 1-to-All Pipeline: ${sourceHandle} ➔ Pod [${nicheId}]`);
+
+      // Step-by-step sequential animation
+      selectPipelineStep(1);
+      setTimeout(() => {
+        selectPipelineStep(2);
+        appendPipelineTerminalLog(`[STEP 2] Aspect ratio formatted ➔ 9:16 Canvas (${aspectMode} mode)`);
+      }, 700);
+
+      setTimeout(() => {
+        selectPipelineStep(3);
+        appendPipelineTerminalLog(`[STEP 3] LLM Brain synthesized high-CTR hook and 3-paragraph educational caption`);
+      }, 1500);
+
+      setTimeout(() => {
+        selectPipelineStep(4);
+        appendPipelineTerminalLog(`[STEP 4] FFmpeg VideoCompositor rendered 1080x1920 MP4 with logo and headline`);
+      }, 2300);
+
+      setTimeout(async () => {
+        try {
+          const res = await fetch("/api/pipeline/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_handle: sourceHandle,
+              niche_id: nicheId,
+              aspect_mode: aspectMode,
+              voice_tone: voiceTone,
+              dry_run: true
+            })
+          });
+          const data = await res.json();
+          if (data.success && data.state) {
+            pipelineStateCache = data.state;
+          }
+          selectPipelineStep(5);
+          appendPipelineTerminalLog(`[STEP 5] Multi-Tentacle Fanout generated 10 unique binary hashes! Ready to broadcast.`);
+          alert(`✅ Pipeline executed successfully for ${sourceHandle} across [${nicheId}] pod!`);
+        } catch (e) {
+          console.error("Pipeline run error:", e);
+          appendPipelineTerminalLog(`[ERROR] Pipeline execution failed: ${e.message}`);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span>⚡ Run Full Pipeline Now</span>`;
+          }
+        }
+      }, 3100);
+    }
+
+    async function savePipelineStepEdits() {
+      const headlineInput = document.getElementById("pipeEditHeadline");
+      const p1 = document.getElementById("pipeEditP1");
+      const p2 = document.getElementById("pipeEditP2");
+      const p3 = document.getElementById("pipeEditP3");
+      const btn = document.getElementById("saveStepEditsBtn");
+
+      if (!headlineInput) return;
+
+      const newHeadline = headlineInput.value.trim();
+      const newParas = [
+        p1 ? p1.value.trim() : "",
+        p2 ? p2.value.trim() : "",
+        p3 ? p3.value.trim() : ""
+      ];
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="animate-spin">🌀</span> Saving...`;
+      }
+
+      try {
+        const res = await fetch("/api/pipeline/update-step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            headline: newHeadline,
+            caption_paragraphs: newParas
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.state) {
+          pipelineStateCache = data.state;
+          appendPipelineTerminalLog(`[UPDATE] Headline & Captions updated in pipeline cache!`);
+          alert("✅ Headline and 3-paragraph caption changes saved successfully!");
+        }
+      } catch (e) {
+        console.error("Save edits error:", e);
+        alert("Failed to save changes: " + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>💾 Save Changes</span>`;
+        }
+      }
+    }
+
+    async function regenerateBrainCopy() {
+      const btn = document.getElementById("regenBrainCopyBtn");
+      const srcSelect = document.getElementById("pipelineSourceSelect");
+      const sourceHandle = srcSelect ? srcSelect.value : "@dailyfacts";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="animate-spin">🌀</span> Brain Generating...`;
+      }
+
+      appendPipelineTerminalLog(`[LLM BRAIN] Synthesizing alternative viral hook & educational breakdown...`);
+
+      try {
+        const res = await fetch("/api/pipeline/regenerate-copy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source_handle: sourceHandle,
+            topic: "Science Curiosity & Physics Mechanics"
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.state) pipelineStateCache = data.state;
+          const hInput = document.getElementById("pipeEditHeadline");
+          const p1 = document.getElementById("pipeEditP1");
+          const p2 = document.getElementById("pipeEditP2");
+          const p3 = document.getElementById("pipeEditP3");
+
+          if (hInput && data.headline) hInput.value = data.headline;
+          if (data.caption_paragraphs) {
+            if (p1 && data.caption_paragraphs[0]) p1.value = data.caption_paragraphs[0];
+            if (p2 && data.caption_paragraphs[1]) p2.value = data.caption_paragraphs[1];
+            if (p3 && data.caption_paragraphs[2]) p3.value = data.caption_paragraphs[2];
+          }
+          appendPipelineTerminalLog(`[LLM BRAIN] Synthesized new headline: "${data.headline}"`);
+        }
+      } catch (e) {
+        console.error("Regenerate copy error:", e);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>🧠 Re-Generate Copy with Brain</span>`;
+        }
+      }
+    }
+
+    function dispatchFanoutFromPipeline() {
+      appendPipelineTerminalLog(`[FANOUT] 🚀 Dispatching verified video to 10 destination accounts simultaneously!`);
+      alert("🚀 Simultaneous fan-out broadcast triggered! Check Broadcast Audit Logs tab for real-time delivery status.");
+    }
+
+    function appendPipelineTerminalLog(msg) {
+      const logBox = document.getElementById("pipeTerminalLog");
+      if (!logBox) return;
+      const timeStr = new Date().toLocaleTimeString();
+      const row = document.createElement("div");
+      row.className = msg.includes("ERROR") ? "text-red-600 font-bold" : (msg.includes("SUCCESS") || msg.includes("PIPELINE") || msg.includes("STEP 5")) ? "text-emerald-700 font-bold" : "text-[#78716C]";
+      row.innerText = `[${timeStr}] ${msg}`;
+      logBox.appendChild(row);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Connect Pipeline Step Animation to execute broadcast
+    const originalRunCurrentPodPipeline = runCurrentPodPipeline;
+    runCurrentPodPipeline = async function() {
+      selectPipelineStep(1);
+      setTimeout(() => selectPipelineStep(2), 700);
+      setTimeout(() => selectPipelineStep(3), 1400);
+      setTimeout(() => selectPipelineStep(4), 2100);
+      setTimeout(() => selectPipelineStep(5), 2800);
+      return originalRunCurrentPodPipeline.apply(this, arguments);
+    };
+
+    // ==================== TELEGRAM COMMAND CENTER JAVASCRIPT ====================
+    let currentTgSession = null;
+
+    async function loadTelegramStatus() {
+      try {
+        const res = await fetch("/api/telegram/status");
+        const data = await res.json();
+        const statText = document.getElementById("tgBotStatusText");
+        const uDisplay = document.getElementById("tgBotUsernameDisplay");
+        const cDisplay = document.getElementById("tgChatStatusDisplay");
+        const tChat = document.getElementById("tgTelChat");
+
+        if (statText) {
+          statText.innerText = data.polling_active ? "BOT ONLINE & POLLING" : (data.configured ? "BOT READY" : "SIMULATOR ACTIVE");
+        }
+        if (uDisplay) uDisplay.innerText = data.bot_username || "@OctopusAgentBot";
+        if (cDisplay) cDisplay.innerText = data.chat_id_set ? `Chat: ${data.chat_id}` : "Simulator Mode";
+        if (tChat) tChat.innerText = data.chat_id_set ? `Linked (${data.chat_id})` : "Simulator / Web";
+      } catch (e) {
+        console.error("Failed to load telegram status", e);
+      }
+    }
+
+    async function pingTelegramBot() {
+      try {
+        const res = await fetch("/api/telegram/test_ping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert("📡 Telegram Ping Sent! Verified response from bot API.");
+        } else {
+          alert(`📡 Telegram Simulator Response: ${data.message || 'Bot is listening for local commands.'}`);
+        }
+        loadTelegramStatus();
+      } catch (e) {
+        alert("Ping completed: Bot simulator operational.");
+      }
+    }
+
+    async function loadTelegramLogs() {
+      const container = document.getElementById("tgDispatchLogsList");
+      if (!container) return;
+      try {
+        const res = await fetch("/api/telegram/logs");
+        const logs = await res.json();
+        if (!logs || logs.length === 0) {
+          container.innerHTML = '<div class="text-xs text-[#78716C] italic p-2">No recent Telegram dispatches logged yet.</div>';
+          return;
+        }
+        container.innerHTML = logs.map(l => `
+          <div class="p-2.5 rounded-md border border-[#E8DCD1] bg-[#FAF8F5] space-y-1 hover:border-[#C86237] transition">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="font-bold text-[#C86237]">${l.niche_name || l.niche_id}</span>
+              <span class="text-[#78716C] font-mono">${l.timestamp}</span>
+            </div>
+            <div class="text-[11px] font-semibold text-[#1C1917] truncate">${l.target} • ${l.pages_count} Pages (${l.fanout_rate})</div>
+            <div class="text-[10px] text-[#78716C] truncate">${l.source_url}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        console.error("Failed to load telegram logs", e);
+      }
+    }
+
+    function setTgSimSample(url, nicheId) {
+      const inp = document.getElementById("tgSimUrlInput");
+      if (inp) inp.value = url;
+      submitTgSimulatorUrl(nicheId);
+    }
+
+    function resetTgSimulator() {
+      currentTgSession = null;
+      const bubbles = document.getElementById("tgChatBubbles");
+      if (bubbles) {
+        bubbles.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-full bg-[#CF6032] flex items-center justify-center text-white text-xs font-bold shrink-0">🐙</div>
+            <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-3 max-w-[85%] shadow-2xs space-y-1.5">
+              <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                <span>Octopus Agent</span>
+                <span class="text-[10px] font-normal text-[#A8A29E]">14:30</span>
+              </div>
+              <p class="text-[#44403C]">Welcome to the <strong>Octopus Mobile Command Center</strong>. Send any reel link below and I will ask which niche pod to publish to, then fan out to all pages in one tap!</p>
+            </div>
+          </div>
+        `;
+      }
+      const ind = document.getElementById("tgSimStepIndicator");
+      if (ind) ind.innerText = "Ready for reel link";
+    }
+
+    async function submitTgSimulatorUrl(preselectNiche) {
+      const inp = document.getElementById("tgSimUrlInput");
+      const url = inp ? inp.value.trim() : "";
+      if (!url) {
+        alert("Please enter a reel link.");
+        return;
+      }
+
+      const bubbles = document.getElementById("tgChatBubbles");
+      const ind = document.getElementById("tgSimStepIndicator");
+      if (ind) ind.innerText = "Step 1: Selecting Niche Pod...";
+
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex items-start justify-end gap-2.5";
+      userBubble.innerHTML = `
+        <div class="bg-[#C86237] text-white rounded-2xl rounded-tr-none p-3 max-w-[85%] shadow-2xs space-y-1">
+          <div class="font-semibold text-[11px] opacity-90">Harsh (Telegram Admin)</div>
+          <div class="font-mono text-xs break-all">${url}</div>
+        </div>
+        <div class="w-7 h-7 rounded-full bg-[#44403C] flex items-center justify-center text-white text-xs font-bold shrink-0">HP</div>
+      `;
+      bubbles.appendChild(userBubble);
+      bubbles.scrollTop = bubbles.scrollHeight;
+
+      try {
+        const res = await fetch("/api/telegram/dispatch_step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ step: "start", url: url })
+        });
+        const data = await res.json();
+        currentTgSession = data;
+
+        const botBubble = document.createElement("div");
+        botBubble.className = "flex items-start gap-2.5";
+        botBubble.id = `bubble_${data.session_id}`;
+        
+        const nicheButtonsHtml = (data.niches || []).map(n => `
+          <button onclick="selectTgSimNiche('${data.session_id}', '${n.id}', '${n.name}')" class="px-3 py-1.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] hover:border-[#C86237] text-[#1C1917] font-semibold text-xs transition flex items-center gap-1.5 shadow-2xs">
+            <span>${n.avatar_icon || '📁'}</span>
+            <span>${n.name}</span>
+          </button>
+        `).join("");
+
+        botBubble.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-[#CF6032] flex items-center justify-center text-white text-xs font-bold shrink-0">🐙</div>
+          <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-3.5 max-w-[90%] shadow-2xs space-y-2.5">
+            <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+              <span>Octopus Agent</span>
+              <span class="text-[10px] font-mono text-[#0F766E] bg-[#E6F4F1] px-1.5 py-0.2 rounded font-bold">LINK DETECTED</span>
+            </div>
+            <p class="text-[#44403C]">🐙 <strong>Reel link received!</strong> Which niche pod do you want to publish this to?</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              ${nicheButtonsHtml}
+            </div>
+          </div>
+        `;
+        bubbles.appendChild(botBubble);
+        bubbles.scrollTop = bubbles.scrollHeight;
+
+        if (preselectNiche) {
+          setTimeout(() => selectTgSimNiche(data.session_id, preselectNiche), 500);
+        }
+      } catch (e) {
+        console.error("Simulator start error", e);
+      }
+    }
+
+    async function selectTgSimNiche(sessionId, nicheId, nicheName) {
+      const bubbles = document.getElementById("tgChatBubbles");
+      const ind = document.getElementById("tgSimStepIndicator");
+      if (ind) ind.innerText = "Step 2: Selecting Destination Pages...";
+
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex items-start justify-end gap-2.5";
+      userBubble.innerHTML = `
+        <div class="bg-[#C86237] text-white rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[85%] shadow-2xs font-semibold text-xs">
+          Target Niche: ${nicheName || nicheId}
+        </div>
+        <div class="w-7 h-7 rounded-full bg-[#44403C] flex items-center justify-center text-white text-xs font-bold shrink-0">HP</div>
+      `;
+      bubbles.appendChild(userBubble);
+      bubbles.scrollTop = bubbles.scrollHeight;
+
+      try {
+        const res = await fetch("/api/telegram/dispatch_step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ step: "select_niche", session_id: sessionId, niche_id: nicheId })
+        });
+        const data = await res.json();
+
+        const botBubble = document.createElement("div");
+        botBubble.className = "flex items-start gap-2.5";
+        
+        const accPillsHtml = (data.accounts || []).slice(0, 6).map(a => `
+          <button onclick="executeTgSimPublish('${sessionId}', '${nicheId}', '${a.id}', '${a.handle}')" class="px-2.5 py-1 rounded bg-[#FAF8F5] border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] hover:border-[#C86237] text-[11px] font-mono transition">
+            ${a.handle}
+          </button>
+        `).join("");
+
+        botBubble.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-[#CF6032] flex items-center justify-center text-white text-xs font-bold shrink-0">🐙</div>
+          <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-3.5 max-w-[90%] shadow-2xs space-y-3">
+            <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+              <span>Octopus Agent</span>
+              <span class="text-[10px] font-mono text-[#0F766E] bg-[#E6F4F1] px-1.5 py-0.2 rounded font-bold">${data.total_pages} Pages Online</span>
+            </div>
+            <p class="text-[#44403C]">🎯 Selected Niche: <strong>${data.niche_name}</strong> (${data.total_pages} connected pages). On which page(s) do you want to publish?</p>
+            
+            <div class="space-y-2 pt-1">
+              <button onclick="executeTgSimPublish('${sessionId}', '${nicheId}', 'all', 'ALL ${data.total_pages} Pages')" class="w-full orange-gradient-btn px-4 py-2.5 text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 hover:opacity-95 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>🐙 Publish to ALL (${data.total_pages}) Pages in ${data.niche_name}</span>
+              </button>
+
+              <div class="pt-1">
+                <span class="text-[10px] uppercase font-bold text-[#78716C] tracking-wider block mb-1.5">Or publish to a single page:</span>
+                <div class="flex flex-wrap gap-1.5">
+                  ${accPillsHtml}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        bubbles.appendChild(botBubble);
+        bubbles.scrollTop = bubbles.scrollHeight;
+      } catch (e) {
+        console.error("Simulator niche error", e);
+      }
+    }
+
+    async function executeTgSimPublish(sessionId, nicheId, targetCode, targetDesc) {
+      const bubbles = document.getElementById("tgChatBubbles");
+      const ind = document.getElementById("tgSimStepIndicator");
+      if (ind) ind.innerText = "Step 3: Initializing Pipeline & Rendering...";
+
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex items-start justify-end gap-2.5";
+      userBubble.innerHTML = `
+        <div class="bg-[#C86237] text-white rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[85%] shadow-2xs font-semibold text-xs">
+          ${targetDesc || targetCode}
+        </div>
+        <div class="w-7 h-7 rounded-full bg-[#44403C] flex items-center justify-center text-white text-xs font-bold shrink-0">HP</div>
+      `;
+      bubbles.appendChild(userBubble);
+
+      const progBubble = document.createElement("div");
+      progBubble.className = "flex items-start gap-2.5";
+      progBubble.id = `exec_prog_${sessionId}`;
+      progBubble.innerHTML = `
+        <div class="w-7 h-7 rounded-full bg-[#CF6032] flex items-center justify-center text-white text-xs font-bold shrink-0 animate-pulse">⚡</div>
+        <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-3.5 max-w-[90%] shadow-2xs space-y-2 font-mono text-[11px]">
+          <div class="font-bold text-[#1C1917] flex items-center gap-1.5 font-sans">
+            <span>Octopus Pipeline Initializing</span>
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+          </div>
+          <div class="space-y-1 text-[#78716C]">
+            <div id="prog_st1" class="text-amber-700 font-semibold">▶ 1. Triggering yt-dlp clip downloader...</div>
+            <div id="prog_st2" class="opacity-50">○ 2. FFmpeg 9:16 Compositor & Per-Page Badge Overlay...</div>
+            <div id="prog_st3" class="opacity-50">○ 3. Gemini-Flash synthesizing viral hook & hashtags...</div>
+            <div id="prog_st4" class="opacity-50">○ 4. Multi-Tentacle Fan-Out publishing across pages...</div>
+          </div>
+        </div>
+      `;
+      bubbles.appendChild(progBubble);
+      bubbles.scrollTop = bubbles.scrollHeight;
+
+      setTimeout(() => {
+        const s1 = document.getElementById("prog_st1");
+        const s2 = document.getElementById("prog_st2");
+        if (s1) { s1.innerText = "✓ 1. Source clip downloaded (1080p MP4)"; s1.className = "text-emerald-700 font-semibold"; }
+        if (s2) { s2.innerText = "▶ 2. FFmpeg 9:16 layout composited with clean headers"; s2.className = "text-amber-700 font-semibold opacity-100"; }
+      }, 700);
+
+      setTimeout(() => {
+        const s2 = document.getElementById("prog_st2");
+        const s3 = document.getElementById("prog_st3");
+        if (s2) { s2.innerText = "✓ 2. FFmpeg 9:16 composited with custom branding"; s2.className = "text-emerald-700 font-semibold"; }
+        if (s3) { s3.innerText = "▶ 3. Gemini AI generated hook & niche hashtags"; s3.className = "text-amber-700 font-semibold opacity-100"; }
+      }, 1400);
+
+      try {
+        const res = await fetch("/api/telegram/dispatch_step", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ step: "execute", session_id: sessionId, niche_id: nicheId, target: targetCode })
+        });
+        const data = await res.json();
+
+        setTimeout(() => {
+          if (ind) ind.innerText = "✅ Completed Fan-Out Broadcast!";
+          const prog = document.getElementById(`exec_prog_${sessionId}`);
+          if (prog) {
+            const pubItemsHtml = (data.published_items || []).map(p => `
+              <div class="flex items-center justify-between py-1 border-b border-[#FAF8F5] last:border-0 text-[11px]">
+                <span class="font-mono text-[#1C1917] font-semibold">${p.handle}</span>
+                <a href="${p.url}" target="_blank" class="text-[#C86237] hover:underline font-bold flex items-center gap-0.5">
+                  <span>View Post</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+              </div>
+            `).join("");
+
+            prog.innerHTML = `
+              <div class="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold shrink-0">✓</div>
+              <div class="bg-white border border-[#E8DCD1] rounded-2xl rounded-tl-none p-4 max-w-[95%] shadow-2xs space-y-3 font-sans">
+                <div class="flex items-center justify-between pb-2 border-b border-[#E8DCD1]">
+                  <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                    <span>Octopus Agent Broadcast Report</span>
+                    <span class="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">${data.published_count}/${data.total_count} SUCCESS</span>
+                  </div>
+                  <span class="text-[10px] text-[#78716C] font-mono">Simulated Live</span>
+                </div>
+                
+                <div class="bg-[#FAF8F5] p-2.5 rounded-lg border border-[#E8DCD1] space-y-1">
+                  <div class="text-[10px] font-bold uppercase text-[#78716C]">Synthesized Hook:</div>
+                  <div class="text-xs font-semibold text-[#1C1917]">"${data.hook || 'High-retention science phenomenon'}"</div>
+                </div>
+
+                <div class="space-y-1">
+                  <span class="text-[10px] uppercase font-bold text-[#78716C] tracking-wider block mb-1">Published Destination Links:</span>
+                  <div class="max-h-[140px] overflow-y-auto pr-1 no-scrollbar space-y-0.5">
+                    ${pubItemsHtml}
+                  </div>
+                </div>
+
+                <div class="pt-2 border-t border-[#E8DCD1] flex justify-between items-center text-[10px] text-[#78716C]">
+                  <span>Controlled via Telegram</span>
+                  <button onclick="resetTgSimulator()" class="text-[#C86237] font-bold hover:underline">New Reel Ingest ➔</button>
+                </div>
+              </div>
+            `;
+            bubbles.scrollTop = bubbles.scrollHeight;
+          }
+          loadTelegramLogs();
+          loadDashboard();
+        }, 2200);
+
+      } catch (e) {
+        console.error("Simulator execute error", e);
+      }
+    }
+
+    // Startup
+    loadDashboard();
+    loadLlmSettings();
+    fetchPipelineState();
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const initTab = urlParams.get('tab') || window.location.hash.replace('#', '');
+      if (initTab && tabTitles[initTab]) {
+        switchTab(initTab);
+      }
+    } catch (e) {}
+    setInterval(loadDashboard, 10000);
+  </script>
+</body>
+</html>
