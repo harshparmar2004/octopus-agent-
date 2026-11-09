@@ -181,7 +181,8 @@ class NichePodAgent:
                     hook_text=hook_text,
                     channel=ch,
                     output_filename=rendered_filename,
-                    credit_handle=handle
+                    credit_handle=handle,
+                    highlight_word=enriched.get("highlight_word")
                 )
 
                 if not rendered_path:

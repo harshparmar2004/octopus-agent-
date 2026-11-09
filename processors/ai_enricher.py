@@ -31,8 +31,19 @@ class AIEnricher:
             channel_handle=getattr(channel, "handle", "@info.daily"),
             formula=formula
         )
+        hook_text = trace.get("hook_text", title)
+        highlight_word = trace.get("highlight_word")
+        if not highlight_word:
+            # Auto-detect punchline keyword
+            keywords = ["completely", "insane", "never", "secret", "billionaire", "dumb", "taxes", "wealth", "truth", "money", "hidden", "mistake", "always", "stop"]
+            for kw in keywords:
+                if re.search(rf'\b{kw}\b', hook_text, re.IGNORECASE):
+                    highlight_word = kw
+                    break
+
         return {
-            "hook_text": trace.get("hook_text", title),
+            "hook_text": hook_text,
+            "highlight_word": highlight_word,
             "full_caption": trace.get("full_caption", ""),
             "credit": trace.get("credit", "via original source"),
             "hashtags": trace.get("hashtags", ""),
