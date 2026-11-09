@@ -2075,14 +2075,14 @@
     let studioSourceMode = 'scrape';
     let pipelineStateCache = null;
 
-    // 1. Focus Stepper Stage
+    // 1. Focus Stepper Stage (Isolates single stage view)
     function focusStudioSection(sectionKey) {
-      const stepMap = { 'source': 1, 'aicopy': 2, 'canvas': 3, 'fanout': 4 };
+      const stepMap = { 'source': 1, 'aicopy': 2, 'canvas': 3, 'fanout': 4, 'stage5': 5, 'preview': 5 };
       const stepNum = typeof sectionKey === 'number' ? sectionKey : (stepMap[sectionKey] || 1);
       studioCurrentStep = stepNum;
 
-      // Update 4 stepper cards
-      for (let i = 1; i <= 4; i++) {
+      // Update 5 stepper cards
+      for (let i = 1; i <= 5; i++) {
         const card = document.getElementById(`stepCard_${i}`);
         if (!card) continue;
         if (i === stepNum) {
@@ -2092,15 +2092,21 @@
         }
       }
 
-      // Smooth scroll to corresponding section if key given
-      if (typeof sectionKey === 'string') {
-        const secId = sectionKey === 'canvas' ? 'studioSection_aicopy' : `studioSection_${sectionKey}`;
-        const secEl = document.getElementById(secId);
-        if (secEl) {
-          secEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          secEl.classList.add('ring-2', 'ring-[#C86237]/30');
-          setTimeout(() => secEl.classList.remove('ring-2', 'ring-[#C86237]/30'), 1200);
+      // Hide all 5 stage views, show ONLY the active one
+      for (let i = 1; i <= 5; i++) {
+        const stageView = document.getElementById(`pipeView_stage${i}`);
+        if (!stageView) continue;
+        if (i === stepNum) {
+          stageView.classList.remove("hidden");
+        } else {
+          stageView.classList.add("hidden");
         }
+      }
+
+      // If Stage 5 (Mobile Preview) is focused, refresh preview and account pills
+      if (stepNum === 5) {
+        updateStudioPreview();
+        renderStudioPageSwitcher();
       }
     }
 
@@ -2414,11 +2420,12 @@
         btn.innerHTML = `<span>⚙️ Executing Pipeline...</span>`;
       }
 
-      // Step Animation
+      // Step Animation across all 5 stages
       focusStudioSection(1);
-      setTimeout(() => focusStudioSection(2), 600);
-      setTimeout(() => focusStudioSection(3), 1200);
-      setTimeout(() => focusStudioSection(4), 1800);
+      setTimeout(() => focusStudioSection(2), 500);
+      setTimeout(() => focusStudioSection(3), 1000);
+      setTimeout(() => focusStudioSection(4), 1500);
+      setTimeout(() => focusStudioSection(5), 2000);
 
       try {
         const res = await fetch("/api/pipeline/run", {

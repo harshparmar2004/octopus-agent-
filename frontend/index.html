@@ -746,7 +746,7 @@
                     <span>⚡ Groq Cloud LPU</span>
                   </span>
                 </div>
-                <p class="text-xs text-[#78716C] mt-0.5">End-to-end visual workflow: ingest 1 source reel, synthesize viral AI copy, composite 9:16 vertical canvas with dynamic logo badges, and distribute across 10-30 accounts in one click.</p>
+                <p class="text-xs text-[#78716C] mt-0.5">End-to-end visual workflow: ingest 1 source reel, synthesize viral AI copy, composite 9:16 vertical canvas, and distribute across 10-30 accounts in one click.</p>
               </div>
             </div>
 
@@ -760,13 +760,13 @@
             </div>
           </div>
 
-          <!-- 2. 4-STAGE INTERACTIVE WORKFLOW STEPPER -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          <!-- 2. 5-STAGE INTERACTIVE WORKFLOW STEPPER -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
             <!-- Stage 1 -->
-            <div id="stepCard_1" onclick="focusStudioSection('source')" class="p-3.5 rounded-xl border-2 border-[#C86237] bg-[#F7EFE9] cursor-pointer transition shadow-2xs space-y-1">
+            <div id="stepCard_1" onclick="focusStudioSection('source')" class="p-3.5 rounded-xl border-2 border-[#C86237] bg-[#F7EFE9] ring-2 ring-[#C86237]/20 cursor-pointer transition shadow-2xs space-y-1">
               <div class="flex justify-between items-center text-[10px]">
                 <span class="font-bold uppercase tracking-wider text-[#C86237]">Stage 1</span>
-                <span class="px-1.5 py-0.2 rounded font-bold text-[10px] bg-emerald-100 text-emerald-800">● Input Ready</span>
+                <span class="px-1.5 py-0.2 rounded font-bold text-[10px] bg-emerald-100 text-emerald-800">● Input</span>
               </div>
               <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
                 <span>📥</span>
@@ -783,7 +783,7 @@
               </div>
               <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
                 <span>🧠</span>
-                <span>Viral Copy Studio</span>
+                <span>Visual Copy Studio</span>
               </div>
               <div class="text-[11px] text-[#78716C] truncate" id="studioStep2Sub">Curiosity Hook + 3-Para</div>
             </div>
@@ -809,227 +809,480 @@
               </div>
               <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
                 <span>🚀</span>
-                <span>Fanout & Mobile Appr.</span>
+                <span>Pod Fanout Matrix</span>
               </div>
-              <div class="text-[11px] text-[#78716C] truncate" id="studioStep4Sub">10 Pages • Telegram linked</div>
+              <div class="text-[11px] text-[#78716C] truncate" id="studioStep4Sub">10 Pages • Parallel 3.4s</div>
+            </div>
+
+            <!-- Stage 5 -->
+            <div id="stepCard_5" onclick="focusStudioSection('stage5')" class="p-3.5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] cursor-pointer hover:border-[#C86237]/60 transition space-y-1">
+              <div class="flex justify-between items-center text-[10px]">
+                <span class="font-bold uppercase tracking-wider text-[#78716C]">Stage 5</span>
+                <span class="px-1.5 py-0.2 rounded font-bold text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200">● Mobile</span>
+              </div>
+              <div class="font-bold text-xs text-[#1C1917] flex items-center gap-1.5">
+                <span>📱</span>
+                <span>Mobile 9:16 Preview</span>
+              </div>
+              <div class="text-[11px] text-[#78716C] truncate" id="studioStep5Sub">Live Phone Sync • Telegram</div>
             </div>
           </div>
         </div>
 
-        <!-- 3. MAIN WORKFLOW 2-COLUMN STUDIO GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <!-- LEFT COLUMN (7 COLS): ENHANCED CONTROLLABILITY DECK -->
-          <div class="lg:col-span-7 space-y-5">
-            
-            <!-- CONTROLLER 1: SOURCE INGESTION -->
-            <div id="studioSection_source" class="cloud-card rounded-xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-              <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm">📥</span>
-                  <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">1. Content Source & Ingest Mode</h4>
+        <!-- ==================== STAGE 1: CONTENT SOURCE & INGEST MODE (FULL WIDTH LEFT-TO-RIGHT) ==================== -->
+        <div id="pipeView_stage1" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-5">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+                📥
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#1C1917]">Stage 1: Content Source & Ingestion Engine</h4>
+                <p class="text-xs text-[#78716C]">Ingest high-performing competitor reels or parse direct video links into normalized 1080x1920 video assets.</p>
+              </div>
+            </div>
+            <div class="inline-flex rounded-lg border border-[#E8DCD1] p-0.5 bg-[#FAF8F5] text-xs font-semibold">
+              <button type="button" onclick="setStudioSourceMode('scrape')" id="btnSourceModeScrape" class="px-3 py-1.5 rounded-md bg-white text-[#1C1917] shadow-2xs font-bold transition">Competitor Scrape</button>
+              <button type="button" onclick="setStudioSourceMode('direct')" id="btnSourceModeDirect" class="px-3 py-1.5 rounded-md text-[#78716C] hover:text-[#1C1917] transition">Direct Reel URL</button>
+            </div>
+          </div>
+
+          <!-- Scrape Mode Controls -->
+          <div id="studioScrapeControls" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div class="md:col-span-6 space-y-1">
+                <label class="block text-xs font-bold text-[#78716C] uppercase">Competitor Instagram Handle</label>
+                <div class="relative">
+                  <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#78716C]">@</span>
+                  <input id="studioScrapeHandleInput" type="text" value="dailyfacts" oninput="onStudioSourceChange()" 
+                    class="w-full pl-8 pr-4 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
                 </div>
-                <div class="inline-flex rounded-lg border border-[#E8DCD1] p-0.5 bg-[#FAF8F5] text-[11px] font-semibold">
-                  <button type="button" onclick="setStudioSourceMode('scrape')" id="btnSourceModeScrape" class="px-2.5 py-1 rounded-md bg-white text-[#1C1917] shadow-2xs font-bold">Competitor Scrape</button>
-                  <button type="button" onclick="setStudioSourceMode('direct')" id="btnSourceModeDirect" class="px-2.5 py-1 rounded-md text-[#78716C] hover:text-[#1C1917]">Direct Reel URL</button>
-                </div>
+                <p class="text-[11px] text-[#78716C]">Target account for high-engagement viral video harvesting.</p>
               </div>
 
-              <!-- Scrape Mode Controls -->
-              <div id="studioScrapeControls" class="space-y-3">
-                <div class="flex flex-col sm:flex-row gap-2">
-                  <div class="flex-1">
-                    <label class="block text-[10px] font-bold text-[#78716C] uppercase mb-1">Competitor Instagram Handle</label>
-                    <div class="relative">
-                      <span class="absolute left-3 top-2 text-xs font-bold text-[#78716C]">@</span>
-                      <input id="studioScrapeHandleInput" type="text" value="dailyfacts" oninput="onStudioSourceChange()" 
-                        class="w-full pl-7 pr-3 py-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+              <div class="md:col-span-6 space-y-1">
+                <label class="block text-xs font-bold text-[#78716C] uppercase">Target Niche Pod</label>
+                <select id="studioNichePodSelect" onchange="onStudioNicheChange()" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                  <option value="information">💡 Information (10 Pages)</option>
+                  <option value="quantum">⚛️ Quantum Physics (10 Pages)</option>
+                  <option value="robotics">🦾 Robotics (10 Pages)</option>
+                  <option value="ai">🤖 Artificial Intel (10 Pages)</option>
+                  <option value="space">🚀 Space & Cosmos (10 Pages)</option>
+                  <option value="biotech">🧬 BioTech & DNA (10 Pages)</option>
+                </select>
+                <p class="text-[11px] text-[#78716C]">Destination 10-page cluster where customized variants will broadcast.</p>
+              </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="p-3.5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+              <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
+                <span>Curated High-Impact Viral Presets:</span>
+                <span class="text-[10px] text-[#C86237]">1-Click Autofill</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <button type="button" onclick="loadStudioPreset('dailyfacts', 'information', 'Two people can earn the exact same salary and end up living completely different lives', 'completely')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">💡 Science & Financial Facts</button>
+                <button type="button" onclick="loadStudioPreset('physicsfun', 'quantum', 'Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions', 'gravity')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">⚛️ Quantum Levitator</button>
+                <button type="button" onclick="loadStudioPreset('engineering', 'robotics', 'New Humanoid Actuators Mimic Human Muscle Fibers With Unprecedented Agility', 'unprecedented')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🦾 Humanoid Robotics</button>
+                <button type="button" onclick="loadStudioPreset('ai_pulse', 'ai', 'Neural Models Can Now Synthesize Fully Coherent Physical Simulators In Real Time', 'coherent')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🤖 Generative AI</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct URL Controls (Hidden by default) -->
+          <div id="studioDirectControls" class="hidden space-y-3">
+            <label class="block text-xs font-bold text-[#78716C] uppercase">Direct Reel / Shorts / TikTok Video Stream URL</label>
+            <div class="flex gap-2">
+              <input id="studioDirectUrlInput" type="text" placeholder="https://www.instagram.com/reel/C8q_viral_physics..." 
+                class="flex-1 px-3.5 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+              <button type="button" onclick="onStudioDirectUrlIngest()" class="px-4 py-2 bg-[#F7EFE9] text-[#C86237] hover:bg-[#F2E5DA] font-bold text-xs rounded-lg border border-[#E8DCD1] transition">
+                Inspect Link
+              </button>
+            </div>
+            <p class="text-xs text-[#78716C]">Directly ingest raw mp4 video stream for immediate re-compositing and multi-page fanout.</p>
+          </div>
+
+          <!-- Scraped Media Metadata Inspector -->
+          <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3">
+            <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
+              <span>Ingested Source Video Telemetry:</span>
+              <span class="text-emerald-700 font-bold">● Stream Verified</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                <div class="text-[10px] text-[#78716C] uppercase font-bold">Resolution</div>
+                <div class="font-bold text-[#1C1917] mt-0.5">1080 x 1920 (9:16)</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                <div class="text-[10px] text-[#78716C] uppercase font-bold">Audio Channels</div>
+                <div class="font-bold text-[#1C1917] mt-0.5">Stereo 48kHz AAC</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                <div class="text-[10px] text-[#78716C] uppercase font-bold">Codec / Bitrate</div>
+                <div class="font-bold text-[#1C1917] mt-0.5">H.264 • 6,500 kbps</div>
+              </div>
+              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                <div class="text-[10px] text-[#78716C] uppercase font-bold">Frame Rate</div>
+                <div class="font-bold text-[#1C1917] mt-0.5">29.97 FPS (Stable)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Stage Navigation -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
+            <span class="text-xs text-[#78716C]">Step 1 of 5 Ready</span>
+            <button type="button" onclick="focusStudioSection('aicopy')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
+              <span>Proceed to Stage 2: Visual Copywriting Studio</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== STAGE 2: AI BRAIN & VISUAL COPYWRITING STUDIO (FULL WIDTH LEFT-TO-RIGHT) ==================== -->
+        <div id="pipeView_stage2" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-5 hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+                🧠
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#1C1917]">Stage 2: AI Brain & Visual Copywriting Studio</h4>
+                <p class="text-xs text-[#78716C]">Craft high-retention curiosity hooks, glowing neon keywords, and educational captions that drive engagement.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded text-xs font-bold bg-[#F7EFE9] text-[#9E441B] border border-[#E8DCD1]" id="studioBrainActiveBadge">GROQ (LLAMA-3.3-70B)</span>
+              <button type="button" onclick="regenerateBrainCopy()" id="btnStudioRegenCopy" class="text-xs font-bold text-[#9E441B] bg-[#F7EFE9] hover:bg-[#F2E5DA] border border-[#E8DCD1] px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                <span>✨ Re-Generate Copy with AI</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Headline & Neon Highlight Word (Full Width Grid) -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <!-- Headline text -->
+            <div class="md:col-span-8 space-y-1.5">
+              <div class="flex justify-between items-center text-xs font-bold text-[#78716C]">
+                <span class="uppercase">Viral On-Screen Hook (Headline)</span>
+                <span id="headlineCharCount" class="font-mono text-[#A8A29E]">88 chars</span>
+              </div>
+              <textarea id="studioHeadlineInput" oninput="onStudioHeadlineInput()" rows="2" 
+                class="w-full p-3 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-bold text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Two people can earn the exact same salary and end up living completely different lives</textarea>
+              <p class="text-[11px] text-[#78716C]">Primary on-screen curiosity hook composited directly onto the top card of the vertical reel.</p>
+            </div>
+
+            <!-- Highlight Word in Neon Yellow -->
+            <div class="md:col-span-4 space-y-1.5">
+              <div class="flex justify-between items-center text-xs font-bold text-[#78716C]">
+                <span class="uppercase">Highlight Keyword</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-black bg-[#DDF51A] text-black">#DDF51A NEON</span>
+              </div>
+              <input id="studioHighlightWordInput" type="text" value="completely" oninput="onStudioHighlightWordInput()" 
+                class="w-full px-3 py-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-black text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+              <p class="text-[11px] text-[#78716C]">This word automatically renders in bold glowing neon-yellow over the video canvas.</p>
+            </div>
+          </div>
+
+          <!-- 3-Paragraph Caption Editor (Full Width) -->
+          <div class="space-y-3 pt-1">
+            <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
+              <span>3-Paragraph Educational Retention Caption</span>
+              <span class="text-xs font-normal text-[#A8A29E]">Structured for 90%+ Audience Watch-Through</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <!-- Paragraph 1 -->
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-[#C86237]">Para 1: Observation Hook</div>
+                <textarea id="studioP1Input" oninput="onStudioCaptionInput()" rows="4" 
+                  class="w-full p-2.5 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">When examining financial dynamics, researchers discovered a fundamental principle: cashflow velocity and investment rate matter infinitely more than gross income.</textarea>
+              </div>
+
+              <!-- Paragraph 2 -->
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-[#C86237]">Para 2: Underlying Mechanics</div>
+                <textarea id="studioP2Input" oninput="onStudioCaptionInput()" rows="4" 
+                  class="w-full p-2.5 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Under controlled financial modeling, behavioral patterns and compounding leverage create exponential divergence within just 36 months, even with identical baseline earnings.</textarea>
+              </div>
+
+              <!-- Paragraph 3 -->
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-[#C86237]">Para 3: Key Takeaway & CTA</div>
+                <textarea id="studioP3Input" oninput="onStudioCaptionInput()" rows="4" 
+                  class="w-full p-2.5 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Understanding this distinction unlocks greater financial autonomy. Follow for daily deep-dive breakdowns and share your perspective below.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata & Hashtags -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#78716C] uppercase">Source Attribution Tag</label>
+              <input id="studioCreditInput" type="text" value="@dailyfacts / open archives" oninput="onStudioCreditInput()" 
+                class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-[#78716C] uppercase">Targeted Algorithm Hashtags</label>
+              <input id="studioHashtagsInput" type="text" value="#information #science #financefacts #curiosity #didyouknow #knowledge" oninput="onStudioHashtagsInput()" 
+                class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+            </div>
+          </div>
+
+          <!-- Bottom Stage Navigation -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
+            <button type="button" onclick="focusStudioSection('source')" class="px-3.5 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
+              <span>⬅ Back to Stage 1: Source Ingest</span>
+            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="focusStudioSection('stage5')" class="px-3.5 py-2 rounded-lg border border-[#C86237]/40 bg-[#F7EFE9] text-[#9E441B] font-bold text-xs hover:bg-[#F2E5DA] transition">
+                <span>📱 Jump to Mobile Preview (Stage 5)</span>
+              </button>
+              <button type="button" onclick="focusStudioSection('canvas')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
+                <span>Proceed to Stage 3: 9:16 Compositor</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== STAGE 3: 9:16 VIDEO COMPOSITOR (FULL WIDTH LEFT-TO-RIGHT) ==================== -->
+        <div id="pipeView_stage3" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-5 hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+                🎨
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#1C1917]">Stage 3: 9:16 Video Compositor & Aesthetic Engine</h4>
+                <p class="text-xs text-[#78716C]">High-speed hardware-accelerated canvas compositing with custom account logos and verified badges.</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">NVENC / CPU AUTO</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+              <div class="font-bold text-[#1C1917] flex items-center gap-2">
+                <span>📐</span>
+                <span>Aspect & Dimension Matrix</span>
+              </div>
+              <p class="text-[#78716C]">Converts arbitrary source ratios (1:1, 4:3, 16:9) into compliant 1080x1920 Instagram Reel dimensions with blurred pillarbox backdrop.</p>
+              <div class="pt-2 text-[11px] font-mono font-bold text-emerald-700">● 1080 x 1920 Fixed Canvas</div>
+            </div>
+
+            <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+              <div class="font-bold text-[#1C1917] flex items-center gap-2">
+                <span>🏷️</span>
+                <span>Dynamic Account Identity</span>
+              </div>
+              <p class="text-[#78716C]">Infers each destination page's custom profile avatar, blue verified badge, and handle overlay dynamically without re-encoding the background video.</p>
+              <div class="pt-2 text-[11px] font-mono font-bold text-[#C86237]">● 10 Unique Brandings</div>
+            </div>
+
+            <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+              <div class="font-bold text-[#1C1917] flex items-center gap-2">
+                <span>✨</span>
+                <span>Cult Aesthetic Overlay</span>
+              </div>
+              <p class="text-[#78716C]">Renders high-contrast bold typography with glowing neon-yellow keyword highlight (#DDF51A), giving high retention and instant visual clarity.</p>
+              <div class="pt-2 text-[11px] font-mono font-bold text-purple-700">● Glowing Neon Keyword</div>
+            </div>
+          </div>
+
+          <!-- Bottom Stage Navigation -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
+            <button type="button" onclick="focusStudioSection('aicopy')" class="px-3.5 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
+              <span>⬅ Back to Stage 2: Visual Copywriting</span>
+            </button>
+            <button type="button" onclick="focusStudioSection('fanout')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
+              <span>Proceed to Stage 4: Pod Fanout Matrix</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== STAGE 4: MULTI-ACCOUNT POD FANOUT (FULL WIDTH LEFT-TO-RIGHT) ==================== -->
+        <div id="pipeView_stage4" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-5 hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+                🚀
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#1C1917]">Stage 4: Multi-Account Pod Fanout Matrix</h4>
+                <p class="text-xs text-[#78716C]">Simultaneous 1-to-All distribution matrix: broadcast 1 verified master reel to 10 destination pages in 3.4 seconds.</p>
+              </div>
+            </div>
+            <div class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-md border border-emerald-200">
+              ● 10 Destination Pages Connected
+            </div>
+          </div>
+
+          <!-- Fanout Accounts Grid Preview -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
+              <span>Target Pod Accounts (Active Cluster):</span>
+              <span class="text-[#C86237]">Parallel Concurrency: 10 Workers</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold">1</div>
+                  <span class="font-bold text-[#1C1917] truncate">@info.daily</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Ready (0x981F4B)</div>
+              </div>
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold">2</div>
+                  <span class="font-bold text-[#1C1917] truncate">@curious.minds</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Ready (0x442E8A)</div>
+              </div>
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold">3</div>
+                  <span class="font-bold text-[#1C1917] truncate">@daily.knowledge</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Ready (0x19A7BC)</div>
+              </div>
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold">4</div>
+                  <span class="font-bold text-[#1C1917] truncate">@deep.facts</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Ready (0x38F01D)</div>
+              </div>
+              <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-[#00b4d8] text-white flex items-center justify-center text-[10px] font-bold">5</div>
+                  <span class="font-bold text-[#1C1917] truncate">@mind.uncovered</span>
+                </div>
+                <div class="text-[10px] text-emerald-700 font-semibold">● Ready (0x7C924E)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Stage Navigation -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
+            <button type="button" onclick="focusStudioSection('canvas')" class="px-3.5 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
+              <span>⬅ Back to Stage 3: Compositor</span>
+            </button>
+            <button type="button" onclick="focusStudioSection('stage5')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
+              <span>Proceed to Stage 5: Mobile 9:16 Preview & Approval</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== STAGE 5: MOBILE 9:16 PREVIEW & TELEGRAM APPROVAL ==================== -->
+        <div id="pipeView_stage5" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-6 hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+                📱
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-[#1C1917]">Stage 5: Mobile 9:16 Preview Studio & Telegram Approval</h4>
+                <p class="text-xs text-[#78716C]">Review the finished reel on the real-world smartphone simulator, test individual account branding, or push to Telegram.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="focusStudioSection('aicopy')" class="px-3 py-1.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-xs font-semibold text-[#1C1917] hover:bg-[#F3EDE4] transition">
+                ✏️ Edit Copy & Hook
+              </button>
+              <span class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                REAL-TIME SYNC
+              </span>
+            </div>
+          </div>
+
+          <!-- 2-COLUMN STAGE 5 LAYOUT: LEFT CONTROLS + RIGHT MOBILE MOCKUP -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT COLUMN (6 COLS): TELEGRAM APPROVAL & DISPATCH CONTROLS -->
+            <div class="lg:col-span-6 space-y-5">
+              
+              <!-- Telegram Mobile Approval Deck -->
+              <div class="p-5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-4">
+                <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] shrink-0 border border-[#2AABEE]/20">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Telegram Mobile 1-Tap Approval</h4>
+                      <p class="text-[11px] text-[#78716C]">Review and approve straight from your mobile phone</p>
                     </div>
                   </div>
-                  <div class="w-full sm:w-48">
-                    <label class="block text-[10px] font-bold text-[#78716C] uppercase mb-1">Target Niche Pod</label>
-                    <select id="studioNichePodSelect" onchange="onStudioNicheChange()" class="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                      <option value="information">💡 Information (10 Pages)</option>
-                      <option value="quantum">⚛️ Quantum Physics (10 Pages)</option>
-                      <option value="robotics">🦾 Robotics (10 Pages)</option>
-                      <option value="ai">🤖 Artificial Intel (10 Pages)</option>
-                      <option value="space">🚀 Space & Cosmos (10 Pages)</option>
-                      <option value="biotech">🧬 BioTech & DNA (10 Pages)</option>
-                    </select>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-emerald-700" id="studioTgBotStatusPill">@OctopusAgentBot Active</span>
                   </div>
                 </div>
 
-                <!-- Quick Presets -->
-                <div class="flex items-center gap-2 pt-1 text-[11px] text-[#78716C] overflow-x-auto no-scrollbar">
-                  <span class="shrink-0 font-medium text-[10px] uppercase tracking-wider">Quick Presets:</span>
-                  <button type="button" onclick="loadStudioPreset('dailyfacts', 'information', 'Two people can earn the exact same salary and end up living completely different lives', 'completely')" class="px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] text-[10px] font-semibold transition shrink-0">💡 Science Facts</button>
-                  <button type="button" onclick="loadStudioPreset('physicsfun', 'quantum', 'Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions', 'gravity')" class="px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] text-[10px] font-semibold transition shrink-0">⚛️ Quantum Levitator</button>
-                  <button type="button" onclick="loadStudioPreset('engineering', 'robotics', 'New Humanoid Actuators Mimic Human Muscle Fibers With Unprecedented Agility', 'unprecedented')" class="px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] text-[10px] font-semibold transition shrink-0">🦾 Humanoid Robotics</button>
-                  <button type="button" onclick="loadStudioPreset('ai_pulse', 'ai', 'Neural Models Can Now Synthesize Fully Coherent Physical Simulators In Real Time', 'coherent')" class="px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] text-[10px] font-semibold transition shrink-0">🤖 Generative AI</button>
-                </div>
-              </div>
+                <div class="space-y-3 text-xs">
+                  <div class="p-3 rounded-lg border border-[#E8DCD1] bg-white space-y-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input id="chkRequireTgApproval" type="checkbox" checked class="rounded text-[#C86237]">
+                      <span class="text-xs font-bold text-[#1C1917]">Require Telegram 1-Tap Mobile Approval</span>
+                    </label>
+                    <p class="text-[10px] text-[#78716C]">Sends video clip, headline, and full caption to your private Telegram chat with [Approve & Fanout] and [Regenerate] buttons before publishing.</p>
+                  </div>
 
-              <!-- Direct URL Controls (Hidden by default) -->
-              <div id="studioDirectControls" class="hidden space-y-2">
-                <label class="block text-[10px] font-bold text-[#78716C] uppercase">Direct Reel / Shorts / TikTok URL</label>
-                <div class="flex gap-2">
-                  <input id="studioDirectUrlInput" type="text" placeholder="https://www.instagram.com/reel/C8q_viral_physics..." 
-                    class="flex-1 px-3 py-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                  <button type="button" onclick="onStudioDirectUrlIngest()" class="px-3 py-1.5 bg-[#F7EFE9] text-[#C86237] hover:bg-[#F2E5DA] font-bold text-xs rounded-lg border border-[#E8DCD1] transition">
-                    Inspect Link
+                  <div class="p-3 rounded-lg border border-[#E8DCD1] bg-white space-y-1">
+                    <div class="text-[10px] font-bold text-[#78716C] uppercase">Destination Fanout Matrix</div>
+                    <div class="text-xs font-bold text-[#1C1917]" id="studioPodCountLabel">10 Destination Pages Connected</div>
+                    <p class="text-[10px] text-emerald-700 font-semibold">● Parallel 3.4s Broadcast Engine Ready</p>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-[#E8DCD1]">
+                  <button type="button" onclick="sendStudioToTelegram()" id="btnSendStudioTg" class="flex-1 px-4 py-2.5 rounded-lg border border-[#2AABEE]/40 bg-[#2AABEE]/10 hover:bg-[#2AABEE]/20 text-[#0088cc] font-bold text-xs flex items-center justify-center gap-2 transition shadow-2xs">
+                    <span>📲 Send Preview to Telegram</span>
                   </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- CONTROLLER 2: AI BRAIN & VIRAL COPYWRITING STUDIO -->
-            <div id="studioSection_aicopy" class="cloud-card rounded-xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-              <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm">🧠</span>
-                  <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">2. AI Brain & Viral Copywriting Studio</h4>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F7EFE9] text-[#9E441B] border border-[#E8DCD1]" id="studioBrainActiveBadge">GROQ (LLAMA-3.3-70B)</span>
-                </div>
-                <button type="button" onclick="regenerateBrainCopy()" id="btnStudioRegenCopy" class="text-xs font-bold text-[#9E441B] bg-[#F7EFE9] hover:bg-[#F2E5DA] border border-[#E8DCD1] px-3 py-1 rounded-md flex items-center gap-1.5 transition">
-                  <span>✨ Re-Generate with AI</span>
-                </button>
-              </div>
-
-              <!-- Headline & Neon Highlight Word -->
-              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <!-- Headline text -->
-                <div class="sm:col-span-8 space-y-1">
-                  <div class="flex justify-between items-center text-[10px] font-bold text-[#78716C]">
-                    <span class="uppercase">Viral On-Screen Hook (Headline)</span>
-                    <span id="headlineCharCount" class="font-mono text-[#A8A29E]">88 chars</span>
-                  </div>
-                  <textarea id="studioHeadlineInput" oninput="onStudioHeadlineInput()" rows="2" 
-                    class="w-full p-2.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-bold text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Two people can earn the exact same salary and end up living completely different lives</textarea>
-                </div>
-
-                <!-- Highlight Word in Neon Yellow -->
-                <div class="sm:col-span-4 space-y-1">
-                  <div class="flex justify-between items-center text-[10px] font-bold text-[#78716C]">
-                    <span class="uppercase">Highlight Keyword</span>
-                    <span class="text-[9px] px-1 py-0.2 rounded font-bold bg-[#DDF51A] text-black">#DDF51A NEON</span>
-                  </div>
-                  <input id="studioHighlightWordInput" type="text" value="completely" oninput="onStudioHighlightWordInput()" 
-                    class="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-black text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                  <p class="text-[10px] text-[#78716C]">This word renders in glowing neon yellow over the video.</p>
-                </div>
-              </div>
-
-              <!-- 3-Paragraph Caption Editor -->
-              <div class="space-y-2 pt-1">
-                <div class="flex justify-between items-center text-[10px] font-bold text-[#78716C] uppercase">
-                  <span>3-Paragraph Educational Caption</span>
-                  <span class="text-[10px] font-normal text-[#A8A29E]">High-Retention Format</span>
-                </div>
-
-                <!-- Paragraph 1 -->
-                <div class="p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1">
-                  <div class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Para 1: Observation & Phenomenon Hook</div>
-                  <textarea id="studioP1Input" oninput="onStudioCaptionInput()" rows="2" 
-                    class="w-full p-2 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">When examining financial dynamics, researchers discovered a fundamental principle: cashflow velocity and investment rate matter infinitely more than gross income.</textarea>
-                </div>
-
-                <!-- Paragraph 2 -->
-                <div class="p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1">
-                  <div class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Para 2: Underlying Mechanics & Scientific Depth</div>
-                  <textarea id="studioP2Input" oninput="onStudioCaptionInput()" rows="2" 
-                    class="w-full p-2 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Under controlled financial modeling, behavioral patterns and compounding leverage create exponential divergence within just 36 months, even with identical baseline earnings.</textarea>
-                </div>
-
-                <!-- Paragraph 3 -->
-                <div class="p-2.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1">
-                  <div class="text-[9px] font-bold uppercase tracking-wider text-[#C86237]">Para 3: Key Takeaway & Discussion CTA</div>
-                  <textarea id="studioP3Input" oninput="onStudioCaptionInput()" rows="2" 
-                    class="w-full p-2 bg-white border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] leading-relaxed">Understanding this distinction unlocks greater financial autonomy. Follow for daily deep-dive breakdowns and share your perspective below.</textarea>
-                </div>
-              </div>
-
-              <!-- Metadata & Hashtags -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label class="block text-[10px] font-bold text-[#78716C] uppercase mb-1">Source Credit Tag</label>
-                  <input id="studioCreditInput" type="text" value="@dailyfacts / open archives" oninput="onStudioCreditInput()" 
-                    class="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-[#78716C] uppercase mb-1">Targeted Hashtags</label>
-                  <input id="studioHashtagsInput" type="text" value="#information #science #financefacts #curiosity #didyouknow #knowledge" oninput="onStudioHashtagsInput()" 
-                    class="w-full px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                </div>
-              </div>
-            </div>
-
-            <!-- CONTROLLER 3: TELEGRAM MOBILE APPROVAL & DISPATCH DECK -->
-            <div id="studioSection_fanout" class="cloud-card rounded-xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-              <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-7 h-7 rounded-lg bg-[#2AABEE]/10 flex items-center justify-center text-[#2AABEE] shrink-0 border border-[#2AABEE]/20">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">3. Telegram Mobile Control & Multi-Page Fanout</h4>
-                    <p class="text-[11px] text-[#78716C]">Review on your phone or broadcast to all destination pages</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span class="text-[10px] font-bold text-emerald-700" id="studioTgBotStatusPill">@OctopusAgentBot Active</span>
-                </div>
-              </div>
-
-              <!-- Controls row -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1">
-                  <div class="text-[10px] font-bold text-[#78716C] uppercase">Mobile Approval Workflow</div>
-                  <label class="flex items-center gap-2 cursor-pointer pt-1">
-                    <input id="chkRequireTgApproval" type="checkbox" checked class="rounded text-[#C86237]">
-                    <span class="text-xs font-semibold text-[#1C1917]">Require Telegram 1-Tap Approval</span>
-                  </label>
-                  <p class="text-[10px] text-[#78716C]">Sends video & caption directly to your Telegram chat before posting.</p>
-                </div>
-
-                <div class="p-3 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] space-y-1">
-                  <div class="text-[10px] font-bold text-[#78716C] uppercase">Target Accounts in Pod</div>
-                  <div class="text-xs font-bold text-[#1C1917]" id="studioPodCountLabel">10 Destination Pages Connected</div>
-                  <p class="text-[10px] text-emerald-700 font-semibold">● Parallel 3.4s Broadcast Ready</p>
-                </div>
-              </div>
-
-              <!-- Action Bar -->
-              <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E8DCD1]">
-                <button type="button" onclick="sendStudioToTelegram()" id="btnSendStudioTg" class="px-3.5 py-2 rounded-lg border border-[#2AABEE]/40 bg-[#2AABEE]/10 hover:bg-[#2AABEE]/20 text-[#0088cc] font-bold text-xs flex items-center gap-2 transition shadow-2xs">
-                  <span>📲 Send Preview to Telegram</span>
-                </button>
-                <div class="flex items-center gap-2">
-                  <button type="button" onclick="triggerPipelineRun()" class="px-3.5 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
+                  <button type="button" onclick="triggerPipelineRun()" class="px-4 py-2.5 rounded-lg border border-[#E8DCD1] bg-white hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
                     ⚡ Test Dry-Run
                   </button>
-                  <button type="button" onclick="broadcastPipelineNow()" class="orange-gradient-btn px-4 py-2 rounded-lg text-white font-bold text-xs shadow-sm transition">
+                  <button type="button" onclick="broadcastPipelineNow()" class="orange-gradient-btn px-5 py-2.5 rounded-lg text-white font-bold text-xs shadow-sm transition">
                     🚀 Broadcast to All Pages
                   </button>
                 </div>
               </div>
+
+              <!-- Pre-Flight Deployment Checklist -->
+              <div class="p-4 rounded-xl border border-[#E8DCD1] bg-white space-y-2.5">
+                <div class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Production Pre-Flight Checklist</div>
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex items-center justify-between text-[#78716C]">
+                    <span class="flex items-center gap-1.5"><span>✅</span> 1080x1920 Vertical HD Canvas</span>
+                    <span class="font-mono text-emerald-700 font-bold">100%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[#78716C]">
+                    <span class="flex items-center gap-1.5"><span>✅</span> Viral Hook with Neon Highlight</span>
+                    <span class="font-mono text-emerald-700 font-bold">Active</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[#78716C]">
+                    <span class="flex items-center gap-1.5"><span>✅</span> 3-Paragraph Educational Caption</span>
+                    <span class="font-mono text-emerald-700 font-bold">Generated</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[#78716C]">
+                    <span class="flex items-center gap-1.5"><span>✅</span> Dynamic Page Branding & Logo</span>
+                    <span class="font-mono text-emerald-700 font-bold">Ready</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-          </div>
-
-          <!-- RIGHT COLUMN (5 COLS): REAL-TIME 9:16 VERTICAL SMARTPHONE MOCKUP -->
-          <div class="lg:col-span-5 sticky top-6 space-y-4">
-            <div class="cloud-card rounded-2xl p-5 border border-[#E8DCD1] bg-white shadow-md space-y-4">
-              <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm">📱</span>
-                  <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Live 9:16 Reel Preview Studio</h4>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  REAL-TIME SYNC
-                </span>
+            <!-- RIGHT COLUMN (6 COLS): REALISTIC 9:16 SMARTPHONE MOCKUP -->
+            <div class="lg:col-span-6 space-y-4">
+              <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
+                <span>Interactive 9:16 Smartphone Simulator:</span>
+                <span class="text-[#C86237]">Live Video Rendering</span>
               </div>
 
               <!-- Phone Bezel Container -->
@@ -1116,7 +1369,7 @@
 
               </div>
 
-              <!-- MULTI-PAGE PREVIEW SELECTOR BAR -->
+              <!-- MULTI-PAGE PREVIEW SELECTOR BAR (SWITCH BRANDING) -->
               <div class="pt-2 border-t border-[#E8DCD1] space-y-1.5">
                 <div class="flex justify-between items-center text-[10px] font-bold uppercase text-[#78716C]">
                   <span>Preview Other Destination Pages in Pod:</span>
@@ -1127,12 +1380,21 @@
                 </div>
               </div>
             </div>
+
           </div>
 
+          <!-- Bottom Stage Navigation -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
+            <button type="button" onclick="focusStudioSection('fanout')" class="px-3.5 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-semibold text-xs transition">
+              <span>⬅ Back to Stage 4: Pod Fanout</span>
+            </button>
+            <button type="button" onclick="broadcastPipelineNow()" class="orange-gradient-btn px-5 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
+              <span>🚀 Execute Final Multi-Page Broadcast</span>
+            </button>
+          </div>
         </div>
 
       </section>
-
       <!-- ==================== TAB 4: ACCOUNTS MATRIX ==================== -->
       <section id="view_accounts" class="space-y-6 hidden">
         <div class="cloud-card rounded-lg p-5 space-y-4">
@@ -3576,14 +3838,14 @@
     let studioSourceMode = 'scrape';
     let pipelineStateCache = null;
 
-    // 1. Focus Stepper Stage
+    // 1. Focus Stepper Stage (Isolates single stage view)
     function focusStudioSection(sectionKey) {
-      const stepMap = { 'source': 1, 'aicopy': 2, 'canvas': 3, 'fanout': 4 };
+      const stepMap = { 'source': 1, 'aicopy': 2, 'canvas': 3, 'fanout': 4, 'stage5': 5, 'preview': 5 };
       const stepNum = typeof sectionKey === 'number' ? sectionKey : (stepMap[sectionKey] || 1);
       studioCurrentStep = stepNum;
 
-      // Update 4 stepper cards
-      for (let i = 1; i <= 4; i++) {
+      // Update 5 stepper cards
+      for (let i = 1; i <= 5; i++) {
         const card = document.getElementById(`stepCard_${i}`);
         if (!card) continue;
         if (i === stepNum) {
@@ -3593,15 +3855,21 @@
         }
       }
 
-      // Smooth scroll to corresponding section if key given
-      if (typeof sectionKey === 'string') {
-        const secId = sectionKey === 'canvas' ? 'studioSection_aicopy' : `studioSection_${sectionKey}`;
-        const secEl = document.getElementById(secId);
-        if (secEl) {
-          secEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          secEl.classList.add('ring-2', 'ring-[#C86237]/30');
-          setTimeout(() => secEl.classList.remove('ring-2', 'ring-[#C86237]/30'), 1200);
+      // Hide all 5 stage views, show ONLY the active one
+      for (let i = 1; i <= 5; i++) {
+        const stageView = document.getElementById(`pipeView_stage${i}`);
+        if (!stageView) continue;
+        if (i === stepNum) {
+          stageView.classList.remove("hidden");
+        } else {
+          stageView.classList.add("hidden");
         }
+      }
+
+      // If Stage 5 (Mobile Preview) is focused, refresh preview and account pills
+      if (stepNum === 5) {
+        updateStudioPreview();
+        renderStudioPageSwitcher();
       }
     }
 
@@ -3915,11 +4183,12 @@
         btn.innerHTML = `<span>⚙️ Executing Pipeline...</span>`;
       }
 
-      // Step Animation
+      // Step Animation across all 5 stages
       focusStudioSection(1);
-      setTimeout(() => focusStudioSection(2), 600);
-      setTimeout(() => focusStudioSection(3), 1200);
-      setTimeout(() => focusStudioSection(4), 1800);
+      setTimeout(() => focusStudioSection(2), 500);
+      setTimeout(() => focusStudioSection(3), 1000);
+      setTimeout(() => focusStudioSection(4), 1500);
+      setTimeout(() => focusStudioSection(5), 2000);
 
       try {
         const res = await fetch("/api/pipeline/run", {
