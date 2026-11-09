@@ -158,17 +158,24 @@ class OctopusFanoutEngine:
 
         render_and_publish_tasks = []
 
+        # Check if pre-rendered reel is already available for fast broadcast
+        master_rendered = reel.get("rendered_video_path")
+        is_pre_rendered = bool(master_rendered and Path(master_rendered).exists())
+
         # 1. Prepare tailored videos & logs for each account
         for account in target_accounts:
-            rendered_path = self.generate_account_customized_reel(
-                raw_video_path=reel["raw_video_path"],
-                hook_text=reel["hook_text"],
-                account=account,
-                task_id=f"{reel_id}_{account['id']}"
-            )
+            if is_pre_rendered:
+                rendered_path = master_rendered
+            else:
+                rendered_path = self.generate_account_customized_reel(
+                    raw_video_path=reel.get("raw_video_path"),
+                    hook_text=reel.get("hook_text", ""),
+                    account=account,
+                    task_id=f"{reel_id}_{account['id']}"
+                )
             
             if not rendered_path:
-                logger.error(f"Failed to render video variation for {account['handle']}")
+                logger.error(f"Failed to resolve video for {account['handle']}")
                 continue
 
             rendered_filename = Path(rendered_path).name
@@ -226,10 +233,13 @@ class OctopusFanoutEngine:
         insert_or_update_reel({"id": reel_id, "status": "BROADCASTED"})
         
         success_count = sum(1 for r in results if r.get("success"))
+        rate = f"{int((success_count / max(1, len(target_accounts))) * 100)}%"
         return {
             "success": True,
             "total_accounts": len(target_accounts),
             "successful_publishes": success_count,
+            "successful_posts_count": success_count,
+            "success_rate": rate,
             "dry_run": dry_run,
             "details": results
         }

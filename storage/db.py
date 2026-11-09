@@ -426,19 +426,29 @@ def get_active_sources_by_type(source_type: str = "instagram_handle") -> List[Di
     conn.close()
     return rows
 
-def add_monitored_source(
-    source_type: str,
-    source_value: str,
-    category: str,
-    target_account_id: Optional[str] = None,
-    auto_publish: int = 1
-):
+def add_monitored_source(*args, **kwargs):
+    if len(args) == 1 and isinstance(args[0], dict):
+        d = args[0]
+        source_type = d.get("source_type", "instagram_handle")
+        source_value = d.get("source_value", "")
+        category = d.get("category", "general")
+        target_account_id = d.get("target_account_id") or category
+        auto_publish = d.get("auto_publish", 1)
+        niche_id = d.get("niche_id") or category
+    else:
+        source_type = args[0] if len(args) > 0 else kwargs.get("source_type", "instagram_handle")
+        source_value = args[1] if len(args) > 1 else kwargs.get("source_value", "")
+        category = args[2] if len(args) > 2 else kwargs.get("category", "general")
+        target_account_id = args[3] if len(args) > 3 else kwargs.get("target_account_id", category)
+        auto_publish = args[4] if len(args) > 4 else kwargs.get("auto_publish", 1)
+        niche_id = kwargs.get("niche_id") or category
+
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO monitored_sources (source_type, source_value, category, target_account_id, auto_publish)
-        VALUES (?, ?, ?, ?, ?)
-    """, (source_type, source_value.strip().lstrip("@"), category, target_account_id or category, auto_publish))
+        INSERT INTO monitored_sources (source_type, source_value, category, target_account_id, auto_publish, niche_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (source_type, source_value.strip().lstrip("@"), category, target_account_id or category, auto_publish, niche_id))
     conn.commit()
     conn.close()
 
