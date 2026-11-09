@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: octopus-agent-backend
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: starter  # Note: Must be starter ($7/mo) or above so it never sleeps after 15 mins!
+    autoDeploy: true
+    healthCheckPath: /api/telegram/status
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: STORAGE_PROVIDER
+        value: local_tunnel
+      - key: DEFAULT_CHANNEL
+        value: quantum
+    disk:
+      name: octopus-storage
+      mountPath: /app/storage
+      sizeGB: 10

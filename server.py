@@ -46,8 +46,19 @@ from storage.db import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("OctopusServer")
 
+from fastapi.middleware.cors import CORSMiddleware
+
 init_octopus_db()
 app = FastAPI(title="Octopus Agent: Enterprise Multi-Account Reels Engine", version="3.0.0")
+
+# Enable Cross-Origin Resource Sharing (CORS) for Vercel and remote web clients
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount output and assets folders to stream generated videos and logos
 app.mount("/output", StaticFiles(directory=str(settings.OUTPUT_DIR)), name="output")
