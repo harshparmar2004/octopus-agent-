@@ -18,6 +18,14 @@ from scrapers.content_harvester import ContentHarvester
 from processors.ai_enricher import AIEnricher
 from processors.llm_manager import LLMManager
 from renderers.video_compositor import VideoCompositor
+from renderers.niche_templates import (
+    list_all_templates,
+    get_template_by_id,
+    get_template_for_niche,
+    register_custom_template,
+    NicheTemplate
+)
+from storage.db import get_niche_template, set_niche_template
 from storage.db import (
     init_octopus_db,
     get_all_reels,
@@ -205,6 +213,8 @@ class PipelineRegenerateRequest(BaseModel):
     source_handle: Optional[str] = "@dailyfacts"
     topic: Optional[str] = "Curiosity & Science"
     voice_tone: Optional[str] = "curiosity"
+    niche: Optional[str] = "information"
+    niche_id: Optional[str] = "information"
 
 # API Endpoints
 @app.get("/api/niches")
@@ -449,6 +459,31 @@ latest_pipeline_trace = {
     }
 }
 
+
+@app.get("/api/templates")
+def get_templates():
+    return list_all_templates()
+
+@app.get("/api/templates/{template_id}")
+def get_template(template_id: str):
+    t = get_template_by_id(template_id)
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return t.model_dump()
+
+@app.post("/api/templates")
+def create_template(tpl: NicheTemplate):
+    register_custom_template(tpl)
+    return {"status": "success", "template": tpl.model_dump()}
+
+@app.post("/api/niches/{niche_id}/template")
+def assign_niche_template(niche_id: str, payload: Dict[str, str]):
+    template_id = payload.get("template_id")
+    if not template_id:
+        raise HTTPException(status_code=400, detail="template_id required")
+    set_niche_template(niche_id, template_id)
+    return {"status": "success", "niche_id": niche_id, "template_id": template_id}
+
 @app.get("/api/pipeline/state")
 def get_pipeline_state():
     mgr = LLMManager()
@@ -532,10 +567,11 @@ def regenerate_pipeline_copy(req: PipelineRegenerateRequest):
     topic = req.topic or "Educational Viral Reel"
     mgr = LLMManager()
     
+    niche_target = req.niche_id or req.niche or "information"
     hook_data = mgr.synthesize_reel(
         title=f"Viral demonstration reel from {handle}",
-        description=f"Demonstration illustrating {topic} with physical and scientific principles",
-        niche="information",
+        description=f"Demonstration illustrating {topic}",
+        niche=niche_target,
         channel_handle=handle,
         formula="curiosity"
     )

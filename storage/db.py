@@ -135,6 +135,11 @@ def init_octopus_db():
         cursor.execute("ALTER TABLE niches ADD COLUMN automation_config TEXT")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE niches ADD COLUMN template_id TEXT DEFAULT 'informative_cult'")
+    except sqlite3.OperationalError:
+        pass
+
 
     # Seed default initial accounts if empty
     cursor.execute("SELECT COUNT(*) FROM accounts")
@@ -196,6 +201,75 @@ def init_octopus_db():
     cursor.execute("UPDATE accounts SET niche_id = 'space' WHERE id = 'space' OR niche LIKE '%space%'")
     cursor.execute("UPDATE accounts SET niche_id = 'biotech' WHERE id = 'biotech' OR niche LIKE '%biotech%'")
     cursor.execute("UPDATE accounts SET niche_id = 'information' WHERE id LIKE 'info_%'")
+
+    # Seed extended niches (Parties, Organizing, Fashion) with their templates
+    extended_niches = [
+        ("parties", "Parties, EDM & Nightlife", "EDM festivals, DJ drops, club culture & event recaps", "#FF007F", "🎉", "#nightlife #edmlifestyle #partyvibes #techno #festivalvibes #clubbing", "Follow @{handle} for weekend party drops!", "nightlife_party"),
+        ("organizing", "Home Organizing & ASMR", "Decluttering, Sunday resets, pantry setups & clean home hacks", "#84A98C", "🧺", "#organizationhacks #sundayreset #cleantok #minimalisthome", "Follow @{handle} for weekly reset inspiration!", "organizing_home"),
+        ("fashion", "Fashion & Beauty Lifestyle", "Capsule wardrobes, clean girl aesthetic outfits & chic lookbooks", "#D4AF37", "✨", "#outfitinspo #capsulewardrobe #cleangirlstyle #aestheticfits", "Follow @{handle} for daily chic rotation inspo!", "fashion_editorial"),
+    ]
+    for n in extended_niches:
+        cursor.execute("""
+            INSERT OR IGNORE INTO niches (id, name, description, brand_color, avatar_icon, default_hashtags, cta_text, template_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, n)
+        cursor.execute("UPDATE niches SET template_id = ? WHERE id = ?", (n[7], n[0]))
+
+    # Seed accounts for Parties, Organizing, and Fashion pods
+    party_accounts = [
+        ("party_01", "@miami.nights", "MiamiNights", "Parties & Nightlife", "parties", "", "", "MN", "#FF007F", 1),
+        ("party_02", "@edm.pulse", "EDMPulse", "Parties & Nightlife", "parties", "", "", "EP", "#00F0FF", 1),
+        ("party_03", "@afterhours.club", "AfterhoursClub", "Parties & Nightlife", "parties", "", "", "AC", "#f43f5e", 1),
+        ("party_04", "@festival.vibes", "FestivalVibes", "Parties & Nightlife", "parties", "", "", "FV", "#a855f7", 1),
+        ("party_05", "@club.tulum", "ClubTulum", "Parties & Nightlife", "parties", "", "", "CT", "#ec4899", 1),
+        ("party_06", "@neon.energy", "NeonEnergy", "Parties & Nightlife", "parties", "", "", "NE", "#3b82f6", 1),
+        ("party_07", "@techno.pulse", "TechnoPulse", "Parties & Nightlife", "parties", "", "", "TP", "#6366f1", 1),
+        ("party_08", "@bass.heavy", "BassHeavy", "Parties & Nightlife", "parties", "", "", "BH", "#8b5cf6", 1),
+        ("party_09", "@rave.society", "RaveSociety", "Parties & Nightlife", "parties", "", "", "RS", "#d946ef", 1),
+        ("party_10", "@drop.vault", "DropVault", "Parties & Nightlife", "parties", "", "", "DV", "#FF007F", 1),
+    ]
+    for acc in party_accounts:
+        cursor.execute("""
+            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, acc)
+
+    organizing_accounts = [
+        ("org_01", "@organize.daily", "OrganizeDaily", "Home Organizing & ASMR", "organizing", "", "", "OD", "#84A98C", 1),
+        ("org_02", "@reset.routine", "ResetRoutine", "Home Organizing & ASMR", "organizing", "", "", "RR", "#52796F", 1),
+        ("org_03", "@clean.spaces", "CleanSpaces", "Home Organizing & ASMR", "organizing", "", "", "CS", "#354F52", 1),
+        ("org_04", "@pantry.perfection", "PantryPerfection", "Home Organizing & ASMR", "organizing", "", "", "PP", "#2F3E46", 1),
+        ("org_05", "@neat.living", "NeatLiving", "Home Organizing & ASMR", "organizing", "", "", "NL", "#84A98C", 1),
+        ("org_06", "@declutter.flow", "DeclutterFlow", "Home Organizing & ASMR", "organizing", "", "", "DF", "#52796F", 1),
+        ("org_07", "@asmr.organize", "ASMROrganize", "Home Organizing & ASMR", "organizing", "", "", "AO", "#C86237", 1),
+        ("org_08", "@aesthetic.home", "AestheticHome", "Home Organizing & ASMR", "organizing", "", "", "AH", "#D5BDAF", 1),
+        ("org_09", "@tidy.haven", "TidyHaven", "Home Organizing & ASMR", "organizing", "", "", "TH", "#84A98C", 1),
+        ("org_10", "@order.simplified", "OrderSimplified", "Home Organizing & ASMR", "organizing", "", "", "OS", "#52796F", 1),
+    ]
+    for acc in organizing_accounts:
+        cursor.execute("""
+            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, acc)
+
+    fashion_accounts = [
+        ("fash_01", "@chic.rotation", "ChicRotation", "Fashion & Beauty Lifestyle", "fashion", "", "", "CR", "#D4AF37", 1),
+        ("fash_02", "@minimal.fits", "MinimalFits", "Fashion & Beauty Lifestyle", "fashion", "", "", "MF", "#C5A059", 1),
+        ("fash_03", "@style.notes", "StyleNotes", "Fashion & Beauty Lifestyle", "fashion", "", "", "SN", "#E5C158", 1),
+        ("fash_04", "@aesthetic.wardrobe", "AestheticWardrobe", "Fashion & Beauty Lifestyle", "fashion", "", "", "AW", "#A38035", 1),
+        ("fash_05", "@capsule.styling", "CapsuleStyling", "Fashion & Beauty Lifestyle", "fashion", "", "", "CS", "#D4AF37", 1),
+        ("fash_06", "@quiet.luxury", "QuietLuxury", "Fashion & Beauty Lifestyle", "fashion", "", "", "QL", "#8C6D23", 1),
+        ("fash_07", "@french.vibe", "FrenchVibe", "Fashion & Beauty Lifestyle", "fashion", "", "", "FV", "#D4AF37", 1),
+        ("fash_08", "@daily.lookbook", "DailyLookbook", "Fashion & Beauty Lifestyle", "fashion", "", "", "DL", "#C5A059", 1),
+        ("fash_09", "@couture.pulse", "CouturePulse", "Fashion & Beauty Lifestyle", "fashion", "", "", "CP", "#E5C158", 1),
+        ("fash_10", "@clean.girl.fits", "CleanGirlFits", "Fashion & Beauty Lifestyle", "fashion", "", "", "CG", "#D4AF37", 1),
+    ]
+    for acc in fashion_accounts:
+        cursor.execute("""
+            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, acc)
+
 
     # Seed 7 benchmark sources for the Information Niche if missing
     info_sources = [
@@ -708,3 +782,24 @@ def bulk_add_sources_to_niche(niche_id: str, source_handles: List[str]) -> int:
 
 
 
+
+
+def get_niche_template(niche_id: str) -> str:
+    """Returns the template ID assigned to a niche, fallback to 'informative_cult'."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT template_id FROM niches WHERE id = ?", (niche_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row and row["template_id"]:
+        return row["template_id"]
+    return "informative_cult"
+
+def set_niche_template(niche_id: str, template_id: str) -> bool:
+    """Assigns a template ID to a niche."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE niches SET template_id = ? WHERE id = ?", (template_id, niche_id))
+    conn.commit()
+    conn.close()
+    return True

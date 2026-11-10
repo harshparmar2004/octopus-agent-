@@ -6,6 +6,7 @@ import requests
 from pathlib import Path
 from typing import Dict, Any, Optional
 from config import settings
+from renderers.niche_templates import get_template_for_niche
 
 logger = logging.getLogger("LLMManager")
 
@@ -269,25 +270,23 @@ class LLMManager:
         api_key = cfg.get("api_key", "")
         base_url = cfg.get("base_url", "")
 
-        system_instruction = f"""You are the chief viral media curator for {channel_handle} specializing in {niche}.
-Your objective is to craft an educational 9:16 vertical reel package from source video metadata:
-1. 'hook_text': 10 to 18 words on-screen headline. Direct, observational, curiosity-inducing, scientific authority. No exclamation marks, no emojis, no spammy clickbait words.
-2. 'caption_paragraphs': Exactly 3 paragraphs.
-   - Para 1: Hook the reader by explaining the exact phenomenon observed in the video.
-   - Para 2: Dive deeper into the underlying science, mechanics, or historical context.
-   - Para 3: Conclude with a thought-provoking insight and call to action to discuss in the comments.
-3. 'credit': Identify original researcher/source or provide a clean attribution tag.
-4. 'hashtags': 8 to 12 targeted niche hashtags.
+        # Resolve template for niche
+        template = get_template_for_niche(niche)
 
+        system_instruction = template.persona_system_instruction.format(
+            channel_handle=channel_handle,
+            niche=niche
+        )
+        system_instruction += """
 Respond strictly with valid JSON schema:
-{{
+{
   "hook_text": "...",
-  "caption_paragraphs": ["para1", "para2", "para3"],
+  "caption_paragraphs": ["...", "..."],
   "credit": "...",
   "hashtags": ["#...", "#..."]
-}}"""
+}"""
 
-        user_content = f"Video Title: {title}\nContext / Description: {description[:800]}\nFormula: {formula}"
+        user_content = f"Video Title: {title}\nContext / Description: {description[:800]}\nFormula: {formula}\nNiche Template: {template.name}"
         prompt_str = f"{system_instruction}\n\n{user_content}"
 
         parsed = None
@@ -319,13 +318,14 @@ Respond strictly with valid JSON schema:
                     headers = {
                         "x-api-key": api_key,
                         "anthropic-version": "2023-06-01",
-                        "content-type": "application/json"
+                        "Content-Type": "application/json"
                     }
                     payload = {
                         "model": model,
-                        "max_tokens": 1000,
                         "system": system_instruction,
-                        "messages": [{"role": "user", "content": user_content + "\nOutput pure JSON only."}]
+                        "messages": [{"role": "user", "content": user_content}],
+                        "max_tokens": 1000,
+                        "temperature": 0.7
                     }
                     res = requests.post(endpoint, json=payload, headers=headers, timeout=20)
                     if res.status_code == 200:
@@ -339,41 +339,84 @@ Respond strictly with valid JSON schema:
 
                 elif provider == "gemini":
                     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                    headers = {"Content-Type": "application/json"}
                     payload = {
-                        "contents": [{"parts": [{"text": prompt_str}]}],
-                        "generationConfig": {"response_mime_type": "application/json"}
+                        "contents": [{
+                            "parts": [{"text": prompt_str}]
+                        }],
+                        "generationConfig": {"temperature": 0.7}
                     }
-                    res = requests.post(endpoint, json=payload, headers={"Content-Type": "application/json"}, timeout=20)
+                    res = requests.post(endpoint, json=payload, headers=headers, timeout=20)
                     if res.status_code == 200:
-                        raw = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-                        parsed = json.loads(raw)
+                        candidates = res.json().get("candidates", [])
+                        if candidates:
+                            raw = candidates[0]["content"]["parts"][0]["text"]
+                            clean_raw = raw.strip()
+                            if clean_raw.startswith("```json"):
+                                clean_raw = clean_raw[7:-3].strip()
+                            elif clean_raw.startswith("```"):
+                                clean_raw = clean_raw[3:-3].strip()
+                            parsed = json.loads(clean_raw)
             except Exception as e:
-                logger.warning(f"LLM call to {provider} failed: {e}. Using deterministic viral enricher.")
+                logger.warning(f"Error calling {provider}: {e}")
 
-        # High-authority fallback generator if offline or no key
-        if not parsed:
-            clean = title.strip().rstrip(".")
-            parsed = {
-                "hook_text": f"Researchers Just Discovered The Remarkable Mechanism Behind {clean}.",
-                "caption_paragraphs": [
-                    f"When examining {clean.lower()}, researchers discovered a fundamental principle that alters how we interpret this phenomenon.",
-                    f"Under controlled observation, the interaction demonstrates intricate dynamics that conventional models frequently overlook.",
-                    f"This breakthrough offers compelling insights for future applications. Follow {channel_handle} for daily deep-dive breakdowns."
-                ],
-                "credit": "via original source / open archives",
-                "hashtags": [f"#{niche.lower().replace(' ', '')}", "#science", "#curiosity", "#deepknowledge", "#facts", "#didyouknow"]
-            }
+        # Template-specific fallback if LLM offline
+        if not parsed or not isinstance(parsed, dict) or "hook_text" not in parsed:
+            if template.caption_format == "numbered_checklist":
+                parsed = {
+                    "hook_text": template.sample_headline,
+                    "caption_paragraphs": [
+                        "Step 1: Clear and wipe down all surfaces completely before sorting goods by daily usage frequency.",
+                        "Step 2: Decant staples into clear labeled airtight canisters to eliminate visual clutter instantly.",
+                        "Step 3: Keep a designated overflow bin on the bottom shelf so incoming items never break the system."
+                    ],
+                    "credit": "@organize.daily / minimalist storage archives",
+                    "hashtags": template.default_hashtags
+                }
+            elif template.caption_format == "hype_punchline":
+                parsed = {
+                    "hook_text": template.sample_headline,
+                    "caption_paragraphs": [
+                        "The energy peaked at 3:45 AM when this unreleased drop shook the entire pavilion — complete pure euphoria on the dancefloor.",
+                        "Track ID: Afterlife Horizons (Original Mix). Save this sound for your weekend festival playlist and tag your crew below!"
+                    ],
+                    "credit": "@afterhours.club / live set archives",
+                    "hashtags": template.default_hashtags
+                }
+            elif template.caption_format == "editorial_lookbook":
+                parsed = {
+                    "hook_text": template.sample_headline,
+                    "caption_paragraphs": [
+                        "The formula centers around balancing an oversized relaxed silhouette with structured high-waisted tailored linen trousers.",
+                        "Tonal neutral layering in cream, oat, and espresso creates an understated quiet luxury depth without loud logos.",
+                        "Which piece would you style this with: look 1 (leather slides) or look 2 (minimalist slingback heels)?"
+                    ],
+                    "credit": "@chic.rotation / style lookbook archives",
+                    "hashtags": template.default_hashtags
+                }
+            else:
+                # Default educational format
+                parsed = {
+                    "hook_text": template.sample_headline,
+                    "caption_paragraphs": [
+                        f"When examining {title.lower() or 'this phenomenon'}, researchers discovered a fundamental principle that explains how these forces operate.",
+                        f"Under controlled observation, the interaction demonstrates intricate dynamics that conventional models frequently overlook.",
+                        f"This breakthrough offers compelling insights for future applications. Follow {channel_handle} for daily deep-dive breakdowns."
+                    ],
+                    "credit": "via original source / open archives",
+                    "hashtags": template.default_hashtags
+                }
 
         latency_ms = int((time.time() - start) * 1000)
         paragraphs = parsed.get("caption_paragraphs", [])
         body = "\n\n".join(paragraphs)
         credit = parsed.get("credit", "via original source")
-        hashtags = " ".join(parsed.get("hashtags", [f"#{niche.lower().replace(' ', '')}", "#facts"]))
+        hashtags = " ".join(parsed.get("hashtags", template.default_hashtags))
 
         full_caption = (
             f"{body}\n\n"
             f"🔬 Credit: {credit}\n"
-            f"✨ Follow {channel_handle} for daily {niche.lower()} discoveries.\n"
+            f"✨ Follow {channel_handle} for daily {niche.lower()} inspiration.\n"
             f"💬 Share your thoughts in the comments below!\n\n"
             f"{hashtags}"
         )
@@ -381,9 +424,12 @@ Respond strictly with valid JSON schema:
         trace = {
             "provider": provider,
             "model": model,
+            "template_id": template.id,
+            "template_name": template.name,
+            "highlight_color": template.highlight_color,
             "latency_ms": latency_ms,
             "prompt": prompt_str,
-            "hook_text": parsed.get("hook_text", title),
+            "hook_text": parsed.get("hook_text", template.sample_headline),
             "caption_paragraphs": paragraphs,
             "full_caption": full_caption,
             "credit": credit,

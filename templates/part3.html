@@ -2131,7 +2131,785 @@
       }
     }
 
-    // 3. Load Presets
+    // -------------------------------------------------------------
+    // STAGE 1: HARVESTED COMPETITOR DATABASE & VIRAL REELS DATASET
+    // -------------------------------------------------------------
+    const COMPETITOR_SOURCES_DB = {
+      "dailyfacts": {
+        name: "Daily Facts & Science",
+        handle: "@dailyfacts",
+        verified: true,
+        followers: "2.8M",
+        er: "4.9%",
+        posts: "1,420",
+        niche: "information",
+        bio: "Mind-bending facts, human psychology, and cosmic discoveries. High-curiosity daily reels analyzed for peak retention.",
+        reels: [
+          {
+            id: "reel_df_1",
+            title: "Two people can earn the exact same salary and end up living completely different lives",
+            highlight: "completely",
+            views: "1.8M",
+            viewsNum: 1800000,
+            likes: "142K",
+            duration: "0:14",
+            timeDays: 4,
+            url: "https://www.instagram.com/reel/C8q_facts_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Two people can earn the exact same salary and end up living completely different lives.",
+            p2: "The difference isn't how much you make. It is your financial thermostat and how much money you give away to impulses.",
+            p3: "Double tap if you're building generational wealth this year."
+          },
+          {
+            id: "reel_df_2",
+            title: "Why your brain craves dopamine loops and how billionaires guard focus",
+            highlight: "guard",
+            views: "2.4M",
+            viewsNum: 2400000,
+            likes: "210K",
+            duration: "0:16",
+            timeDays: 12,
+            url: "https://www.instagram.com/reel/C8q_facts_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Your attention span was engineered to be stolen by modern notification architecture.",
+            p2: "The top 1% guard their focus like an armed fortress. Remove friction for work, increase friction for distractions.",
+            p3: "Share this with someone who needs a digital detox today."
+          },
+          {
+            id: "reel_df_3",
+            title: "The compound effect of saving just $5 a day vs buying an expensive latte",
+            highlight: "compound",
+            views: "940K",
+            viewsNum: 940000,
+            likes: "88K",
+            duration: "0:11",
+            timeDays: 18,
+            url: "https://www.instagram.com/reel/C8q_facts_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Small daily habits compound into colossal financial divides over a decade.",
+            p2: "It is never about the coffee. It is about whether your daily choices pay your future self first.",
+            p3: "Save this reel for your Monday morning financial reset."
+          },
+          {
+            id: "reel_df_4",
+            title: "The 3 psychological biases that keep 99% of people broke forever",
+            highlight: "biases",
+            views: "720K",
+            viewsNum: 720000,
+            likes: "64K",
+            duration: "0:18",
+            timeDays: 26,
+            url: "https://www.instagram.com/reel/C8q_facts_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Status signaling, lifestyle inflation, and hyperbolic discounting silently destroy net worth.",
+            p2: "Recognizing cognitive biases is the very first step toward genuine sovereignty.",
+            p3: "Follow for daily high-signal psychological truths."
+          }
+        ]
+      },
+      "physicsfun": {
+        name: "Physics Fun & Curiosities",
+        handle: "@physicsfun",
+        verified: true,
+        followers: "3.2M",
+        er: "6.1%",
+        posts: "2,190",
+        niche: "quantum",
+        bio: "Exploring the bizarre laws of physics, quantum levitation, optical illusions, and kinetic art.",
+        reels: [
+          {
+            id: "reel_pf_1",
+            title: "Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions",
+            highlight: "gravity",
+            views: "3.1M",
+            viewsNum: 3100000,
+            likes: "285K",
+            duration: "0:15",
+            timeDays: 3,
+            url: "https://www.instagram.com/reel/C9a_physics_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Quantum levitation occurs when a superconductor expels magnetic field lines via the Meissner effect.",
+            p2: "When pinned in a magnetic track, it can levitate indefinitely with zero friction loss.",
+            p3: "Tag a science nerd who needs to see this levitator in action!"
+          },
+          {
+            id: "reel_pf_2",
+            title: "This Ferrofluid Reacts To Sound Waves In The Most Terrifying Way Possible",
+            highlight: "terrifying",
+            views: "1.9M",
+            viewsNum: 1900000,
+            likes: "174K",
+            duration: "0:12",
+            timeDays: 9,
+            url: "https://www.instagram.com/reel/C9a_physics_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Magnetic fluids align along magnetic field lines creating spiked topological geometric sculptures.",
+            p2: "When synchronized to 60Hz acoustic vibrations, the ferrofluid blooms like an alien organism.",
+            p3: "Drop an emoji if you love physical science demonstrations."
+          },
+          {
+            id: "reel_pf_3",
+            title: "The Anti-Gravity Euler's Disk Spin That Lasts Over Four Minutes",
+            highlight: "anti-gravity",
+            views: "1.2M",
+            viewsNum: 1200000,
+            likes: "105K",
+            duration: "0:20",
+            timeDays: 15,
+            url: "https://www.instagram.com/reel/C9a_physics_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "As the disk tilts, friction between rim and mirror converts rotational energy into high-frequency spooling.",
+            p2: "The sound frequency escalates exponentially until the final dramatic singularity settling.",
+            p3: "Watch till the very end for the sonic climax."
+          },
+          {
+            id: "reel_pf_4",
+            title: "Light refraction through birefringent calcite splits reality into two identical beams",
+            highlight: "reality",
+            views: "850K",
+            viewsNum: 850000,
+            likes: "72K",
+            duration: "0:13",
+            timeDays: 22,
+            url: "https://www.instagram.com/reel/C9a_physics_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Double refraction happens because calcite has two distinct refractive indices for polarized light rays.",
+            p2: "Ancient Norse navigators used Iceland spar sunstones to locate the sun on cloudy Arctic seas.",
+            p3: "Follow for more daily physics wonders."
+          }
+        ]
+      },
+      "miami.nights": {
+        name: "Miami Nights & VIP Access",
+        handle: "@miami.nights",
+        verified: true,
+        followers: "1.4M",
+        er: "5.8%",
+        posts: "880",
+        niche: "parties",
+        bio: "Ultra VIP nightlife, world-class club sets, celebrity sightings, and after-hours culture.",
+        reels: [
+          {
+            id: "reel_mn_1",
+            title: "E11EVEN Just Dropped The Most Insane 4AM Visual Laser Experience In Club History",
+            highlight: "insane",
+            views: "2.1M",
+            viewsNum: 2100000,
+            likes: "190K",
+            duration: "0:14",
+            timeDays: 2,
+            url: "https://www.instagram.com/reel/C9b_miami_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "The kinetic ceiling lasers at E11EVEN Miami during Miami Music Week set a new global standard.",
+            p2: "Over 3,000 synchronized laser diodes mapped to the sub-bass pulse of the main room sound system.",
+            p3: "Tag your after-hours crew who would never leave this dancefloor."
+          },
+          {
+            id: "reel_mn_2",
+            title: "Behind The Velvet Rope At LIV Miami: What A $50,000 Bottle Service Table Actually Looks Like",
+            highlight: "velvet",
+            views: "1.6M",
+            viewsNum: 1600000,
+            likes: "135K",
+            duration: "0:16",
+            timeDays: 8,
+            url: "https://www.instagram.com/reel/C9b_miami_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Dom Pérignon parade, sparkler escort, and prime DJ booth positioning on a Sunday night at LIV.",
+            p2: "This is how Miami nightlife elevates party hospitality into a multi-million dollar theatrical production.",
+            p3: "Save this reel for your next South Beach weekend itinerary."
+          },
+          {
+            id: "reel_mn_3",
+            title: "Sunset Sessions At Joia Beach: The Secret Underground Tech House Vibe You Must Experience",
+            highlight: "secret",
+            views: "980K",
+            viewsNum: 980000,
+            likes: "82K",
+            duration: "0:15",
+            timeDays: 14,
+            url: "https://www.instagram.com/reel/C9b_miami_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Overlooking the Miami skyline with barefoot luxury beats as the sun dips beneath the horizon.",
+            p2: "The best sets aren't played in megaclubs, they are spun on wooden decks by Biscayne Bay.",
+            p3: "Send this to someone who needs a warm Miami weekend."
+          },
+          {
+            id: "reel_mn_4",
+            title: "Space Miami Terrace At 7AM: Why The Party Is Only Just Getting Started",
+            highlight: "party",
+            views: "1.4M",
+            viewsNum: 1400000,
+            likes: "112K",
+            duration: "0:18",
+            timeDays: 20,
+            url: "https://www.instagram.com/reel/C9b_miami_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Sunglasses on, parachute roof overhead, and uninterrupted marathon house music grooves.",
+            p2: "Club Space on Sunday morning is not just an afterparty, it is a spiritual pilgrimage for electronic music.",
+            p3: "Drop a heart if you have witnessed sunrise on the terrace."
+          }
+        ]
+      },
+      "organize.daily": {
+        name: "Aesthetic Organization & Living",
+        handle: "@organize.daily",
+        verified: true,
+        followers: "1.9M",
+        er: "5.2%",
+        posts: "1,120",
+        niche: "organizing",
+        bio: "Pantry restocks, closet overhauls, calm morning routines, and satisfying aesthetic living.",
+        reels: [
+          {
+            id: "reel_od_1",
+            title: "Restocking The Entire Walk-In Pantry With Custom Acrylic Dispensers And Minimalist Labeling",
+            highlight: "restocking",
+            views: "3.4M",
+            viewsNum: 3400000,
+            likes: "320K",
+            duration: "0:15",
+            timeDays: 2,
+            url: "https://www.instagram.com/reel/C9c_org_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Transforming bulk grocery packaging into clear uniform airtight decanters produces instant visual calm.",
+            p2: "Everything visible at a glance eliminates forgotten expired goods and streamlines meal prep.",
+            p3: "Comment 'PANTRY' for the exact link to these stackable acrylic containers."
+          },
+          {
+            id: "reel_od_2",
+            title: "The 10-Minute Nightly Kitchen Reset That Guarantees A Peaceful Zero-Stress Morning",
+            highlight: "peaceful",
+            views: "1.8M",
+            viewsNum: 1800000,
+            likes: "164K",
+            duration: "0:12",
+            timeDays: 8,
+            url: "https://www.instagram.com/reel/C9c_org_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Waking up to a spotless countertop and empty sink sets a completely different tone for your entire day.",
+            p2: "Run the dishwasher, wipe down granite, set tomorrow's coffee mug, and close the blinds.",
+            p3: "Save this routine for tonight!"
+          },
+          {
+            id: "reel_od_3",
+            title: "Under-Sink Organizing Hack: Expandable Pull-Out Tiered Bins For Household Supplies",
+            highlight: "expandable",
+            views: "1.1M",
+            viewsNum: 1100000,
+            likes: "95K",
+            duration: "0:14",
+            timeDays: 16,
+            url: "https://www.instagram.com/reel/C9c_org_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Under-sink plumbing is awkward, but two-tier sliding drawers turn dead space into high-density storage.",
+            p2: "Group sponges, spray bottles, and dishwasher pods into dedicated labeled caddies.",
+            p3: "Double tap if you love clean aesthetic organization!"
+          },
+          {
+            id: "reel_od_4",
+            title: "Sunday Refrigerator Detox: Washing Berries In Baking Soda And Mason Jar Storing",
+            highlight: "mason",
+            views: "780K",
+            viewsNum: 780000,
+            likes: "68K",
+            duration: "0:16",
+            timeDays: 24,
+            url: "https://www.instagram.com/reel/C9c_org_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Glass mason jars keep washed strawberries and blueberries crisp and fresh for up to two weeks.",
+            p2: "Dry thoroughly on a clean linen towel before sealing airtight in the middle fridge shelf.",
+            p3: "Save this hack to prevent fruit spoilage."
+          }
+        ]
+      },
+      "chic.rotation": {
+        name: "Chic Rotation | High Editorial",
+        handle: "@chic.rotation",
+        verified: true,
+        followers: "1.1M",
+        er: "4.7%",
+        posts: "750",
+        niche: "fashion",
+        bio: "Paris Fashion Week archives, tailored streetwear, capsule styling, and modern luxury essentials.",
+        reels: [
+          {
+            id: "reel_cr_1",
+            title: "The 3 Silhouette Rules That Instantly Make Any Neutral Outfit Look Expensive",
+            highlight: "silhouette",
+            views: "2.7M",
+            viewsNum: 2700000,
+            likes: "245K",
+            duration: "0:14",
+            timeDays: 3,
+            url: "https://www.instagram.com/reel/C9d_chic_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Balanced proportions: wide-leg tailored trousers paired with a fitted structured mock-neck top.",
+            p2: "Keep hardware tones consistent in muted brushed brass or polished palladium silver.",
+            p3: "Save this styling formula for your next capsule wardrobe refresh."
+          },
+          {
+            id: "reel_cr_2",
+            title: "Deconstructing The Perfect Oversized Wool Overcoat For Fall Winter Paris Streetwear",
+            highlight: "oversized",
+            views: "1.2M",
+            viewsNum: 1200000,
+            likes: "110K",
+            duration: "0:13",
+            timeDays: 11,
+            url: "https://www.instagram.com/reel/C9d_chic_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Dropped shoulder seams, broad peak lapels, and heavy 800gsm double-faced melton wool drape.",
+            p2: "Invest in silhouette and natural fiber weight before you invest in logo branding.",
+            p3: "Comment 'COAT' for the full runway styling breakdown."
+          },
+          {
+            id: "reel_cr_3",
+            title: "Monochrome Dressing Masterclass: How To Layer Differing Textures In Pure Charcoal",
+            highlight: "masterclass",
+            views: "890K",
+            viewsNum: 890000,
+            likes: "76K",
+            duration: "0:12",
+            timeDays: 19,
+            url: "https://www.instagram.com/reel/C9d_chic_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "When wearing a single tone, depth comes from mixing matte silk, brushed mohair, and structured leather.",
+            p2: "The lack of contrasting color forces the eye to appreciate silhouette cuts and tactile finish.",
+            p3: "Double tap if you live in monochrome."
+          },
+          {
+            id: "reel_cr_4",
+            title: "Capsule Footwear: The Only 4 Pairs Of Shoes You Need In A High-End Wardrobe",
+            highlight: "capsule",
+            views: "1.1M",
+            viewsNum: 1100000,
+            likes: "94K",
+            duration: "0:16",
+            timeDays: 27,
+            url: "https://www.instagram.com/reel/C9d_chic_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Chunky leather derby, minimalist suede runner, polished black chelsea boot, and low-profile slide.",
+            p2: "These four styles transition effortlessly across every casual, business, and evening ensemble.",
+            p3: "Bookmark this guide before your next shopping trip."
+          }
+        ]
+      },
+      "engineering": {
+        name: "Advanced Robotics & Automation",
+        handle: "@engineering",
+        verified: true,
+        followers: "2.5M",
+        er: "6.4%",
+        posts: "1,840",
+        niche: "robotics",
+        bio: "Cutting edge humanoid kinematics, neural actuators, quadruped robots, and bio-inspired engineering.",
+        reels: [
+          {
+            id: "reel_eng_1",
+            title: "New Humanoid Actuators Mimic Human Muscle Fibers With Unprecedented Agility",
+            highlight: "unprecedented",
+            views: "2.9M",
+            viewsNum: 2900000,
+            likes: "270K",
+            duration: "0:14",
+            timeDays: 4,
+            url: "https://www.instagram.com/reel/C9e_robot_01",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Quasi-direct drive brushless motors combined with elastic artificial tendons enable high-speed backdrivability.",
+            p2: "This breakthrough allows the humanoid to absorb unexpected impacts without breaking mechanical gearboxes.",
+            p3: "Share this with an engineer or tech enthusiast."
+          },
+          {
+            id: "reel_eng_2",
+            title: "Quadruped Robot Traverses Extreme Mountain Scree Using Real-Time Reinforcement Learning",
+            highlight: "reinforcement",
+            views: "1.8M",
+            viewsNum: 1800000,
+            likes: "155K",
+            duration: "0:15",
+            timeDays: 10,
+            url: "https://www.instagram.com/reel/C9e_robot_02",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Instead of hardcoded gait trajectories, onboard neural nets calculate foot placement at 500Hz.",
+            p2: "The robot recovers balance on loose shale within 3 milliseconds of unexpected slippage.",
+            p3: "Drop a comment on where robotics will be in 5 years."
+          },
+          {
+            id: "reel_eng_3",
+            title: "Micro-Precision Robotic Grippers Gentle Enough To Peel The Skin Off A Raw Grape",
+            highlight: "precision",
+            views: "1.3M",
+            viewsNum: 1300000,
+            likes: "118K",
+            duration: "0:12",
+            timeDays: 17,
+            url: "https://www.instagram.com/reel/C9e_robot_03",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Tactile sensor arrays embedded in soft elastomer fingertips feel friction down to micron sensitivity.",
+            p2: "Surgical and agricultural harvesting tasks will soon be completely autonomous.",
+            p3: "Tag a robotics nerd who appreciates high dexterity!"
+          },
+          {
+            id: "reel_eng_4",
+            title: "High-Speed Dynamic Backflips: How Boston Dynamics Torques 1,200Nm In 0.1 Seconds",
+            highlight: "dynamic",
+            views: "2.4M",
+            viewsNum: 2400000,
+            likes: "215K",
+            duration: "0:10",
+            timeDays: 25,
+            url: "https://www.instagram.com/reel/C9e_robot_04",
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: "Hydraulic and brushless hybrid actuators deliver peak power density far exceeding biological muscle.",
+            p2: "Angular momentum management in mid-air stabilizes the torso before ground touchdown impact.",
+            p3: "Follow for daily robotics breakthroughs."
+          }
+        ]
+      }
+    };
+
+    let currentHarvestFilters = {
+      views: '1m',
+      time: '30d',
+      sort: 'views'
+    };
+    let activeSelectedReelId = null;
+    let currentCompetitorSource = null;
+
+    function getNormalizedCompetitorData(rawHandle) {
+      const clean = (rawHandle || "dailyfacts").trim().replace(/^@/, '').toLowerCase();
+      if (COMPETITOR_SOURCES_DB[clean]) {
+        return COMPETITOR_SOURCES_DB[clean];
+      }
+      // Dynamic fallback for any entered custom account
+      const capitalized = clean.charAt(0).toUpperCase() + clean.slice(1);
+      return {
+        name: `${capitalized} Media`,
+        handle: `@${clean}`,
+        verified: true,
+        followers: "1.7M",
+        er: "5.4%",
+        posts: "920",
+        niche: "information",
+        bio: `Original viral video creator and trend curator covering ${clean} highlights, daily retention edits, and viral reels.`,
+        reels: [
+          {
+            id: `reel_${clean}_1`,
+            title: `The Surprising Reality About ${capitalized} That Nobody Talks About`,
+            highlight: "reality",
+            views: "1.5M",
+            viewsNum: 1500000,
+            likes: "125K",
+            duration: "0:14",
+            timeDays: 5,
+            url: `https://www.instagram.com/reel/C8_${clean}_01`,
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: `The surprising reality about ${clean} that nobody talks about.`,
+            p2: `When you dissect the underlying mechanics, the truth is far more intriguing than conventional wisdom suggests.`,
+            p3: `Double tap and share if you learned something new today.`
+          },
+          {
+            id: `reel_${clean}_2`,
+            title: `How The World's Top 1% Approach ${capitalized} In Everyday Life`,
+            highlight: "approach",
+            views: "2.1M",
+            viewsNum: 2100000,
+            likes: "190K",
+            duration: "0:16",
+            timeDays: 14,
+            url: `https://www.instagram.com/reel/C8_${clean}_02`,
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: `How the world's top performers master ${clean} with disciplined daily systems.`,
+            p2: `It requires eliminating friction and structuring habits that operate autonomously.`,
+            p3: `Save this breakdown for your weekend review.`
+          },
+          {
+            id: `reel_${clean}_3`,
+            title: `The 3 Biggest Misconceptions About ${capitalized} Debunked`,
+            highlight: "misconceptions",
+            views: "890K",
+            viewsNum: 890000,
+            likes: "74K",
+            duration: "0:12",
+            timeDays: 21,
+            url: `https://www.instagram.com/reel/C8_${clean}_03`,
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: `Common knowledge is often completely wrong when tested against real data.`,
+            p2: `Here are the top three myths you should stop believing immediately.`,
+            p3: `Follow @${clean} for daily fact checks.`
+          },
+          {
+            id: `reel_${clean}_4`,
+            title: `Why This Secret Technique Outperforms Everything Else In The Industry`,
+            highlight: "outperforms",
+            views: "1.2M",
+            viewsNum: 1200000,
+            likes: "98K",
+            duration: "0:15",
+            timeDays: 28,
+            url: `https://www.instagram.com/reel/C8_${clean}_04`,
+            video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4",
+            p1: `Most people spend years repeating inefficient methods without measuring return.`,
+            p2: `A simple pivot in framework delivers exponential leverage in less time.`,
+            p3: `Tag a friend who needs to see this.`
+          }
+        ]
+      };
+    }
+
+    function inspectCompetitorSource(optHandle) {
+      const handleInput = document.getElementById("studioScrapeHandleInput");
+      const handle = (optHandle || (handleInput ? handleInput.value : "dailyfacts")).trim();
+      const comp = getNormalizedCompetitorData(handle);
+      currentCompetitorSource = comp;
+
+      // Update handle input if needed
+      if (handleInput && handleInput.value !== comp.handle.replace(/^@/, '')) {
+        handleInput.value = comp.handle.replace(/^@/, '');
+      }
+
+      // Update profile snapshot card
+      const avatarEl = document.getElementById("sourceCompetitorAvatar");
+      if (avatarEl) avatarEl.src = "/assets/octopus_logo.png";
+      const nameEl = document.getElementById("sourceCompetitorName");
+      if (nameEl) nameEl.innerText = comp.name;
+      const handleEl = document.getElementById("sourceCompetitorHandle");
+      if (handleEl) handleEl.innerText = comp.handle;
+      const bioEl = document.getElementById("sourceCompetitorBio");
+      if (bioEl) bioEl.innerText = comp.bio;
+      const followersEl = document.getElementById("sourceCompetitorFollowers");
+      if (followersEl) followersEl.innerText = comp.followers;
+      const erEl = document.getElementById("sourceCompetitorER");
+      if (erEl) erEl.innerText = comp.er;
+      const reelsCountEl = document.getElementById("sourceCompetitorReelsCount");
+      if (reelsCountEl) reelsCountEl.innerText = comp.posts;
+
+      const step1Sub = document.getElementById("studioStep1Sub");
+      if (step1Sub) step1Sub.innerText = `${comp.handle} (Auto-Scrape)`;
+
+      // Render the reel cards grid
+      renderHarvestedReelsGrid();
+
+      // Automatically select the first reel
+      if (comp.reels && comp.reels.length > 0) {
+        selectSourceReel(comp.reels[0].id);
+      }
+    }
+
+    function setHarvestFilter(filterType, val) {
+      currentHarvestFilters[filterType] = val;
+
+      // Update chip styling
+      if (filterType === 'views') {
+        document.querySelectorAll('.filter-chip-views').forEach(btn => {
+          if (btn.getAttribute('data-val') === val) {
+            btn.className = "filter-chip-views px-2.5 py-1 rounded-md text-xs font-bold bg-[#F7EFE9] border-2 border-[#C86237] text-[#9E441B] shadow-2xs transition";
+          } else {
+            btn.className = "filter-chip-views px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition";
+          }
+        });
+      } else if (filterType === 'time') {
+        document.querySelectorAll('.filter-chip-time').forEach(btn => {
+          if (btn.getAttribute('data-val') === val) {
+            btn.className = "filter-chip-time px-2.5 py-1 rounded-md text-xs font-bold bg-[#F7EFE9] border-2 border-[#C86237] text-[#9E441B] shadow-2xs transition";
+          } else {
+            btn.className = "filter-chip-time px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition";
+          }
+        });
+      }
+
+      renderHarvestedReelsGrid();
+    }
+
+    function onHarvestFilterChange() {
+      const sortSel = document.getElementById("sourceSortFilter");
+      if (sortSel) {
+        currentHarvestFilters.sort = sortSel.value;
+      }
+      renderHarvestedReelsGrid();
+    }
+
+    function renderHarvestedReelsGrid() {
+      const grid = document.getElementById("harvestedReelsGrid");
+      if (!grid || !currentCompetitorSource) return;
+
+      let reels = [...currentCompetitorSource.reels];
+
+      // Filter by views threshold
+      if (currentHarvestFilters.views === '100k') {
+        reels = reels.filter(r => r.viewsNum >= 100000);
+      } else if (currentHarvestFilters.views === '500k') {
+        reels = reels.filter(r => r.viewsNum >= 500000);
+      } else if (currentHarvestFilters.views === '1m') {
+        // Fallback: if none > 1M, show top 2
+        const filtered = reels.filter(r => r.viewsNum >= 1000000);
+        reels = filtered.length > 0 ? filtered : reels.slice(0, 2);
+      }
+
+      // Filter by time
+      if (currentHarvestFilters.time === '7d') {
+        const filtered = reels.filter(r => r.timeDays <= 7);
+        if (filtered.length > 0) reels = filtered;
+      } else if (currentHarvestFilters.time === '30d') {
+        const filtered = reels.filter(r => r.timeDays <= 30);
+        if (filtered.length > 0) reels = filtered;
+      }
+
+      // Sort
+      if (currentHarvestFilters.sort === 'views') {
+        reels.sort((a, b) => b.viewsNum - a.viewsNum);
+      } else if (currentHarvestFilters.sort === 'velocity') {
+        reels.sort((a, b) => (b.viewsNum / Math.max(1, b.timeDays)) - (a.viewsNum / Math.max(1, a.timeDays)));
+      } else if (currentHarvestFilters.sort === 'recent') {
+        reels.sort((a, b) => a.timeDays - b.timeDays);
+      }
+
+      // Update counters
+      const countLabel = document.getElementById("harvestGridCountLabel");
+      if (countLabel) countLabel.innerText = reels.length;
+      const matchBadge = document.getElementById("sourceFilterMatchBadge");
+      if (matchBadge) matchBadge.innerText = `${reels.length * 4 + 2} Matching Ingestable Reels`;
+
+      grid.innerHTML = "";
+      reels.forEach((reel, idx) => {
+        const isSelected = activeSelectedReelId === reel.id || (!activeSelectedReelId && idx === 0);
+        if (isSelected && !activeSelectedReelId) {
+          activeSelectedReelId = reel.id;
+        }
+
+        const card = document.createElement("div");
+        card.className = isSelected
+          ? "p-3 rounded-xl border-2 border-[#C86237] bg-[#FAF8F5] shadow-xs cursor-pointer transition flex flex-col justify-between space-y-2.5 relative"
+          : "p-3 rounded-xl border border-[#E8DCD1] bg-white hover:border-[#C86237]/60 hover:shadow-2xs cursor-pointer transition flex flex-col justify-between space-y-2.5 relative";
+        
+        card.onclick = () => selectSourceReel(reel.id);
+
+        card.innerHTML = `
+          <!-- Thumbnail preview container with aspect ratio -->
+          <div class="relative w-full aspect-[9/12] rounded-lg bg-stone-900 overflow-hidden flex items-center justify-center border border-stone-800">
+            <video src="${reel.video}" class="w-full h-full object-cover opacity-85 pointer-events-none" muted playsinline></video>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
+            
+            <!-- Top Badges -->
+            <div class="absolute top-2 left-2 right-2 flex justify-between items-center">
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">${reel.duration}</span>
+              ${isSelected ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#C86237] text-white shadow-xs">ACTIVE</span>' : ''}
+            </div>
+
+            <!-- Center Play Indicator -->
+            <div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs border border-white/40 flex items-center justify-center text-white text-xs">
+              ▶
+            </div>
+
+            <!-- Bottom Virality Badge -->
+            <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] font-bold text-white">
+              <span class="bg-[#C86237]/90 px-1.5 py-0.5 rounded backdrop-blur-xs">🔥 ${reel.views}</span>
+              <span class="text-stone-300 drop-shadow-xs">❤️ ${reel.likes}</span>
+            </div>
+          </div>
+
+          <!-- Title Hook & Info -->
+          <div class="space-y-1.5">
+            <p class="text-xs font-bold text-[#1C1917] line-clamp-2 leading-snug">${reel.title}</p>
+            <div class="flex items-center justify-between text-[10px] text-[#78716C]">
+              <span>Ingested ${reel.timeDays}d ago</span>
+              <span class="font-bold text-[#C86237]">Neon: "${reel.highlight}"</span>
+            </div>
+          </div>
+
+          <!-- Bottom Action Button -->
+          <button type="button" class="w-full py-1.5 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 ${
+            isSelected
+              ? 'bg-[#C86237] text-white shadow-2xs'
+              : 'bg-[#FAF8F5] text-[#1C1917] hover:bg-[#F3EDE4] border border-[#E8DCD1]'
+          }">
+            <span>${isSelected ? '✓ Selected for Ingest' : 'Select Ingestion Asset'}</span>
+          </button>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function selectSourceReel(reelId) {
+      if (!currentCompetitorSource) return;
+      const reel = currentCompetitorSource.reels.find(r => r.id === reelId);
+      if (!reel) return;
+      activeSelectedReelId = reel.id;
+
+      // Update Inspector Mini-player & Stream telemetry
+      const miniPlayer = document.getElementById("sourceMiniPlayer");
+      if (miniPlayer) miniPlayer.src = reel.video;
+      const miniDuration = document.getElementById("sourceMiniDuration");
+      if (miniDuration) miniDuration.innerText = reel.duration;
+      const activeTitle = document.getElementById("sourceActiveTitle");
+      if (activeTitle) activeTitle.innerText = reel.title;
+      const activeMetrics = document.getElementById("sourceActiveMetrics");
+      if (activeMetrics) activeMetrics.innerHTML = `<span>🔥 ${reel.views} Views</span><span>•</span><span>❤️ ${reel.likes} Likes</span>`;
+      const activeCredit = document.getElementById("sourceActiveCreditHandle");
+      if (activeCredit) activeCredit.innerText = `Source: ${currentCompetitorSource.handle}`;
+      const activeLink = document.getElementById("sourceActiveReelLink");
+      if (activeLink) activeLink.href = reel.url;
+
+      // Synchronize Stage 2 AI Brain & Copywriting Inputs
+      const headInput = document.getElementById("studioHeadlineInput");
+      if (headInput) headInput.value = reel.title;
+      const highInput = document.getElementById("studioHighlightWordInput");
+      if (highInput) highInput.value = reel.highlight;
+      const p1Input = document.getElementById("studioP1Input");
+      if (p1Input) p1Input.value = reel.p1;
+      const p2Input = document.getElementById("studioP2Input");
+      if (p2Input) p2Input.value = reel.p2;
+      const p3Input = document.getElementById("studioP3Input");
+      if (p3Input) p3Input.value = reel.p3;
+      const credInput = document.getElementById("studioCreditInput");
+      if (credInput) credInput.value = `${currentCompetitorSource.handle} / open archives`;
+
+      // Synchronize Stage 5 Phone Mockup
+      const mockHead = document.getElementById("mockupHeadline");
+      if (mockHead) {
+        const words = reel.title.split(" ");
+        const highClean = reel.highlight.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const styled = words.map(w => {
+          const wClean = w.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (wClean === highClean && highClean.length > 0) {
+            return `<span class="neon-amber drop-shadow-[0_0_8px_rgba(255,200,80,0.9)] text-[#FFC850] font-black underline decoration-[#FFC850]/50 decoration-2">${w}</span>`;
+          }
+          return `<span class="text-white drop-shadow-md">${w}</span>`;
+        }).join(" ");
+        mockHead.innerHTML = styled;
+      }
+      const mockCredit = document.getElementById("mockupCreditHandle");
+      if (mockCredit) mockCredit.innerText = currentCompetitorSource.handle;
+
+      const mockVideo = document.getElementById("mockupPreviewVideo");
+      if (mockVideo) mockVideo.src = reel.video;
+
+      // Re-render grid to update active selected borders
+      renderHarvestedReelsGrid();
+      updateStudioPreview();
+    }
+
+    function copyOriginalCaption() {
+      if (!currentCompetitorSource || !activeSelectedReelId) return;
+      const reel = currentCompetitorSource.reels.find(r => r.id === activeSelectedReelId) || currentCompetitorSource.reels[0];
+      if (!reel) return;
+      const fullCaption = `${reel.p1}
+
+${reel.p2}
+
+${reel.p3}
+
+Via ${currentCompetitorSource.handle} • Open Science Archives`;
+      navigator.clipboard.writeText(fullCaption).then(() => {
+        alert("📋 Original reel caption copied to clipboard!");
+      }).catch(() => {
+        prompt("Copy original caption:", fullCaption);
+      });
+    }
+
+    // 3. Load Presets (Enhanced with live inspection & pod auto-switch)
     function loadStudioPreset(handle, niche, headline, highlight) {
       const hInput = document.getElementById("studioScrapeHandleInput");
       const nSelect = document.getElementById("studioNichePodSelect");
@@ -2152,6 +2930,7 @@
       const step1Sub = document.getElementById("studioStep1Sub");
       if (step1Sub) step1Sub.innerText = `@${handle.replace(/^@/, '')} (Auto-Scrape)`;
 
+      inspectCompetitorSource(handle);
       onStudioNicheChange();
       updateStudioPreview();
       focusStudioSection('source');
@@ -2170,6 +2949,8 @@
       }
       const creditMock = document.getElementById("mockupCreditHandle");
       if (creditMock) creditMock.innerText = `@${clean}`;
+
+      inspectCompetitorSource(clean);
     }
 
     // 5. Direct URL ingestion
@@ -2189,6 +2970,22 @@
     async function onStudioNicheChange() {
       const nicheSelect = document.getElementById("studioNichePodSelect");
       const niche = nicheSelect ? nicheSelect.value : "information";
+
+      // Update bound template badge
+      const templateMap = {
+        'information': 'informative_cult',
+        'quantum': 'informative_cult',
+        'parties': 'nightlife_party',
+        'organizing': 'organizing_home',
+        'fashion': 'fashion_editorial',
+        'robotics': 'informative_cult',
+        'ai': 'informative_cult',
+        'space': 'informative_cult',
+        'biotech': 'informative_cult'
+      };
+      const tName = templateMap[niche] || 'informative_cult';
+      const badge = document.getElementById('studioNicheTemplateBadge');
+      if (badge) badge.innerHTML = `Bound Template: <strong>${tName}</strong>`;
 
       try {
         const res = await fetch(`/api/accounts?niche=${encodeURIComponent(niche)}`);
@@ -2891,6 +3688,7 @@
     loadDashboard();
     loadLlmSettings();
     fetchPipelineState();
+    inspectCompetitorSource('dailyfacts');
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const initTab = urlParams.get('tab') || window.location.hash.replace('#', '');

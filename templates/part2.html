@@ -410,108 +410,281 @@
           </div>
         </div>
 
-        <!-- ==================== STAGE 1: CONTENT SOURCE & INGEST MODE (FULL WIDTH LEFT-TO-RIGHT) ==================== -->
-        <div id="pipeView_stage1" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-5">
+                <!-- ==================== STAGE 1: CONTENT SOURCE & INGESTION ENGINE ==================== -->
+        <div id="pipeView_stage1" class="cloud-card rounded-xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-6">
+          
+          <!-- Header Bar: Title, Subtitle & Ingestion Mode Switcher -->
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E8DCD1] pb-4">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-base">
+              <div class="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1] flex items-center justify-center text-lg shadow-2xs">
                 📥
               </div>
               <div>
-                <h4 class="text-sm font-bold text-[#1C1917]">Stage 1: Content Source & Ingestion Engine</h4>
-                <p class="text-xs text-[#78716C]">Ingest high-performing competitor reels or parse direct video links into normalized 1080x1920 video assets.</p>
-              </div>
-            </div>
-            <div class="inline-flex rounded-lg border border-[#E8DCD1] p-0.5 bg-[#FAF8F5] text-xs font-semibold">
-              <button type="button" onclick="setStudioSourceMode('scrape')" id="btnSourceModeScrape" class="px-3 py-1.5 rounded-md bg-white text-[#1C1917] shadow-2xs font-bold transition">Competitor Scrape</button>
-              <button type="button" onclick="setStudioSourceMode('direct')" id="btnSourceModeDirect" class="px-3 py-1.5 rounded-md text-[#78716C] hover:text-[#1C1917] transition">Direct Reel URL</button>
-            </div>
-          </div>
-
-          <!-- Scrape Mode Controls -->
-          <div id="studioScrapeControls" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div class="md:col-span-6 space-y-1">
-                <label class="block text-xs font-bold text-[#78716C] uppercase">Competitor Instagram Handle</label>
-                <div class="relative">
-                  <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#78716C]">@</span>
-                  <input id="studioScrapeHandleInput" type="text" value="dailyfacts" oninput="onStudioSourceChange()" 
-                    class="w-full pl-8 pr-4 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-bold text-[#1C1917]">Stage 1: Content Source & Ingestion Engine</h4>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">LIVE INGESTION ACTIVE</span>
                 </div>
-                <p class="text-[11px] text-[#78716C]">Target account for high-engagement viral video harvesting.</p>
-              </div>
-
-              <div class="md:col-span-6 space-y-1">
-                <label class="block text-xs font-bold text-[#78716C] uppercase">Target Niche Pod</label>
-                <select id="studioNichePodSelect" onchange="onStudioNicheChange()" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-                  <option value="information">💡 Information (10 Pages)</option>
-                  <option value="quantum">⚛️ Quantum Physics (10 Pages)</option>
-                  <option value="robotics">🦾 Robotics (10 Pages)</option>
-                  <option value="ai">🤖 Artificial Intel (10 Pages)</option>
-                  <option value="space">🚀 Space & Cosmos (10 Pages)</option>
-                  <option value="biotech">🧬 BioTech & DNA (10 Pages)</option>
-                </select>
-                <p class="text-[11px] text-[#78716C]">Destination 10-page cluster where customized variants will broadcast.</p>
+                <p class="text-xs text-[#78716C] mt-0.5">Harvest top-performing viral reels from competitors or ingest direct URLs into normalized 1080x1920 9:16 master assets.</p>
               </div>
             </div>
-
-            <!-- Quick Presets -->
-            <div class="p-3.5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
-              <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
-                <span>Curated High-Impact Viral Presets:</span>
-                <span class="text-[10px] text-[#C86237]">1-Click Autofill</span>
-              </div>
-              <div class="flex flex-wrap items-center gap-2 text-xs">
-                <button type="button" onclick="loadStudioPreset('dailyfacts', 'information', 'Two people can earn the exact same salary and end up living completely different lives', 'completely')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">💡 Science & Financial Facts</button>
-                <button type="button" onclick="loadStudioPreset('physicsfun', 'quantum', 'Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions', 'gravity')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">⚛️ Quantum Levitator</button>
-                <button type="button" onclick="loadStudioPreset('engineering', 'robotics', 'New Humanoid Actuators Mimic Human Muscle Fibers With Unprecedented Agility', 'unprecedented')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🦾 Humanoid Robotics</button>
-                <button type="button" onclick="loadStudioPreset('ai_pulse', 'ai', 'Neural Models Can Now Synthesize Fully Coherent Physical Simulators In Real Time', 'coherent')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🤖 Generative AI</button>
-              </div>
+            <div class="inline-flex rounded-lg border border-[#E8DCD1] p-0.5 bg-[#FAF8F5] text-xs font-semibold shrink-0">
+              <button type="button" onclick="setStudioSourceMode('scrape')" id="btnSourceModeScrape" class="px-3.5 py-1.5 rounded-md bg-white text-[#1C1917] shadow-2xs font-bold transition">Competitor Scrape</button>
+              <button type="button" onclick="setStudioSourceMode('direct')" id="btnSourceModeDirect" class="px-3.5 py-1.5 rounded-md text-[#78716C] hover:text-[#1C1917] transition">Direct Reel URL</button>
             </div>
           </div>
 
-          <!-- Direct URL Controls (Hidden by default) -->
-          <div id="studioDirectControls" class="hidden space-y-3">
-            <label class="block text-xs font-bold text-[#78716C] uppercase">Direct Reel / Shorts / TikTok Video Stream URL</label>
-            <div class="flex gap-2">
-              <input id="studioDirectUrlInput" type="text" placeholder="https://www.instagram.com/reel/C8q_viral_physics..." 
-                class="flex-1 px-3.5 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-              <button type="button" onclick="onStudioDirectUrlIngest()" class="px-4 py-2 bg-[#F7EFE9] text-[#C86237] hover:bg-[#F2E5DA] font-bold text-xs rounded-lg border border-[#E8DCD1] transition">
-                Inspect Link
-              </button>
+          <!-- SECTION A: Source Account & Target Niche Pod Pairing (Competitor Mode) -->
+          <div id="studioScrapeControls" class="space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <!-- Left: Account Input & Pod Selector -->
+              <div class="lg:col-span-6 space-y-4">
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-center">
+                    <label class="block text-xs font-bold text-[#78716C] uppercase tracking-wider">Competitor Instagram Handle</label>
+                    <span class="text-[11px] text-[#C86237] font-semibold cursor-pointer hover:underline" onclick="inspectCompetitorSource()">Inspect Live Profile 🔍</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <div class="relative flex-1">
+                      <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#78716C]">@</span>
+                      <input id="studioScrapeHandleInput" type="text" value="dailyfacts" oninput="onStudioSourceChange()" 
+                        class="w-full pl-8 pr-4 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237] focus:bg-white transition"
+                        placeholder="e.g. dailyfacts or physicsfun">
+                    </div>
+                    <button type="button" onclick="inspectCompetitorSource()" class="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-bold text-xs rounded-lg border border-[#E8DCD1] shadow-2xs transition flex items-center gap-1.5">
+                      <span>Harvest</span>
+                      <span class="text-[#C86237]">⚡</span>
+                    </button>
+                  </div>
+                  <p class="text-[11px] text-[#78716C]">Target account for high-engagement viral video harvesting and audio extraction.</p>
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-center">
+                    <label class="block text-xs font-bold text-[#78716C] uppercase tracking-wider">Target Niche Pod</label>
+                    <span class="text-[11px] text-[#78716C]" id="studioNicheTemplateBadge">Bound Template: <strong>informative_cult</strong></span>
+                  </div>
+                  <select id="studioNichePodSelect" onchange="onStudioNicheChange()" class="w-full px-3 py-2 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237] focus:bg-white transition">
+                    <option value="information">💡 Information (10 Pages • informative_cult)</option>
+                    <option value="quantum">⚛️ Quantum Physics (10 Pages • informative_cult)</option>
+                    <option value="parties">🥂 Parties & Nightlife (10 Pages • nightlife_party)</option>
+                    <option value="organizing">🧹 Organizing & Home (10 Pages • organizing_home)</option>
+                    <option value="fashion">✨ Fashion Editorial (10 Pages • fashion_editorial)</option>
+                    <option value="robotics">🦾 Robotics (10 Pages • informative_cult)</option>
+                    <option value="ai">🤖 Artificial Intel (10 Pages • informative_cult)</option>
+                    <option value="space">🚀 Space & Cosmos (10 Pages • informative_cult)</option>
+                    <option value="biotech">🧬 BioTech & DNA (10 Pages • informative_cult)</option>
+                  </select>
+                  <p class="text-[11px] text-[#78716C]">Destination 10-page cluster where customized viral variants will broadcast.</p>
+                </div>
+              </div>
+
+              <!-- Right: Live Competitor Profile Snapshot Card -->
+              <div class="lg:col-span-6">
+                <div class="h-full p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] flex flex-col justify-between space-y-3">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-full border-2 border-[#C86237] p-0.5 bg-white shrink-0">
+                        <img id="sourceCompetitorAvatar" src="/assets/octopus_logo.png" alt="Avatar" class="w-full h-full rounded-full object-cover">
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-1.5">
+                          <h5 id="sourceCompetitorName" class="text-xs font-bold text-[#1C1917]">Daily Facts & Science</h5>
+                          <span title="Verified Instagram Creator" class="text-sky-500 text-xs">✓</span>
+                        </div>
+                        <p id="sourceCompetitorHandle" class="text-[11px] text-[#78716C] font-mono">@dailyfacts</p>
+                        <div class="flex items-center gap-1.5 mt-1">
+                          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span class="text-[10px] font-bold text-emerald-800">Scraping Pipeline Active</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#C86237] border border-[#E8DCD1] shadow-2xs">Verified Source</span>
+                  </div>
+
+                  <p id="sourceCompetitorBio" class="text-[11px] text-[#57534E] leading-relaxed line-clamp-2 bg-white/70 p-2 rounded-lg border border-[#E8DCD1]/60">
+                    Mind-bending facts, human psychology, and cosmic discoveries. High-curiosity daily reels analyzed for peak retention.
+                  </p>
+
+                  <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div class="p-2 rounded-lg bg-white border border-[#E8DCD1] shadow-2xs">
+                      <div id="sourceCompetitorFollowers" class="text-xs font-extrabold text-[#1C1917]">2.8M</div>
+                      <div class="text-[10px] text-[#78716C] uppercase font-bold mt-0.5">Followers</div>
+                    </div>
+                    <div class="p-2 rounded-lg bg-white border border-[#E8DCD1] shadow-2xs">
+                      <div id="sourceCompetitorER" class="text-xs font-extrabold text-emerald-700">4.9%</div>
+                      <div class="text-[10px] text-[#78716C] uppercase font-bold mt-0.5">Avg Engagement</div>
+                    </div>
+                    <div class="p-2 rounded-lg bg-white border border-[#E8DCD1] shadow-2xs">
+                      <div id="sourceCompetitorReelsCount" class="text-xs font-extrabold text-[#1C1917]">1,420</div>
+                      <div class="text-[10px] text-[#78716C] uppercase font-bold mt-0.5">Reels Indexed</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p class="text-xs text-[#78716C]">Directly ingest raw mp4 video stream for immediate re-compositing and multi-page fanout.</p>
+
+            <!-- SECTION B: Smart Harvesting Filters & Thresholds -->
+            <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3.5">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E8DCD1]/70 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Smart Harvesting Filters & Virality Thresholds</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F7EFE9] text-[#9E441B] border border-[#E8DCD1]" id="sourceFilterMatchBadge">18 Matching Reels</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-[#78716C]">
+                  <span>Sort By:</span>
+                  <select id="sourceSortFilter" onchange="onHarvestFilterChange()" class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded-md text-xs font-bold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                    <option value="views">🔥 Highest Total Views</option>
+                    <option value="velocity">⚡ Fastest Viral Velocity</option>
+                    <option value="likes">❤️ Engagement & Likes Ratio</option>
+                    <option value="recent">⏱️ Most Recent Ingested</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Filter: Min Views Threshold -->
+                <div class="space-y-1.5">
+                  <label class="block text-[11px] font-bold text-[#78716C] uppercase">Minimum Virality Threshold (Views)</label>
+                  <div class="flex flex-wrap gap-1.5" id="filterViewsGroup">
+                    <button type="button" onclick="setHarvestFilter('views', 'all')" data-val="all" class="filter-chip-views px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">All Views</button>
+                    <button type="button" onclick="setHarvestFilter('views', '100k')" data-val="100k" class="filter-chip-views px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">🔥 > 100K</button>
+                    <button type="button" onclick="setHarvestFilter('views', '500k')" data-val="500k" class="filter-chip-views px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">🚀 > 500K</button>
+                    <button type="button" onclick="setHarvestFilter('views', '1m')" data-val="1m" class="filter-chip-views px-2.5 py-1 rounded-md text-xs font-bold bg-[#F7EFE9] border-2 border-[#C86237] text-[#9E441B] shadow-2xs transition">⚡ > 1M+ Top 1% (Recommended)</button>
+                  </div>
+                </div>
+
+                <!-- Filter: Time Window -->
+                <div class="space-y-1.5">
+                  <label class="block text-[11px] font-bold text-[#78716C] uppercase">Harvest Time Window</label>
+                  <div class="flex flex-wrap gap-1.5" id="filterTimeGroup">
+                    <button type="button" onclick="setHarvestFilter('time', '7d')" data-val="7d" class="filter-chip-time px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">Last 7 Days</button>
+                    <button type="button" onclick="setHarvestFilter('time', '30d')" data-val="30d" class="filter-chip-time px-2.5 py-1 rounded-md text-xs font-bold bg-[#F7EFE9] border-2 border-[#C86237] text-[#9E441B] shadow-2xs transition">Last 30 Days (Recommended)</button>
+                    <button type="button" onclick="setHarvestFilter('time', '90d')" data-val="90d" class="filter-chip-time px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">Last 90 Days</button>
+                    <button type="button" onclick="setHarvestFilter('time', 'all')" data-val="all" class="filter-chip-time px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-[#E8DCD1] text-[#78716C] hover:text-[#1C1917] transition">All Time</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION C: Curated Presets & Harvested Viral Reels Selection Grid -->
+            <div class="space-y-3">
+              <!-- Presets Row -->
+              <div class="p-3.5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2">
+                <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase tracking-wider">
+                  <div class="flex items-center gap-1.5">
+                    <span>⚡ Quick Niche Presets:</span>
+                    <span class="text-[10px] text-[#78716C] font-normal">(Auto-switches handle, pod, templates & reels)</span>
+                  </div>
+                  <span class="text-[10px] text-[#C86237] font-bold">1-Click Fast Pairing</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <button type="button" onclick="loadStudioPreset('dailyfacts', 'information', 'Two people can earn the exact same salary and end up living completely different lives', 'completely')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">💡 Science & Wealth (@dailyfacts)</button>
+                  <button type="button" onclick="loadStudioPreset('physicsfun', 'quantum', 'Physicists Just Discovered That Superconductors Can Defy Gravity Under These Exact Conditions', 'gravity')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">⚛️ Quantum Levitator (@physicsfun)</button>
+                  <button type="button" onclick="loadStudioPreset('miami.nights', 'parties', 'E11EVEN Just Dropped The Most Insane 4AM Visual Laser Experience In Club History', 'insane')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🥂 Luxury Nightlife (@miami.nights)</button>
+                  <button type="button" onclick="loadStudioPreset('organize.daily', 'organizing', 'Restocking The Entire Walk-In Pantry With Custom Acrylic Dispensers And Minimalist Labeling', 'restocking')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🧹 Home Aesthetic (@organize.daily)</button>
+                  <button type="button" onclick="loadStudioPreset('chic.rotation', 'fashion', 'The 3 Silhouette Rules That Instantly Make Any Neutral Outfit Look Expensive', 'silhouette')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">✨ Fashion Editorial (@chic.rotation)</button>
+                  <button type="button" onclick="loadStudioPreset('engineering', 'robotics', 'New Humanoid Actuators Mimic Human Muscle Fibers With Unprecedented Agility', 'unprecedented')" class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#1C1917] font-semibold transition shadow-2xs">🦾 Humanoid Robotics (@engineering)</button>
+                </div>
+              </div>
+
+              <!-- Harvested Reels Grid Header -->
+              <div class="flex justify-between items-center pt-1">
+                <div>
+                  <h5 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Harvested Viral Reels Selection Grid</h5>
+                  <p class="text-[11px] text-[#78716C]">Select any reel below to ingest into Stage 2 copywriting and Stage 5 mobile preview rendering.</p>
+                </div>
+                <span class="text-xs text-[#78716C]"><span class="font-bold text-[#C86237]" id="harvestGridCountLabel">4</span> Reels Ingested</span>
+              </div>
+
+              <!-- Interactive Cards Grid -->
+              <div id="harvestedReelsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <!-- Dynamically populated via renderHarvestedReelsGrid() -->
+              </div>
+            </div>
+
           </div>
 
-          <!-- Scraped Media Metadata Inspector -->
+          <!-- Direct URL Controls (Mode 2) -->
+          <div id="studioDirectControls" class="hidden space-y-4">
+            <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3">
+              <label class="block text-xs font-bold text-[#78716C] uppercase tracking-wider">Direct Reel / Shorts / TikTok Video Stream URL</label>
+              <div class="flex gap-2">
+                <input id="studioDirectUrlInput" type="text" placeholder="https://www.instagram.com/reel/C8q_viral_physics..." 
+                  class="flex-1 px-3.5 py-2 bg-white border border-[#E8DCD1] rounded-lg text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                <button type="button" onclick="onStudioDirectUrlIngest()" class="px-4 py-2 orange-gradient-btn text-white font-bold text-xs rounded-lg shadow-2xs transition">
+                  Inspect & Parse Stream
+                </button>
+              </div>
+              <p class="text-xs text-[#78716C]">Directly ingest raw MP4 video stream from Instagram, YouTube Shorts, or TikTok for automatic watermark stripping and 10-page cluster distribution.</p>
+            </div>
+          </div>
+
+          <!-- SECTION D: Active Asset Stream Inspector & Telemetry -->
           <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3">
-            <div class="flex justify-between items-center text-xs font-bold text-[#78716C] uppercase">
-              <span>Ingested Source Video Telemetry:</span>
-              <span class="text-emerald-700 font-bold">● Stream Verified</span>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E8DCD1]/70 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Active Ingested Video Asset Inspector</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]" id="sourceTelemetryStreamStatus">● Stream Verified & Normalized</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <a id="sourceActiveReelLink" href="https://instagram.com/reel/C8q_facts_01" target="_blank" class="text-[11px] font-bold text-[#C86237] hover:underline flex items-center gap-1">
+                  <span>Open Original Reel</span>
+                  <span>↗</span>
+                </a>
+                <span class="text-stone-300">|</span>
+                <button type="button" onclick="copyOriginalCaption()" class="text-[11px] font-semibold text-[#78716C] hover:text-[#1C1917] flex items-center gap-1">
+                  <span>📋</span>
+                  <span>Copy Original Caption</span>
+                </button>
+              </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
-                <div class="text-[10px] text-[#78716C] uppercase font-bold">Resolution</div>
-                <div class="font-bold text-[#1C1917] mt-0.5">1080 x 1920 (9:16)</div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+              <!-- Mini player container -->
+              <div class="lg:col-span-4 flex items-center gap-3 p-3 rounded-lg bg-white border border-[#E8DCD1]">
+                <div class="w-16 h-24 rounded-md bg-stone-900 overflow-hidden relative shrink-0 flex items-center justify-center border border-stone-800">
+                  <video id="sourceMiniPlayer" src="https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-green-screen-42795-large.mp4" 
+                    autoplay loop muted playsinline class="w-full h-full object-cover opacity-90"></video>
+                  <div class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/70 text-white text-[9px] font-mono" id="sourceMiniDuration">0:14</div>
+                </div>
+                <div class="space-y-1 min-w-0 flex-1">
+                  <div class="text-[10px] text-[#78716C] font-bold uppercase">Selected Active Reel</div>
+                  <div id="sourceActiveTitle" class="text-xs font-bold text-[#1C1917] truncate leading-tight">Two people can earn the exact same salary and end up living completely different lives</div>
+                  <div class="text-[11px] text-[#C86237] font-semibold flex items-center gap-1.5" id="sourceActiveMetrics">
+                    <span>🔥 1.8M Views</span>
+                    <span>•</span>
+                    <span>❤️ 142K Likes</span>
+                  </div>
+                  <div class="text-[10px] text-[#78716C] truncate" id="sourceActiveCreditHandle">Source: @dailyfacts</div>
+                </div>
               </div>
-              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
-                <div class="text-[10px] text-[#78716C] uppercase font-bold">Audio Channels</div>
-                <div class="font-bold text-[#1C1917] mt-0.5">Stereo 48kHz AAC</div>
-              </div>
-              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
-                <div class="text-[10px] text-[#78716C] uppercase font-bold">Codec / Bitrate</div>
-                <div class="font-bold text-[#1C1917] mt-0.5">H.264 • 6,500 kbps</div>
-              </div>
-              <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
-                <div class="text-[10px] text-[#78716C] uppercase font-bold">Frame Rate</div>
-                <div class="font-bold text-[#1C1917] mt-0.5">29.97 FPS (Stable)</div>
+
+              <!-- Stream Specifications Matrix (4 Badges) -->
+              <div class="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                  <div class="text-[10px] text-[#78716C] uppercase font-bold">Resolution</div>
+                  <div class="font-bold text-[#1C1917] mt-0.5" id="sourceTelemetryRes">1080 x 1920 (9:16)</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                  <div class="text-[10px] text-[#78716C] uppercase font-bold">Audio Channels</div>
+                  <div class="font-bold text-[#1C1917] mt-0.5">Stereo 48kHz AAC</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                  <div class="text-[10px] text-[#78716C] uppercase font-bold">Codec / Bitrate</div>
+                  <div class="font-bold text-[#1C1917] mt-0.5">H.264 • 6,500 kbps</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                  <div class="text-[10px] text-[#78716C] uppercase font-bold">Frame Rate / Shield</div>
+                  <div class="font-bold text-emerald-700 mt-0.5">29.97 FPS (Stable)</div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Bottom Stage Navigation -->
           <div class="flex justify-between items-center pt-2 border-t border-[#E8DCD1]">
-            <span class="text-xs text-[#78716C]">Step 1 of 5 Ready</span>
+            <span class="text-xs text-[#78716C]">Step 1 of 5 Ready • Source Asset Ingested</span>
             <button type="button" onclick="focusStudioSection('aicopy')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 hover:opacity-95 transition">
               <span>Proceed to Stage 2: Visual Copywriting Studio</span>
               <span>➔</span>
