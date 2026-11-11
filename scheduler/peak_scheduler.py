@@ -378,6 +378,30 @@ class PeakTimeScheduler:
             })
             if run.get("candidate_id"):
                 update_candidate(run["candidate_id"], {"status": "PUBLISHED"})
+
+            # Automated Telegram completion notification
+            if self.telegram:
+                try:
+                    cluster = get_niche_cluster(run["niche_id"])
+                    n_info = cluster.get("niche") or {}
+                    n_name = n_info.get("name", run["niche_id"].title())
+                    from storage.scheduler_db import get_candidate
+                    cand = get_candidate(run["candidate_id"]) if run.get("candidate_id") else None
+                    completed_at_ist = datetime.now(ZoneInfo(self.tz_name)).strftime("%Y-%m-%d %H:%M:%S IST")
+                    self.telegram.send_broadcast_completion_summary(
+                        niche_id=run["niche_id"],
+                        niche_name=n_name,
+                        slot_time=run.get("slot_time", "Peak-Slot"),
+                        accounts_posted=res.get("successful_posts_count", 0),
+                        accounts_total=len(tasks),
+                        accounts_skipped=len(res.get("skipped_accounts", [])),
+                        source_handle=cand.get("source_handle") if cand else None,
+                        hook_text=cand.get("title") if cand else None,
+                        completed_at_ist=completed_at_ist,
+                        dry_run=dry,
+                    )
+                except Exception as tg_err:
+                    logger.warning(f"Telegram completion notification error: {tg_err}")
         except Exception as e:
             logger.error(f"Slot {slot_run_id} publish failed: {e}", exc_info=True)
             update_slot_run(slot_run_id, {"status": "FAILED", "error": str(e), "finished_at": to_iso(utcnow())})

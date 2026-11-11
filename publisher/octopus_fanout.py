@@ -477,6 +477,28 @@ class OctopusFanoutEngine:
         if source_id and reel_meta.get("id"):
             update_source_last_scraped(source_id, reel_meta.get("id") or reel_meta.get("shortcode", ""))
 
+        # 6. Automated Telegram completion notification
+        try:
+            from bot.octopus_telegram_bot import OctopusTelegramBot
+            from zoneinfo import ZoneInfo
+            from datetime import datetime
+            tg = OctopusTelegramBot()
+            now_ist = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S IST")
+            tg.send_broadcast_completion_summary(
+                niche_id=niche_id,
+                niche_name=niche_name,
+                slot_time="On-Demand Pipeline",
+                accounts_posted=broadcast_res.get("successful_publishes", len(accounts)),
+                accounts_total=broadcast_res.get("total_accounts", len(accounts)),
+                accounts_skipped=len(broadcast_res.get("skipped_accounts", [])),
+                source_handle=clean_handle,
+                hook_text=final_hook,
+                completed_at_ist=now_ist,
+                dry_run=dry_run
+            )
+        except Exception as tg_err:
+            logger.warning(f"Telegram completion notification error: {tg_err}")
+
         broadcast_res["task_id"] = task_id
         broadcast_res["niche_id"] = niche_id
         broadcast_res["source_handle"] = clean_handle

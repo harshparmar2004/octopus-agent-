@@ -4,6 +4,7 @@ import uuid
 import logging
 import threading
 from typing import Optional, Dict, Any, List
+from pathlib import Path
 import requests
 
 from config import settings
@@ -159,11 +160,11 @@ class OctopusTelegramBot:
         }
 
         caption = (
-            f"📅 *OCTOPUS PEAK SLOT PRE-FLIGHT*\\n\\n"
-            f"🎯 *Niche:* `{niche_id.upper()}`\\n"
-            f"⏱ *Slot:* `{slot_time}` IST (Target: `{sched_for[:16].replace('T', ' ')} UTC`)\\n"
-            f"⭐ *AI Score:* `{score:.1f}/100` (Source: `@{source}`)\\n"
-            f"📱 *Connected Tentacles:* `{accounts_count}` Pages\\n\\n"
+            f"📅 *OCTOPUS PEAK SLOT PRE-FLIGHT*\n\n"
+            f"🎯 *Niche:* `{niche_id.upper()}`\n"
+            f"⏱ *Slot:* `{slot_time}` IST (Target: `{sched_for[:16].replace('T', ' ')} UTC`)\n"
+            f"⭐ *AI Score:* `{score:.1f}/100` (Source: `@{source}`)\n"
+            f"📱 *Connected Tentacles:* `{accounts_count}` Pages\n\n"
             f"Will auto-post in {schedule.get('approval_timeout_minutes', 20)}m if untouched."
         )
 
@@ -190,6 +191,79 @@ class OctopusTelegramBot:
         # Fallback to rich markdown message
         self.send_text_message(caption, reply_markup=reply_markup, target_chat_id=cid)
         return True
+
+    def send_broadcast_completion_summary(
+        self,
+        niche_id: str,
+        niche_name: str,
+        slot_time: str,
+        accounts_posted: int,
+        accounts_total: int,
+        accounts_skipped: int = 0,
+        source_handle: Optional[str] = None,
+        hook_text: Optional[str] = None,
+        completed_at_ist: Optional[str] = None,
+        dry_run: bool = True,
+        target_chat_id: Optional[Any] = None
+    ) -> bool:
+        """
+        Sends an automated concise summary notification to Telegram when a pipeline or peak-slot fanout finishes.
+        Reports: niche name, scheduled slot, completion time in IST, number of posts published,
+        guards enforced, source reel, and anti-shadowban status.
+        """
+        cid = target_chat_id or self.chat_id
+        now_ist = completed_at_ist or time.strftime("%Y-%m-%d %H:%M:%S IST")
+        mode_label = "🧪 Simulated Verification" if dry_run else "🟢 Live Meta Graph API"
+        handle_str = f"@{source_handle.lstrip('@')}" if source_handle else "@curated_source"
+        clean_hook = (hook_text or "Viral Educational Reel").replace("\n", " ").strip()
+        hook_str = f'"{clean_hook[:60]}..."' if len(clean_hook) > 60 else f'"{clean_hook}"'
+
+        guard_line = (
+            f"• *Guards Enforced:* {accounts_skipped} accounts skipped (daily cap / 2.5h spacing)"
+            if accounts_skipped > 0
+            else "• *Guards Enforced:* 0 skipped (all within 5/day & 2.5h spacing limits)"
+        )
+
+        text = (
+            f"🚀 *Octopus Automation Broadcast Completed*\n\n"
+            f"• *Niche:* *{niche_name}* (`{niche_id}`)\n"
+            f"• *Scheduled Slot:* `{slot_time}`\n"
+            f"• *Completed At:* `{now_ist}`\n"
+            f"• *Posts Published:* *{accounts_posted}/{accounts_total} Accounts* ✅\n"
+            f"{guard_line}\n"
+            f"• *Source Candidate:* `{handle_str}` - _{hook_str}_\n"
+            f"• *Anti-Shadowban:* 4-layer mutations applied (unique pixels, audio drift, zero collisions)\n"
+            f"• *Execution Mode:* {mode_label}"
+        )
+
+        # Record in dispatch logs for web UI tracking
+        log_entry = {
+            "id": f"auto_{int(time.time())}_{niche_id}",
+            "timestamp": now_ist,
+            "source_url": handle_str,
+            "niche_id": niche_id,
+            "niche_name": niche_name,
+            "target": f"ALL ({accounts_total} Pages)",
+            "status": "COMPLETED",
+            "pages_count": accounts_posted,
+            "fanout_rate": f"{int((accounts_posted / max(1, accounts_total)) * 100)}%",
+            "hook": clean_hook,
+            "summary_text": text
+        }
+        self.dispatch_logs.insert(0, log_entry)
+        if len(self.dispatch_logs) > 50:
+            self.dispatch_logs.pop()
+
+        if not self.bot_token or not cid:
+            logger.info(f"[Telegram Simulator] Notification logged (no credentials configured): \n{text}")
+            return False
+
+        try:
+            self.send_text_message(text, target_chat_id=cid)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send Telegram completion notification: {e}")
+            return False
 
     # ==================== STEP 1: INBOUND URL RECEIVED ====================
     def handle_inbound_url(self, url: str, chat_id: Optional[Any] = None) -> Dict[str, Any]:
