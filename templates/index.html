@@ -183,6 +183,17 @@
           </div>
         </button>
 
+        <!-- Peak Scheduler (NEW) -->
+        <button onclick="switchTab('scheduler')" id="tabBtn_scheduler" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>Peak Scheduler</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">IST Active</span>
+        </button>
+
         <!-- Setup Category Header -->
         <div class="pt-5 pb-1 px-4 text-sm font-medium text-[#78716C]">Setup</div>
 
@@ -1972,6 +1983,207 @@
         </div>
       </section>
 
+      <!-- ==================== TAB: PEAK-TIME SCHEDULER & CANDIDATE POOL ==================== -->
+      <section id="view_scheduler" class="space-y-6 hidden">
+        <!-- Top Banner & Controls -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📅</span>
+                <h2 class="text-lg font-bold text-[#1C1917]">Peak-Time Scheduler & AI Candidate Pool</h2>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">⚡ IST Automation Active</span>
+              </div>
+              <p class="text-xs text-[#78716C] max-w-2xl">
+                Harvests from 10+ sources per niche throughout the day, scores reels using AI velocity + freshness + niche-fit, and automatically pre-renders and fanouts across 20+ accounts at peak viral traffic hours (IST).
+              </p>
+            </div>
+
+            <!-- Niche Selector & Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <div class="flex items-center gap-1.5 bg-[#FAF8F5] border border-[#E8DCD1] px-3 py-1.5 rounded-lg text-xs">
+                <span class="text-[#78716C] font-medium">Pod:</span>
+                <select id="schedulerNicheSelect" onchange="onSchedulerNicheChanged()" class="bg-transparent font-bold text-[#1C1917] focus:outline-hidden cursor-pointer">
+                  <option value="information">💡 Information & Infotainment</option>
+                  <option value="quantum">⚛️ Quantum Physics</option>
+                  <option value="ai">🤖 Generative AI</option>
+                  <option value="robotics">🦾 Robotics</option>
+                  <option value="space">🚀 Space Exploration</option>
+                  <option value="biotech">🧬 BioTech</option>
+                  <option value="parties">🎉 Parties & EDM</option>
+                  <option value="organizing">🧺 Home Organizing</option>
+                  <option value="fashion">✨ Fashion & Beauty</option>
+                </select>
+              </div>
+
+              <button type="button" onclick="triggerHarvestNow()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] flex items-center gap-1.5 transition shadow-2xs">
+                <span>🌾</span>
+                <span>Harvest Sources</span>
+              </button>
+
+              <button type="button" onclick="triggerRunSlotNow()" class="px-3.5 py-1.5 rounded-lg bg-[#C86237] hover:opacity-90 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-2xs">
+                <span>⚡</span>
+                <span>Run Slot Now (Test)</span>
+              </button>
+
+              <button type="button" onclick="openScheduleEditorModal()" class="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#78716C] flex items-center gap-1 transition">
+                <span>⚙️</span>
+                <span>Edit Timing</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Metrics Row -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-[#E8DCD1]/60">
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Daily Peak Slots</div>
+              <div id="stat_slot_count" class="text-base font-extrabold text-[#1C1917] mt-0.5">4 Slots (IST)</div>
+              <div id="stat_slot_times_list" class="text-[10px] text-[#C86237] font-mono mt-0.5">08:00, 13:00, 18:00, 21:00</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Stagger & Jitter</div>
+              <div class="text-base font-extrabold text-[#1C1917] mt-0.5">⚡ Balanced (30–45s)</div>
+              <div class="text-[10px] text-emerald-700 font-bold mt-0.5">±8 min Niche Variance (Anti-Burst)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Scored Candidate Pool</div>
+              <div id="stat_candidate_pool_size" class="text-base font-extrabold text-[#1C1917] mt-0.5">Loading...</div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">Ranked by AI Velocity & Niche Fit</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Safety & Cap Guard</div>
+              <div class="text-base font-extrabold text-emerald-700 mt-0.5">Max 5 Posts / Day</div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">≥ 2.5h Spacing Guard Enforced</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 24-Hour Upcoming Slot Timeline -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>⏱️</span>
+                <span>24-Hour Peak Posting Timeline (IST)</span>
+              </h3>
+              <p class="text-xs text-[#78716C]">Shows the next planned execution slots for this niche, assigned AI candidates, and approval state.</p>
+            </div>
+            <button type="button" onclick="loadSchedulerUpcoming()" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1">
+              <span>↻ Refresh Schedule</span>
+            </button>
+          </div>
+
+          <!-- Timeline Grid Container -->
+          <div id="schedulerTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="col-span-full py-8 text-center text-xs text-[#78716C]">Loading upcoming slot runs...</div>
+          </div>
+        </div>
+
+        <!-- AI Scored Candidate Pool Matrix -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>🎯</span>
+                <span>AI Reel Candidate Pool (Scored & Ranked)</span>
+              </h3>
+              <p class="text-xs text-[#78716C]">Every harvested reel is ranked 0–100 using engagement velocity, freshness, and LLM niche-fit.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#78716C]">Filter:</span>
+              <button onclick="filterCandidates('ALL')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#1C1917] text-white">All</button>
+              <button onclick="filterCandidates('SCORED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Scored</button>
+              <button onclick="filterCandidates('SELECTED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Selected</button>
+              <button onclick="filterCandidates('PUBLISHED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Published</button>
+            </div>
+          </div>
+
+          <!-- Candidate Pool Table -->
+          <div class="border border-[#E8DCD1] rounded-xl overflow-hidden bg-white">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-[#FAF8F5] border-b border-[#E8DCD1] text-[10px] text-[#78716C] uppercase font-bold tracking-wider">
+                  <tr>
+                    <th class="px-4 py-3">Rank & Score</th>
+                    <th class="px-4 py-3">Source & Age</th>
+                    <th class="px-4 py-3">Engagement</th>
+                    <th class="px-4 py-3">Score Breakdown (Velocity / Fresh / Niche)</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="candidatesTableBody" class="divide-y divide-[#E8DCD1]/60">
+                  <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-xs text-[#78716C]">Loading candidate pool...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MODAL: EDIT NICHE SCHEDULE ==================== -->
+      <div id="scheduleEditorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-lg w-full p-6 space-y-4">
+          <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base">⚙️</span>
+              <h3 class="text-sm font-bold text-[#1C1917]">Configure Peak-Time Posting Schedule</h3>
+            </div>
+            <button onclick="closeScheduleEditorModal()" class="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-bold text-xs">✕</button>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <div>
+              <label class="font-bold text-[#1C1917] block mb-1">Peak Slot Times (IST, 24h format, comma-separated):</label>
+              <input type="text" id="schedInput_slotTimes" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden focus:border-[#C86237]" placeholder="08:00, 13:00, 18:00, 21:00">
+              <p class="text-[10px] text-[#78716C] mt-1">Recommended 4 slots: 08:00 (morning), 13:00 (lunch), 18:00 (evening peak), 21:00 (prime-time). Minimum 2.5h apart.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="font-bold text-[#1C1917] block mb-1">Jitter Variance (Minutes):</label>
+                <input type="number" id="schedInput_jitter" min="0" max="15" value="8" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden">
+                <p class="text-[10px] text-[#78716C] mt-0.5">±0 to 8 min random variance</p>
+              </div>
+
+              <div>
+                <label class="font-bold text-[#1C1917] block mb-1">Minimum AI Score:</label>
+                <input type="number" id="schedInput_minScore" min="10" max="90" value="35" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden">
+                <p class="text-[10px] text-[#78716C] mt-0.5">Reels below this are skipped</p>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1 border-t border-[#E8DCD1]/60">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_evergreen" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Enable 7-day Evergreen Fallback if pool is empty</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_diversity" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Source Diversity (no repeat source on the same day)</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_enabled" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Scheduler Enabled for this Pod</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-3 border-t border-[#E8DCD1]">
+            <button onclick="closeScheduleEditorModal()" class="px-3.5 py-1.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-xs font-bold text-[#78716C]">Cancel</button>
+            <button onclick="saveNicheScheduleFromModal()" class="px-4 py-1.5 rounded-lg bg-[#C86237] text-white text-xs font-bold hover:opacity-90 transition">Save Schedule</button>
+          </div>
+        </div>
+      </div>
+
 <!-- ==================== ANTI-SHADOWBAN VARIATION MATRIX MODAL ==================== -->
 <div id="antiShadowbanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
   <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
@@ -2442,6 +2654,9 @@
     let currentNicheId = "information";
     let currentCluster = null;
     let discoveredAccountsCache = [];
+    var currentSchedulerNiche = "information";
+    var currentCandidateFilter = "ALL";
+    var cachedCandidates = [];
 
     const tabTitles = {
       overview: { title: "Overview", sub: "Cloud Analytics & Live Activity" },
@@ -2452,11 +2667,12 @@
       sources: { title: "Sources", sub: "24/7 Competitor Monitoring & Auto-Branding" },
       reels: { title: "Reels", sub: "Rendered 9:16 Vertical Video Vault" },
       broadcasts: { title: "Activity", sub: "Live Per-Account Publishing History" },
-      settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" }
+      settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" },
+      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" }
     };
 
     function switchTab(tabKey) {
-      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "sources", "reels", "broadcasts", "settings"];
+      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "sources", "reels", "broadcasts", "settings", "scheduler"];
       tabs.forEach(t => {
         const sec = document.getElementById(`view_${t}`);
         const btn = document.getElementById(`tabBtn_${t}`);
@@ -2494,6 +2710,10 @@
 
       if (tabKey === 'niche_pods') {
         selectNiche(currentNicheId);
+      }
+
+      if (tabKey === 'scheduler') {
+        loadSchedulerView();
       }
     }
 
@@ -5801,6 +6021,352 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
       }
     } catch (e) {}
     setInterval(loadDashboard, 10000);
+
+    // =========================================================================
+    // PEAK-TIME SCHEDULER & CANDIDATE POOL LOGIC
+    // =========================================================================
+    // variables declared at top of controller
+
+    function onSchedulerNicheChanged() {
+      const sel = document.getElementById("schedulerNicheSelect");
+      if (sel) {
+        currentSchedulerNiche = sel.value;
+      }
+      loadSchedulerView();
+    }
+
+    async function loadSchedulerView() {
+      await Promise.all([
+        loadScheduleConfig(),
+        loadSchedulerUpcoming(),
+        loadCandidates(currentCandidateFilter)
+      ]);
+    }
+
+    async function loadScheduleConfig() {
+      try {
+        const res = await fetch(`/api/niches/${encodeURIComponent(currentSchedulerNiche)}/schedule`);
+        const data = await res.json();
+        if (data && data.schedule) {
+          const s = data.schedule;
+          const slots = s.slot_times || [];
+          const slotCountEl = document.getElementById("stat_slot_count");
+          const slotTimesEl = document.getElementById("stat_slot_times_list");
+          if (slotCountEl) slotCountEl.innerText = `${slots.length} Slots (IST)`;
+          if (slotTimesEl) slotTimesEl.innerText = slots.join(", ");
+        }
+      } catch (e) {
+        console.error("Error loading schedule config:", e);
+      }
+    }
+
+    async function loadSchedulerUpcoming() {
+      const container = document.getElementById("schedulerTimelineContainer");
+      if (!container) return;
+
+      try {
+        const res = await fetch(`/api/schedule/upcoming?niche_id=${encodeURIComponent(currentSchedulerNiche)}&hours=36`);
+        const data = await res.json();
+        const runs = data.slot_runs || [];
+
+        if (runs.length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full py-8 text-center text-xs text-[#78716C]">
+              No upcoming slot runs planned for this niche yet. Click <strong>Run Slot Now</strong> to test or wait for next peak hour.
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = "";
+        runs.forEach(r => {
+          const card = document.createElement("div");
+          card.className = "p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2.5 flex flex-col justify-between";
+          
+          let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-300">${r.status}</span>`;
+          if (r.status === 'DONE') {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">✓ POSTED (${r.accounts_posted}p)</span>`;
+          } else if (r.status === 'APPROVED' || r.status === 'AWAITING_APPROVAL') {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⚡ PRE-RENDERED</span>`;
+          } else if (r.status === 'PUBLISHING') {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">📡 BROADCASTING</span>`;
+          } else if (r.status === 'SKIPPED') {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">SKIPPED</span>`;
+          }
+
+          const candHandle = r.source_handle ? `@${r.source_handle}` : (r.candidate_id ? `Candidate #${r.candidate_id}` : 'Auto-Evaluating...');
+          const scoreText = r.final_score ? `Score: ${r.final_score.toFixed(1)}/100` : 'Pending evaluation';
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black text-[#1C1917] flex items-center gap-1.5">
+                  <span>🕕</span>
+                  <span>${r.slot_time} IST</span>
+                </span>
+                ${statusBadge}
+              </div>
+              <div class="text-[10px] text-[#78716C] font-mono mt-1">Date: ${r.slot_date}</div>
+
+              <div class="mt-2.5 p-2 rounded-lg bg-white border border-[#E8DCD1] text-xs space-y-1">
+                <div class="font-bold text-[#1C1917] truncate">${candHandle}</div>
+                <div class="text-[10px] text-[#C86237] font-semibold">${scoreText}</div>
+              </div>
+            </div>
+
+            <!-- Action buttons for planned slots -->
+            <div class="pt-2 flex items-center gap-1.5 border-t border-[#E8DCD1]/60">
+              ${r.status === 'AWAITING_APPROVAL' ? `
+                <button onclick="approveSlotRun(${r.id})" class="flex-1 py-1 px-2 rounded bg-emerald-600 text-white font-bold text-[10px] hover:opacity-90">Approve</button>
+                <button onclick="swapSlotRun(${r.id})" class="py-1 px-2 rounded bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] hover:bg-[#F3EDE4]">Swap #2</button>
+              ` : ''}
+              ${r.status === 'PLANNED' ? `
+                <button onclick="skipSlotRun(${r.id})" class="py-1 px-2 rounded bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#78716C] hover:bg-[#F3EDE4]">Skip</button>
+              ` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (e) {
+        container.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-red-600">Error: ${e.message}</div>`;
+      }
+    }
+
+    async function loadCandidates(filterStatus = "ALL") {
+      currentCandidateFilter = filterStatus;
+      const tbody = document.getElementById("candidatesTableBody");
+      const statEl = document.getElementById("stat_candidate_pool_size");
+      if (!tbody) return;
+
+      try {
+        const query = filterStatus === 'ALL' ? '' : `&status=${filterStatus}`;
+        const res = await fetch(`/api/candidates?niche_id=${encodeURIComponent(currentSchedulerNiche)}${query}&limit=60`);
+        const data = await res.json();
+        cachedCandidates = data.candidates || [];
+
+        if (statEl) {
+          statEl.innerText = `${cachedCandidates.length} Re-Ranked`;
+        }
+
+        if (cachedCandidates.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-4 py-8 text-center text-xs text-[#78716C]">
+                No reels in candidate pool yet for [${currentSchedulerNiche}]. Click <strong>Harvest Sources</strong> to scrape 10+ handles!
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = "";
+        cachedCandidates.forEach((c, idx) => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-[#FAF8F5]/80 transition";
+
+          const vScore = Math.round(c.velocity_score || 0);
+          const fScore = Math.round(c.freshness_score || 0);
+          const nScore = Math.round(c.niche_fit_score || 0);
+          const finalScore = (c.final_score || 0).toFixed(1);
+
+          const likes = c.like_count ? (c.like_count > 1000 ? (c.like_count/1000).toFixed(1) + 'k' : c.like_count) : '-';
+          const comments = c.comments_count ? (c.comments_count > 1000 ? (c.comments_count/1000).toFixed(1) + 'k' : c.comments_count) : '-';
+
+          let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">${c.status}</span>`;
+          if (c.status === 'SCORED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF8F5] text-[#C86237] border border-[#E8DCD1]">SCORED</span>`;
+          if (c.status === 'SELECTED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">SELECTED</span>`;
+          if (c.status === 'PUBLISHED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">PUBLISHED</span>`;
+          if (c.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">REJECTED</span>`;
+
+          tr.innerHTML = `
+            <td class="px-4 py-3 font-medium">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-[#1C1917] text-white flex items-center justify-center text-[10px] font-bold">${idx + 1}</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-extrabold text-xs border border-emerald-200">
+                  ⭐ ${finalScore}
+                </span>
+                ${c.pinned ? '<span class="text-xs" title="Pinned for next slot">📌</span>' : ''}
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-bold text-[#1C1917]">@${c.source_handle || 'source'}</div>
+              <a href="${c.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono truncate max-w-[120px] block">View Original ↗</a>
+            </td>
+            <td class="px-4 py-3 font-mono text-[11px] text-[#78716C]">
+              <div>❤️ ${likes}</div>
+              <div>💬 ${comments}</div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="space-y-1 max-w-xs">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span>Velocity: <strong>${vScore}%</strong></span>
+                  <span>Fresh: <strong>${fScore}%</strong></span>
+                  <span>Niche: <strong>${nScore}%</strong></span>
+                </div>
+                <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden flex">
+                  <div class="bg-blue-500 h-full" style="width: ${vScore * 0.4}%"></div>
+                  <div class="bg-amber-500 h-full" style="width: ${fScore * 0.25}%"></div>
+                  <div class="bg-emerald-500 h-full" style="width: ${nScore * 0.3}%"></div>
+                </div>
+                <div class="text-[10px] text-[#78716C] truncate">${c.score_reason || ''}</div>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              ${statusBadge}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="pinCandidate(${c.id})" class="px-2 py-1 rounded bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[10px] font-bold text-[#1C1917]" title="Prioritize for upcoming peak slot">
+                  📌 Pin
+                </button>
+                <button onclick="rejectCandidate(${c.id})" class="px-2 py-1 rounded bg-white hover:bg-red-50 border border-[#E8DCD1] text-[10px] font-bold text-red-600" title="Reject from pool">
+                  ✕
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-xs text-red-600">Error loading candidates: ${e.message}</td></tr>`;
+      }
+    }
+
+    function filterCandidates(status) {
+      loadCandidates(status);
+    }
+
+    async function triggerHarvestNow() {
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "<span>⏳</span><span>Scraping 10+ Sources...</span>";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/harvest/${encodeURIComponent(currentSchedulerNiche)}`, { method: "POST" });
+        const data = await res.json();
+        alert(`🌾 Harvest Finished!
+Scanned: ${data.harvest.sources_scanned} sources
+Seen: ${data.harvest.candidates_seen} reels
+Scored: ${data.harvest.candidates_scored} candidates
+Duration: ${data.harvest.duration_seconds}s`);
+        await loadSchedulerView();
+      } catch (e) {
+        alert("Error during harvest: " + e.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function triggerRunSlotNow() {
+      if (!confirm(`Run slot immediately for [${currentSchedulerNiche}] in dry-run mode?`)) return;
+      try {
+        const res = await fetch(`/api/schedule/${encodeURIComponent(currentSchedulerNiche)}/run-slot-now?dry_run=true`, { method: "POST" });
+        const data = await res.json();
+        alert(`⚡ Slot triggered! ID: ${data.slot_run.id}. Preparing candidate and staggered broadcast in background.`);
+        setTimeout(loadSchedulerUpcoming, 2000);
+      } catch (e) {
+        alert("Error: " + e.message);
+      }
+    }
+
+    async function pinCandidate(candId) {
+      try {
+        await fetch(`/api/candidates/${candId}/pin`, { method: "POST" });
+        await loadCandidates(currentCandidateFilter);
+      } catch (e) {
+        alert("Error pinning candidate: " + e.message);
+      }
+    }
+
+    async function rejectCandidate(candId) {
+      try {
+        await fetch(`/api/candidates/${candId}/reject`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "Rejected by dashboard operator" }) });
+        await loadCandidates(currentCandidateFilter);
+      } catch (e) {
+        alert("Error rejecting candidate: " + e.message);
+      }
+    }
+
+    async function approveSlotRun(runId) {
+      try {
+        await fetch(`/api/schedule/slot/${runId}/approve`, { method: "POST" });
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error approving slot: " + e.message);
+      }
+    }
+
+    async function swapSlotRun(runId) {
+      try {
+        await fetch(`/api/schedule/slot/${runId}/swap`, { method: "POST" });
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error swapping slot: " + e.message);
+      }
+    }
+
+    async function skipSlotRun(runId) {
+      try {
+        await fetch(`/api/schedule/slot/${runId}/skip`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "Skipped by operator" }) });
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error skipping slot: " + e.message);
+      }
+    }
+
+    function openScheduleEditorModal() {
+      const modal = document.getElementById("scheduleEditorModal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+    }
+
+    function closeScheduleEditorModal() {
+      const modal = document.getElementById("scheduleEditorModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    async function saveNicheScheduleFromModal() {
+      const timesStr = document.getElementById("schedInput_slotTimes").value.trim();
+      const jitterVal = parseInt(document.getElementById("schedInput_jitter").value, 10);
+      const minScoreVal = parseFloat(document.getElementById("schedInput_minScore").value);
+      const evergreenVal = document.getElementById("schedInput_evergreen").checked;
+      const diversityVal = document.getElementById("schedInput_diversity").checked;
+      const enabledVal = document.getElementById("schedInput_enabled").checked;
+
+      const slotTimes = timesStr ? timesStr.split(",").map(s => s.trim()).filter(Boolean) : ["08:00", "13:00", "18:00", "21:00"];
+
+      try {
+        const payload = {
+          slot_times: slotTimes,
+          jitter_minutes: jitterVal,
+          min_score: minScoreVal,
+          evergreen_fallback: evergreenVal,
+          source_diversity: diversityVal,
+          enabled: enabledVal
+        };
+
+        const res = await fetch(`/api/niches/${encodeURIComponent(currentSchedulerNiche)}/schedule`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Error: " + (err.detail || "Validation error"));
+          return;
+        }
+
+        closeScheduleEditorModal();
+        alert("Peak Schedule Updated Successfully!");
+        await loadSchedulerView();
+      } catch (e) {
+        alert("Error saving schedule: " + e.message);
+      }
+    }
+
   </script>
 </body>
 </html>

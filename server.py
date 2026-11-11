@@ -865,6 +865,135 @@ def get_anti_shadowban_preview(niche: str = "information", handle: str = "dailyf
         "variations": variations
     }
 
+
+# ==============================================================================
+# PEAK-TIME SCHEDULER & CANDIDATE POOL ENDPOINTS
+# ==============================================================================
+from scheduler.peak_scheduler import get_peak_scheduler
+from storage.scheduler_db import (
+    get_niche_schedule,
+    save_niche_schedule,
+    get_candidates,
+    update_candidate,
+    get_slot_runs,
+    get_slot_run,
+    utcnow
+)
+from datetime import timedelta
+
+class NicheScheduleUpdateRequest(BaseModel):
+    slot_times: Optional[List[str]] = None
+    timezone: Optional[str] = None
+    jitter_minutes: Optional[int] = None
+    fanout_mode: Optional[str] = None
+    approval_mode: Optional[str] = None
+    approval_timeout_minutes: Optional[int] = None
+    min_score: Optional[float] = None
+    evergreen_fallback: Optional[bool] = None
+    source_diversity: Optional[bool] = None
+    enabled: Optional[bool] = None
+
+class CandidateActionRequest(BaseModel):
+    reason: Optional[str] = None
+
+@app.on_event("startup")
+def start_scheduler_lifecycle():
+    try:
+        sched = get_peak_scheduler()
+        sched.plan_all()
+        if os.getenv("ENABLE_PEAK_SCHEDULER", "true").lower() in ("1", "true", "yes"):
+            sched.start()
+            logger.info("Peak-Time Scheduler background runner initialized.")
+    except Exception as e:
+        logger.warning(f"Peak-Time Scheduler background init skipped: {e}")
+
+@app.get("/api/schedule/status")
+def get_scheduler_status():
+    sched = get_peak_scheduler()
+    return {"status": "success", "scheduler": sched.status()}
+
+@app.get("/api/niches/{niche_id}/schedule")
+def get_schedule(niche_id: str):
+    sched = get_niche_schedule(niche_id)
+    return {"status": "success", "schedule": sched}
+
+@app.put("/api/niches/{niche_id}/schedule")
+def update_schedule(niche_id: str, req: NicheScheduleUpdateRequest):
+    updates = req.dict(exclude_unset=True) if hasattr(req, "dict") else req.model_dump(exclude_unset=True)
+    saved = save_niche_schedule(niche_id, updates)
+    # Replan slots with the new configuration
+    try:
+        get_peak_scheduler().plan_niche(niche_id, replan=True)
+    except Exception as e:
+        logger.warning(f"Error replanning after schedule update: {e}")
+    return {"status": "success", "schedule": saved}
+
+@app.get("/api/candidates")
+def list_candidates(niche_id: Optional[str] = None, status: Optional[str] = None, limit: int = 50):
+    statuses = [s.strip().upper() for s in status.split(",")] if status else None
+    target_niche = niche_id or "information"
+    cands = get_candidates(target_niche, statuses=statuses, limit=limit)
+    return {
+        "status": "success",
+        "niche_id": target_niche,
+        "count": len(cands),
+        "candidates": cands
+    }
+
+@app.post("/api/candidates/{candidate_id}/pin")
+def pin_candidate(candidate_id: int):
+    update_candidate(candidate_id, {"pinned": 1})
+    return {"status": "success", "candidate_id": candidate_id, "message": "Candidate pinned for next slot."}
+
+@app.post("/api/candidates/{candidate_id}/reject")
+def reject_candidate(candidate_id: int, req: Optional[CandidateActionRequest] = None):
+    reason = req.reason if req and req.reason else "Manually rejected by operator"
+    update_candidate(candidate_id, {"status": "REJECTED", "score_reason": reason, "pinned": 0})
+    return {"status": "success", "candidate_id": candidate_id, "message": "Candidate rejected."}
+
+@app.get("/api/schedule/upcoming")
+def get_upcoming_schedule(niche_id: Optional[str] = None, hours: int = 24):
+    now = utcnow()
+    since = now - timedelta(hours=2)
+    until = now + timedelta(hours=hours)
+    runs = get_slot_runs(since=since, until=until, niche_id=niche_id, limit=200)
+    return {
+        "status": "success",
+        "now_utc": now.isoformat(),
+        "count": len(runs),
+        "slot_runs": runs
+    }
+
+@app.post("/api/schedule/{niche_id}/run-slot-now")
+def run_slot_now_endpoint(niche_id: str, dry_run: bool = True):
+    run = get_peak_scheduler().run_slot_now(niche_id, dry_run=dry_run, background=True)
+    return {
+        "status": "success",
+        "message": f"Slot initiated for niche [{niche_id}]",
+        "slot_run": run
+    }
+
+@app.post("/api/harvest/{niche_id}")
+def harvest_niche_endpoint(niche_id: str):
+    res = get_peak_scheduler().harvest_niche(niche_id)
+    return {"status": "success", "harvest": res}
+
+@app.post("/api/schedule/slot/{slot_run_id}/approve")
+def approve_slot_endpoint(slot_run_id: int):
+    run = get_peak_scheduler().approve_slot(slot_run_id)
+    return {"status": "success", "slot_run": run}
+
+@app.post("/api/schedule/slot/{slot_run_id}/swap")
+def swap_slot_endpoint(slot_run_id: int):
+    run = get_peak_scheduler().swap_slot(slot_run_id)
+    return {"status": "success", "slot_run": run}
+
+@app.post("/api/schedule/slot/{slot_run_id}/skip")
+def skip_slot_endpoint(slot_run_id: int, req: Optional[CandidateActionRequest] = None):
+    reason = req.reason if req and req.reason else "Skipped via API"
+    run = get_peak_scheduler().skip_slot(slot_run_id, reason=reason)
+    return {"status": "success", "slot_run": run}
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard_ui():
     if TEMPLATE_PATH.exists():

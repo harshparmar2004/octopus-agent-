@@ -156,49 +156,36 @@ class OctopusFanoutEngine:
             })
             return {"account_id": account["id"], "handle": account["handle"], "success": False, "error": err}
 
-    def broadcast_to_all_accounts(
+    def prepare_broadcast(
         self,
         reel_id: str,
         account_ids: Optional[List[str]] = None,
-        dry_run: bool = True,
-        max_workers: int = 10,
-        cta_template: Optional[str] = None
+        fanout_mode: str = "balanced"
     ) -> Dict[str, Any]:
         """
-        The Master Octopus Action:
-        Concurrently renders customized videos and broadcasts across all 20-30 connected accounts!
+        PRE-RENDER phase (runs ~30 min before a peak slot):
+        renders every per-account anti-shadowban variant, mutates captions, computes the staggered
+        offsets and records READY broadcast logs. Returns a JSON-serialisable task list that
+        execute_broadcast() can publish later.
         """
         reel = get_reel(reel_id)
         if not reel:
-            return {"success": False, "error": f"Reel {reel_id} not found."}
+            return {"success": False, "error": f"Reel {reel_id} not found.", "tasks": []}
 
-        # Determine target accounts
         all_active = get_all_accounts(active_only=True)
-        if account_ids:
-            target_accounts = [a for a in all_active if a["id"] in account_ids]
-        else:
-            target_accounts = all_active
-
+        target_accounts = [a for a in all_active if a["id"] in account_ids] if account_ids else all_active
         if not target_accounts:
-            return {"success": False, "error": "No active accounts selected for broadcast."}
+            return {"success": False, "error": "No active accounts selected for broadcast.", "tasks": []}
 
-        logger.info(f"🐙 Octopus Agent deploying {reel_id} across {len(target_accounts)} accounts...")
-        insert_or_update_reel({"id": reel_id, "status": "BROADCASTING"})
-
-        render_and_publish_tasks = []
-
-        # Check if pre-rendered reel is already available for fast broadcast
         master_rendered = reel.get("rendered_video_path")
         is_pre_rendered = bool(master_rendered and Path(master_rendered).exists())
+        staggered_schedule = AntiShadowbanEngine.get_staggered_schedule(len(target_accounts), mode=fanout_mode)
 
-        # Calculate staggered schedule jitter for non-colliding publish times
-        staggered_schedule = AntiShadowbanEngine.get_staggered_schedule(len(target_accounts))
-
-        # 1. Prepare anti-shadowbanned videos & mutated text for each account
+        tasks: List[Dict[str, Any]] = []
         for idx, account in enumerate(target_accounts):
             raw_input = reel.get("raw_video_path") or (master_rendered if is_pre_rendered else None)
-            
-            # Generate account-customized reel with video/audio perturbation filters & EXIF spoofing
+
+            # Account-customised reel with perceptual video/audio mutation & metadata spoofing
             if raw_input and Path(raw_input).exists():
                 rendered_path = self.generate_account_customized_reel(
                     raw_video_path=raw_input,
@@ -209,14 +196,14 @@ class OctopusFanoutEngine:
                 )
             else:
                 rendered_path = master_rendered or f"output/{reel_id}_{account['id']}.mp4"
-            
+
             if not rendered_path:
                 logger.error(f"Failed to resolve video for {account['handle']}")
                 continue
 
             rendered_filename = Path(rendered_path).name
-            
-            # Anti-shadowban caption mutation (unique hook variant + transitional synonyms + dynamic CTA + unique hashtags)
+
+            # Unique hook variant + transitional synonyms + dynamic CTA + unique hashtags
             caption = AntiShadowbanEngine.mutate_caption(
                 base_caption=reel["caption"] or reel["hook_text"],
                 hook_headline=reel.get("hook_text", ""),
@@ -225,9 +212,8 @@ class OctopusFanoutEngine:
                 account_index=idx
             )
 
-            # Compute unique media hash
             file_hash = AntiShadowbanEngine.compute_file_sha256(rendered_path) if Path(rendered_path).exists() else f"sha256_{account['id'][:6]}_{idx}"
-            sched = staggered_schedule[idx] if idx < len(staggered_schedule) else {"offset_display": "+0m 00s", "scheduled_iso": "immediate"}
+            sched = staggered_schedule[idx] if idx < len(staggered_schedule) else {"offset_seconds": 0, "offset_display": "+0m 00s", "scheduled_iso": "immediate"}
 
             log_id = record_broadcast_log({
                 "reel_id": reel_id,
@@ -241,11 +227,12 @@ class OctopusFanoutEngine:
                 "published_at": None
             })
 
-            render_and_publish_tasks.append({
+            tasks.append({
                 "log_id": log_id,
                 "account": account,
                 "filename": rendered_filename,
                 "caption": caption,
+                "offset_seconds": int(sched.get("offset_seconds", 0)),
                 "telemetry": {
                     "media_hash": file_hash[:16],
                     "scheduled_offset": sched["offset_display"],
@@ -253,24 +240,58 @@ class OctopusFanoutEngine:
                 }
             })
 
-        # 2. Concurrently publish across all accounts via ThreadPool with anti-shadowban telemetry
-        results = []
-        with ThreadPoolExecutor(max_workers=min(max_workers, len(render_and_publish_tasks) or 1)) as executor:
-            future_to_acc = {
-                executor.submit(
-                    self.publish_single_account,
-                    t["log_id"],
-                    t["account"],
-                    t["filename"],
-                    t["caption"],
-                    dry_run,
-                    t["telemetry"]
-                ): t["account"]["handle"]
-                for t in render_and_publish_tasks
-            }
+        return {"success": True, "reel_id": reel_id, "total_accounts": len(target_accounts), "tasks": tasks}
 
-            for future in as_completed(future_to_acc):
-                handle = future_to_acc[future]
+    def execute_broadcast(
+        self,
+        reel_id: str,
+        tasks: List[Dict[str, Any]],
+        dry_run: bool = True,
+        max_workers: int = 10,
+        respect_stagger: bool = False,
+        enforce_guards: bool = False,
+        sleep_fn=None
+    ) -> Dict[str, Any]:
+        """
+        PUBLISH phase.
+        - respect_stagger=True : account N is published at T0 + offset_seconds (real 30-45s Balanced gaps)
+        - enforce_guards=True  : skips accounts at their daily cap / posted < 2.5h ago
+        """
+        import time as _time
+        from storage.scheduler_db import account_guard
+        sleep_fn = sleep_fn or _time.sleep
+
+        insert_or_update_reel({"id": reel_id, "status": "BROADCASTING"})
+        results: List[Dict[str, Any]] = []
+        skipped: List[Dict[str, Any]] = []
+
+        runnable = []
+        for t in tasks:
+            if enforce_guards:
+                reason = account_guard(t["account"]["id"])
+                if reason:
+                    update_broadcast_log(t["log_id"], {"status": "SKIPPED", "error_message": f"Guard: {reason}"})
+                    skipped.append({"account_id": t["account"]["id"], "handle": t["account"]["handle"], "reason": reason})
+                    continue
+            runnable.append(t)
+
+        runnable.sort(key=lambda t: t.get("offset_seconds", 0))
+        t0 = _time.monotonic()
+        with ThreadPoolExecutor(max_workers=min(max_workers, len(runnable) or 1)) as executor:
+            futures = {}
+            for t in runnable:
+                if respect_stagger:
+                    wait = t.get("offset_seconds", 0) - (_time.monotonic() - t0)
+                    if wait > 0:
+                        sleep_fn(wait)
+                fut = executor.submit(
+                    self.publish_single_account,
+                    t["log_id"], t["account"], t["filename"], t["caption"], dry_run, t.get("telemetry")
+                )
+                futures[fut] = t["account"]["handle"]
+
+            for future in as_completed(futures):
+                handle = futures[future]
                 try:
                     res = future.result()
                     results.append(res)
@@ -280,18 +301,39 @@ class OctopusFanoutEngine:
                     results.append({"handle": handle, "success": False, "error": str(exc)})
 
         insert_or_update_reel({"id": reel_id, "status": "BROADCASTED"})
-        
         success_count = sum(1 for r in results if r.get("success"))
-        rate = f"{int((success_count / max(1, len(target_accounts))) * 100)}%"
+        total = len(tasks)
         return {
             "success": True,
-            "total_accounts": len(target_accounts),
+            "total_accounts": total,
             "successful_publishes": success_count,
             "successful_posts_count": success_count,
-            "success_rate": rate,
+            "skipped_accounts": skipped,
+            "success_rate": f"{int((success_count / max(1, total)) * 100)}%",
             "dry_run": dry_run,
             "details": results
         }
+
+    def broadcast_to_all_accounts(
+        self,
+        reel_id: str,
+        account_ids: Optional[List[str]] = None,
+        dry_run: bool = True,
+        max_workers: int = 10,
+        cta_template: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        The Master Octopus Action (immediate mode, used by manual / Telegram broadcasts):
+        renders customised videos and broadcasts across all connected accounts.
+        Peak-slot publishing uses prepare_broadcast() + execute_broadcast() instead.
+        """
+        prepared = self.prepare_broadcast(reel_id, account_ids=account_ids)
+        if not prepared.get("success"):
+            return {"success": False, "error": prepared.get("error")}
+        logger.info(f"🐙 Octopus Agent deploying {reel_id} across {prepared['total_accounts']} accounts...")
+        result = self.execute_broadcast(reel_id, prepared["tasks"], dry_run=dry_run, max_workers=max_workers)
+        result["total_accounts"] = prepared["total_accounts"]
+        return result
 
     def broadcast_source_reel_to_niche_pages(
         self,

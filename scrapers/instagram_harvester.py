@@ -88,6 +88,98 @@ class InstagramHarvester:
         logger.info(f"Falling back to public discovery for @{clean_handle}...")
         return self._fetch_via_public_fallback(clean_handle)
 
+    def get_recent_reels_from_handle(
+        self,
+        username: str,
+        limit: int = 12,
+        meta_ig_user_id: Optional[str] = None,
+        meta_access_token: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Discovers the most recent N reels for a handle WITH engagement metrics (for AI scoring).
+        Returns a list of dicts: reel_id, permalink, caption, timestamp, like_count, comments_count,
+        source_followers, media_type, author, source_type.
+        Tries Meta Business Discovery first; falls back to public mirrors (no engagement data).
+        """
+        clean_handle = username.lstrip("@").strip().lower()
+        ig_user_id = meta_ig_user_id or getattr(settings, "INSTAGRAM_USER_ID", getattr(settings, "IG_USER_ID", ""))
+        access_token = meta_access_token or getattr(settings, "META_GRAPH_ACCESS_TOKEN", getattr(settings, "META_ACCESS_TOKEN", ""))
+
+        if ig_user_id and access_token:
+            endpoint = f"https://graph.facebook.com/v27.0/{ig_user_id}"
+            params = {
+                "fields": (
+                    f"business_discovery.username({clean_handle})"
+                    f"{{followers_count,media.limit({int(limit)})"
+                    f"{{id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count}}}}"
+                ),
+                "access_token": access_token
+            }
+            try:
+                res = requests.get(endpoint, params=params, timeout=15)
+                if res.status_code == 200:
+                    bd = res.json().get("business_discovery", {})
+                    followers = bd.get("followers_count")
+                    out = []
+                    for item in bd.get("media", {}).get("data", []):
+                        if item.get("media_type") != "VIDEO":
+                            continue
+                        mid = item.get("id")
+                        out.append({
+                            "reel_id": mid,
+                            "permalink": item.get("permalink") or f"https://www.instagram.com/reel/{mid}/",
+                            "caption": item.get("caption", ""),
+                            "timestamp": item.get("timestamp", ""),
+                            "like_count": item.get("like_count"),
+                            "comments_count": item.get("comments_count"),
+                            "source_followers": followers,
+                            "media_type": item.get("media_product_type") or "VIDEO",
+                            "author": clean_handle,
+                            "source_type": "meta_business_discovery"
+                        })
+                    if out:
+                        return out
+                else:
+                    logger.warning(f"Business discovery (multi) for {clean_handle} failed: {res.status_code}")
+            except Exception as e:
+                logger.error(f"Multi-reel business discovery error for @{clean_handle}: {e}")
+
+        # Public mirror fallback: shortcodes only, no engagement metrics
+        out: List[Dict[str, Any]] = []
+        seen = set()
+        mirrors = [
+            (f"https://imginn.com/{clean_handle}/", r'/p/([A-Za-z0-9_-]{10,12})/'),
+            (f"https://dumpor.io/v/{clean_handle}", r'https?://(?:www\.)?instagram\.com/(?:p|reel)/([A-Za-z0-9_-]{10,12})'),
+        ]
+        for url, pattern in mirrors:
+            if out:
+                break
+            try:
+                res = requests.get(url, headers=self.headers, timeout=10)
+                if res.status_code != 200:
+                    continue
+                for sc in re.findall(pattern, res.text):
+                    if sc in seen:
+                        continue
+                    seen.add(sc)
+                    out.append({
+                        "reel_id": sc,
+                        "permalink": f"https://www.instagram.com/reel/{sc}/",
+                        "caption": "",
+                        "timestamp": "",
+                        "like_count": None,
+                        "comments_count": None,
+                        "source_followers": None,
+                        "media_type": "VIDEO",
+                        "author": clean_handle,
+                        "source_type": "public_mirror"
+                    })
+                    if len(out) >= limit:
+                        break
+            except Exception as e:
+                logger.debug(f"Mirror multi-reel attempt error ({url}): {e}")
+        return out
+
     def _fetch_via_business_discovery(self, target_username: str, ig_user_id: str, access_token: str) -> Optional[Dict[str, Any]]:
         """
         Queries official Meta Graph API Business Discovery for competitor / target handle.

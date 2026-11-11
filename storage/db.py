@@ -293,6 +293,10 @@ def init_octopus_db():
     conn.commit()
     conn.close()
 
+    # Peak-Time Scheduler tables (Candidate Pool, niche schedules, slot runs)
+    from storage.scheduler_db import init_scheduler_tables
+    init_scheduler_tables()
+
 # Accounts operations
 def get_all_accounts(active_only: bool = True) -> List[Dict]:
     conn = get_connection()

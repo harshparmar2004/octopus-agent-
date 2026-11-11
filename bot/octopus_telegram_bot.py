@@ -131,6 +131,66 @@ class OctopusTelegramBot:
             logger.error(f"Error sending video to Telegram: {e}")
             return False
 
+
+    def send_slot_preview(self, slot_run: Dict[str, Any], candidate: Dict[str, Any], schedule: Dict[str, Any], target_chat_id: Optional[Any] = None) -> bool:
+        """Sends a pre-flight preview for an upcoming peak-time slot to Telegram."""
+        cid = target_chat_id or self.chat_id
+        if not self.bot_token or not cid:
+            return False
+
+        slot_run_id = slot_run["id"]
+        niche_id = slot_run["niche_id"]
+        slot_time = slot_run["slot_time"]
+        sched_for = slot_run["scheduled_for"]
+        score = candidate.get("final_score", 0)
+        source = candidate.get("source_handle", "unknown")
+        accounts_count = slot_run.get("accounts_total", 0)
+
+        reply_markup = {
+            "inline_keyboard": [
+                [
+                    {"text": f"✅ Approve & Broadcast ({accounts_count} Pages)", "callback_data": f"slot_approve:{slot_run_id}"}
+                ],
+                [
+                    {"text": "🔄 Swap Candidate (#2)", "callback_data": f"slot_swap:{slot_run_id}"},
+                    {"text": "⏭ Skip Slot", "callback_data": f"slot_skip:{slot_run_id}"}
+                ]
+            ]
+        }
+
+        caption = (
+            f"📅 *OCTOPUS PEAK SLOT PRE-FLIGHT*\\n\\n"
+            f"🎯 *Niche:* `{niche_id.upper()}`\\n"
+            f"⏱ *Slot:* `{slot_time}` IST (Target: `{sched_for[:16].replace('T', ' ')} UTC`)\\n"
+            f"⭐ *AI Score:* `{score:.1f}/100` (Source: `@{source}`)\\n"
+            f"📱 *Connected Tentacles:* `{accounts_count}` Pages\\n\\n"
+            f"Will auto-post in {schedule.get('approval_timeout_minutes', 20)}m if untouched."
+        )
+
+        video_path = slot_run.get("reel_id")
+        # Check if rendered video file exists
+        from storage.db import get_reel
+        reel_meta = get_reel(slot_run.get("reel_id", "")) if slot_run.get("reel_id") else None
+        v_path = reel_meta.get("rendered_video_path") if reel_meta else None
+
+        if v_path and Path(v_path).exists():
+            try:
+                with open(v_path, "rb") as vf:
+                    payload = {
+                        "chat_id": cid,
+                        "caption": caption,
+                        "parse_mode": "Markdown",
+                        "reply_markup": json.dumps(reply_markup)
+                    }
+                    res = requests.post(f"{self.base_url}/sendVideo", data=payload, files={"video": vf}, timeout=60)
+                    return res.status_code == 200
+            except Exception as e:
+                logger.error(f"Error sending slot video to Telegram: {e}")
+
+        # Fallback to rich markdown message
+        self.send_text_message(caption, reply_markup=reply_markup, target_chat_id=cid)
+        return True
+
     # ==================== STEP 1: INBOUND URL RECEIVED ====================
     def handle_inbound_url(self, url: str, chat_id: Optional[Any] = None) -> Dict[str, Any]:
         session_id = f"sess_{int(time.time())}_{uuid.uuid4().hex[:6]}"

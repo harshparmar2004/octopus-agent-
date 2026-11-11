@@ -1577,6 +1577,207 @@
         </div>
       </section>
 
+      <!-- ==================== TAB: PEAK-TIME SCHEDULER & CANDIDATE POOL ==================== -->
+      <section id="view_scheduler" class="space-y-6 hidden">
+        <!-- Top Banner & Controls -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📅</span>
+                <h2 class="text-lg font-bold text-[#1C1917]">Peak-Time Scheduler & AI Candidate Pool</h2>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">⚡ IST Automation Active</span>
+              </div>
+              <p class="text-xs text-[#78716C] max-w-2xl">
+                Harvests from 10+ sources per niche throughout the day, scores reels using AI velocity + freshness + niche-fit, and automatically pre-renders and fanouts across 20+ accounts at peak viral traffic hours (IST).
+              </p>
+            </div>
+
+            <!-- Niche Selector & Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <div class="flex items-center gap-1.5 bg-[#FAF8F5] border border-[#E8DCD1] px-3 py-1.5 rounded-lg text-xs">
+                <span class="text-[#78716C] font-medium">Pod:</span>
+                <select id="schedulerNicheSelect" onchange="onSchedulerNicheChanged()" class="bg-transparent font-bold text-[#1C1917] focus:outline-hidden cursor-pointer">
+                  <option value="information">💡 Information & Infotainment</option>
+                  <option value="quantum">⚛️ Quantum Physics</option>
+                  <option value="ai">🤖 Generative AI</option>
+                  <option value="robotics">🦾 Robotics</option>
+                  <option value="space">🚀 Space Exploration</option>
+                  <option value="biotech">🧬 BioTech</option>
+                  <option value="parties">🎉 Parties & EDM</option>
+                  <option value="organizing">🧺 Home Organizing</option>
+                  <option value="fashion">✨ Fashion & Beauty</option>
+                </select>
+              </div>
+
+              <button type="button" onclick="triggerHarvestNow()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] flex items-center gap-1.5 transition shadow-2xs">
+                <span>🌾</span>
+                <span>Harvest Sources</span>
+              </button>
+
+              <button type="button" onclick="triggerRunSlotNow()" class="px-3.5 py-1.5 rounded-lg bg-[#C86237] hover:opacity-90 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-2xs">
+                <span>⚡</span>
+                <span>Run Slot Now (Test)</span>
+              </button>
+
+              <button type="button" onclick="openScheduleEditorModal()" class="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#78716C] flex items-center gap-1 transition">
+                <span>⚙️</span>
+                <span>Edit Timing</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Metrics Row -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-[#E8DCD1]/60">
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Daily Peak Slots</div>
+              <div id="stat_slot_count" class="text-base font-extrabold text-[#1C1917] mt-0.5">4 Slots (IST)</div>
+              <div id="stat_slot_times_list" class="text-[10px] text-[#C86237] font-mono mt-0.5">08:00, 13:00, 18:00, 21:00</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Stagger & Jitter</div>
+              <div class="text-base font-extrabold text-[#1C1917] mt-0.5">⚡ Balanced (30–45s)</div>
+              <div class="text-[10px] text-emerald-700 font-bold mt-0.5">±8 min Niche Variance (Anti-Burst)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Scored Candidate Pool</div>
+              <div id="stat_candidate_pool_size" class="text-base font-extrabold text-[#1C1917] mt-0.5">Loading...</div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">Ranked by AI Velocity & Niche Fit</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
+              <div class="text-[10px] text-[#78716C] font-bold uppercase">Safety & Cap Guard</div>
+              <div class="text-base font-extrabold text-emerald-700 mt-0.5">Max 5 Posts / Day</div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">≥ 2.5h Spacing Guard Enforced</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 24-Hour Upcoming Slot Timeline -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>⏱️</span>
+                <span>24-Hour Peak Posting Timeline (IST)</span>
+              </h3>
+              <p class="text-xs text-[#78716C]">Shows the next planned execution slots for this niche, assigned AI candidates, and approval state.</p>
+            </div>
+            <button type="button" onclick="loadSchedulerUpcoming()" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1">
+              <span>↻ Refresh Schedule</span>
+            </button>
+          </div>
+
+          <!-- Timeline Grid Container -->
+          <div id="schedulerTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="col-span-full py-8 text-center text-xs text-[#78716C]">Loading upcoming slot runs...</div>
+          </div>
+        </div>
+
+        <!-- AI Scored Candidate Pool Matrix -->
+        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
+                <span>🎯</span>
+                <span>AI Reel Candidate Pool (Scored & Ranked)</span>
+              </h3>
+              <p class="text-xs text-[#78716C]">Every harvested reel is ranked 0–100 using engagement velocity, freshness, and LLM niche-fit.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#78716C]">Filter:</span>
+              <button onclick="filterCandidates('ALL')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#1C1917] text-white">All</button>
+              <button onclick="filterCandidates('SCORED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Scored</button>
+              <button onclick="filterCandidates('SELECTED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Selected</button>
+              <button onclick="filterCandidates('PUBLISHED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Published</button>
+            </div>
+          </div>
+
+          <!-- Candidate Pool Table -->
+          <div class="border border-[#E8DCD1] rounded-xl overflow-hidden bg-white">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-[#FAF8F5] border-b border-[#E8DCD1] text-[10px] text-[#78716C] uppercase font-bold tracking-wider">
+                  <tr>
+                    <th class="px-4 py-3">Rank & Score</th>
+                    <th class="px-4 py-3">Source & Age</th>
+                    <th class="px-4 py-3">Engagement</th>
+                    <th class="px-4 py-3">Score Breakdown (Velocity / Fresh / Niche)</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="candidatesTableBody" class="divide-y divide-[#E8DCD1]/60">
+                  <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-xs text-[#78716C]">Loading candidate pool...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MODAL: EDIT NICHE SCHEDULE ==================== -->
+      <div id="scheduleEditorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-lg w-full p-6 space-y-4">
+          <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base">⚙️</span>
+              <h3 class="text-sm font-bold text-[#1C1917]">Configure Peak-Time Posting Schedule</h3>
+            </div>
+            <button onclick="closeScheduleEditorModal()" class="w-7 h-7 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] text-[#1C1917] font-bold text-xs">✕</button>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <div>
+              <label class="font-bold text-[#1C1917] block mb-1">Peak Slot Times (IST, 24h format, comma-separated):</label>
+              <input type="text" id="schedInput_slotTimes" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden focus:border-[#C86237]" placeholder="08:00, 13:00, 18:00, 21:00">
+              <p class="text-[10px] text-[#78716C] mt-1">Recommended 4 slots: 08:00 (morning), 13:00 (lunch), 18:00 (evening peak), 21:00 (prime-time). Minimum 2.5h apart.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="font-bold text-[#1C1917] block mb-1">Jitter Variance (Minutes):</label>
+                <input type="number" id="schedInput_jitter" min="0" max="15" value="8" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden">
+                <p class="text-[10px] text-[#78716C] mt-0.5">±0 to 8 min random variance</p>
+              </div>
+
+              <div>
+                <label class="font-bold text-[#1C1917] block mb-1">Minimum AI Score:</label>
+                <input type="number" id="schedInput_minScore" min="10" max="90" value="35" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden">
+                <p class="text-[10px] text-[#78716C] mt-0.5">Reels below this are skipped</p>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1 border-t border-[#E8DCD1]/60">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_evergreen" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Enable 7-day Evergreen Fallback if pool is empty</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_diversity" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Source Diversity (no repeat source on the same day)</span>
+              </label>
+
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="schedInput_enabled" checked class="rounded border-[#E8DCD1] text-[#C86237] focus:ring-0">
+                <span class="text-[#1C1917] font-medium">Scheduler Enabled for this Pod</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-3 border-t border-[#E8DCD1]">
+            <button onclick="closeScheduleEditorModal()" class="px-3.5 py-1.5 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] text-xs font-bold text-[#78716C]">Cancel</button>
+            <button onclick="saveNicheScheduleFromModal()" class="px-4 py-1.5 rounded-lg bg-[#C86237] text-white text-xs font-bold hover:opacity-90 transition">Save Schedule</button>
+          </div>
+        </div>
+      </div>
+
 <!-- ==================== ANTI-SHADOWBAN VARIATION MATRIX MODAL ==================== -->
 <div id="antiShadowbanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
   <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
