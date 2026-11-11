@@ -276,13 +276,27 @@ class AntiShadowbanEngine:
     @staticmethod
     def get_staggered_schedule(
         account_count: int,
-        base_delay_seconds: int = 180,
-        jitter_seconds: int = 90
+        base_delay_seconds: int = 35,
+        jitter_seconds: int = 15,
+        mode: str = "balanced"
     ) -> List[Dict[str, Any]]:
         """
         Computes non-colliding staggered publish offsets for N accounts.
-        Spreads publication across a natural 20-60 minute window.
+        Modes:
+        - 'turbo': 12-20s micro-jitter (~2-3 mins for 20 accounts)
+        - 'balanced' (Default): 30-45s natural jitter (~5-8 mins for 20 accounts)
+        - 'stealth': 120-210s extended jitter (~35-50 mins for 20 accounts)
         """
+        if mode == "turbo":
+            base_delay = 12
+            jitter_max = 8
+        elif mode == "stealth":
+            base_delay = 120
+            jitter_max = 90
+        else:  # balanced (default)
+            base_delay = base_delay_seconds if base_delay_seconds != 180 else 35
+            jitter_max = jitter_seconds if jitter_seconds != 90 else 15
+
         schedule = []
         current_offset = 0
         base_time = datetime.utcnow()
@@ -291,8 +305,8 @@ class AntiShadowbanEngine:
             if idx == 0:
                 current_offset = 0
             else:
-                jitter = ((idx * 37) % jitter_seconds)
-                step = base_delay_seconds + jitter
+                jitter = ((idx * 17) % max(1, jitter_max))
+                step = base_delay + jitter
                 current_offset += step
 
             scheduled_dt = base_time + timedelta(seconds=current_offset)
@@ -301,6 +315,7 @@ class AntiShadowbanEngine:
 
             schedule.append({
                 "account_index": idx,
+                "mode": mode,
                 "offset_seconds": current_offset,
                 "offset_display": f"+{minutes}m {seconds:02d}s" if current_offset > 0 else "+0m 00s (Immediate)",
                 "scheduled_iso": scheduled_dt.strftime("%Y-%m-%d %H:%M:%S UTC")

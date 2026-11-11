@@ -59,17 +59,31 @@ class TestAntiShadowbanSuite:
             assert "salary" in cap.lower() or "financial" in cap.lower()
 
     def test_04_staggered_jitter_scheduling_non_colliding(self):
-        """Verifies that publish offsets are sequential, with non-zero natural gaps between uploads."""
-        schedule = AntiShadowbanEngine.get_staggered_schedule(account_count=10, base_delay_seconds=180, jitter_seconds=90)
+        """Verifies that publish offsets are sequential, with non-zero natural gaps (Balanced 30-45s by default)."""
+        # 1. Test Default Balanced Mode (30-45s jitter, ~5-8 mins for 20 accounts)
+        schedule = AntiShadowbanEngine.get_staggered_schedule(account_count=10)
         assert len(schedule) == 10
         assert schedule[0]["offset_seconds"] == 0
+        assert schedule[0]["mode"] == "balanced"
 
         for i in range(1, len(schedule)):
             prev = schedule[i-1]["offset_seconds"]
             curr = schedule[i]["offset_seconds"]
             diff = curr - prev
-            # Each subsequent post must be delayed by at least 150 seconds (2.5 minutes)
-            assert diff >= 150, f"Gap too short between account {i-1} and {i}: {diff}s"
+            # Balanced mode: gaps should be between 30s and 60s
+            assert 30 <= diff <= 60, f"Gap out of balanced bounds between account {i-1} and {i}: {diff}s"
+
+        # 2. Test Turbo Mode (12-20s)
+        turbo_sched = AntiShadowbanEngine.get_staggered_schedule(account_count=5, mode="turbo")
+        for i in range(1, len(turbo_sched)):
+            diff = turbo_sched[i]["offset_seconds"] - turbo_sched[i-1]["offset_seconds"]
+            assert 10 <= diff <= 25
+
+        # 3. Test Stealth Mode (120-210s)
+        stealth_sched = AntiShadowbanEngine.get_staggered_schedule(account_count=5, mode="stealth")
+        for i in range(1, len(stealth_sched)):
+            diff = stealth_sched[i]["offset_seconds"] - stealth_sched[i-1]["offset_seconds"]
+            assert diff >= 120
 
     def test_05_anti_shadowban_api_preview_endpoint(self):
         """Verifies /api/anti-shadowban/preview returns valid JSON with 3 simulated variants."""
