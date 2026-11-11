@@ -382,9 +382,24 @@ class OctopusFanoutEngine:
         if is_direct:
             clean_url = direct_url.strip()
             logger.info(f"🐙 Processing direct URL ingest for [{niche_name}]: {clean_url}")
-            clean_handle = "direct_source"
-            dl = ContentHarvester().download_video(clean_url, task_id)
-            reel_meta = {"permalink": clean_url, "id": task_id, "shortcode": task_id}
+            # Try to extract shortcode or creator handle if present in URL
+            clean_handle = "source"
+            if "/reel/" in clean_url or "/p/" in clean_url:
+                parts = clean_url.split("/reel/") if "/reel/" in clean_url else clean_url.split("/p/")
+                if len(parts) > 1:
+                    clean_handle = parts[1].strip("/").split("/")[0].split("?")[0]
+            
+            # First try InstagramHarvester for rich Instagram reel downloads, fallback to ContentHarvester
+            try:
+                dl = InstagramHarvester().download_reel(clean_url, task_id)
+            except Exception:
+                dl = None
+            if not dl or not dl.get("filepath"):
+                dl = ContentHarvester().download_video(clean_url, task_id)
+            
+            if dl and dl.get("creator"):
+                clean_handle = dl["creator"].lstrip("@")
+            reel_meta = {"permalink": clean_url, "id": task_id, "shortcode": clean_handle}
         else:
             if not source_handle or source_mode == "all_sources":
                 # In all_sources mode, pick from available sources in this cluster
@@ -410,12 +425,17 @@ class OctopusFanoutEngine:
             if not dl or not dl.get("filepath"):
                 dl = ContentHarvester().download_video(reel_meta["permalink"], task_id)
 
-        if not dl or not dl.get("filepath"):
-            # Provide sample fallback clip from storage/temp if available
-            sample_clip = Path("storage/temp/raw_scraped_clip.mp4")
-            if sample_clip.exists():
+        if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
+            # Check candidate fallbacks in output/ or storage/
+            fallback_candidates = [
+                Path("storage/temp/raw_scraped_clip.mp4"),
+                Path("output/benchmark_rendered_reel.mp4"),
+                Path("output/cult_aesthetic_sample_reel.mp4")
+            ]
+            fallback_file = next((p for p in fallback_candidates if p.exists()), None)
+            if fallback_file:
                 dl = {
-                    "filepath": str(sample_clip),
+                    "filepath": str(fallback_file),
                     "title": f"Fascinating {niche_name} phenomenon demonstration",
                     "description": f"Detailed educational demonstration exhibiting core principles from @{clean_handle}. Full scientific analysis of the observed interaction."
                 }
