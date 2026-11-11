@@ -1008,6 +1008,67 @@
                 </div>
               </div>
 
+              <!-- Anti-Shadowban Multi-Account Shield Deck -->
+              <div class="p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3">
+                <div class="flex justify-between items-center border-b border-[#E8DCD1] pb-2.5">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-md bg-[#C86237]/10 flex items-center justify-center text-[#C86237] text-xs font-bold border border-[#C86237]/20">
+                      🛡️
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Anti-Shadowban Engine</h4>
+                      <p class="text-[10px] text-[#78716C]">Protects 10–20 accounts from Meta duplicate detection</p>
+                    </div>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">● 4 Layers Active</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                    <div class="text-[10px] text-[#78716C] uppercase font-bold flex items-center gap-1">
+                      <span>🎬</span>
+                      <span>Video Mutation</span>
+                    </div>
+                    <div class="font-bold text-[#1C1917] mt-0.5 text-[11px]">Unique Perceptual Hash</div>
+                    <p class="text-[10px] text-[#78716C]">Color EQ, crop & noise dither</p>
+                  </div>
+
+                  <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                    <div class="text-[10px] text-[#78716C] uppercase font-bold flex items-center gap-1">
+                      <span>📝</span>
+                      <span>Caption Mutation</span>
+                    </div>
+                    <div class="font-bold text-[#1C1917] mt-0.5 text-[11px]">Subtle Niche Variations</div>
+                    <p class="text-[10px] text-[#78716C]">Varied hooks & dynamic CTAs</p>
+                  </div>
+
+                  <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                    <div class="text-[10px] text-[#78716C] uppercase font-bold flex items-center gap-1">
+                      <span>🏷️</span>
+                      <span>Hashtag Tiering</span>
+                    </div>
+                    <div class="font-bold text-[#1C1917] mt-0.5 text-[11px]">Zero Duplicate Sets</div>
+                    <p class="text-[10px] text-[#78716C]">High, Mid & Micro shuffled</p>
+                  </div>
+
+                  <div class="p-2.5 rounded-lg bg-white border border-[#E8DCD1]">
+                    <div class="text-[10px] text-[#78716C] uppercase font-bold flex items-center gap-1">
+                      <span>⏱️</span>
+                      <span>Staggered Jitter</span>
+                    </div>
+                    <div class="font-bold text-emerald-700 mt-0.5 text-[11px]">2-5 Min Posting Gaps</div>
+                    <p class="text-[10px] text-[#78716C]">Zero simultaneous burst flag</p>
+                  </div>
+                </div>
+
+                <!-- Preview Variants Button -->
+                <div class="pt-1">
+                  <button type="button" onclick="toggleAntiShadowbanModal()" class="w-full py-1.5 px-3 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] flex items-center justify-center gap-1.5 transition shadow-2xs">
+                    <span>🔍 View Anti-Shadowban Per-Account Variant Matrix</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Pre-Flight Deployment Checklist -->
               <div class="p-4 rounded-xl border border-[#E8DCD1] bg-white space-y-2.5">
                 <div class="text-xs font-bold text-[#1C1917] uppercase tracking-wider">Production Pre-Flight Checklist</div>
@@ -1515,3 +1576,37 @@
           </div>
         </div>
       </section>
+
+<!-- ==================== ANTI-SHADOWBAN VARIATION MATRIX MODAL ==================== -->
+<div id="antiShadowbanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+    <!-- Modal Header -->
+    <div class="p-4 border-b border-[#E8DCD1] bg-[#FAF8F5] flex justify-between items-center">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#C86237]/10 flex items-center justify-center text-sm font-bold border border-[#C86237]/20">
+          🛡️
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-[#1C1917]">Anti-Shadowban Per-Account Variant Matrix</h3>
+          <p class="text-xs text-[#78716C]">Real-time simulation showing subtle, context-preserving variations across your pod</p>
+        </div>
+      </div>
+      <button type="button" onclick="toggleAntiShadowbanModal()" class="w-8 h-8 rounded-lg bg-white border border-[#E8DCD1] hover:bg-[#F3EDE4] text-[#1C1917] flex items-center justify-center text-sm font-bold transition">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body: Matrix Cards -->
+    <div class="p-5 overflow-y-auto space-y-4" id="antiShadowbanVariantsContainer">
+      <div class="text-center py-6 text-xs text-[#78716C]">Loading anti-shadowban simulation...</div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-[#E8DCD1] bg-[#FAF8F5] flex justify-between items-center text-xs">
+      <span class="text-[#78716C]">Meta Duplicate Detection: <strong>Bypassed via Perceptual & Text Mutation</strong></span>
+      <button type="button" onclick="toggleAntiShadowbanModal()" class="px-4 py-2 rounded-lg bg-[#C86237] text-white font-bold hover:opacity-90 transition">
+        Close Preview
+      </button>
+    </div>
+  </div>
+</div>

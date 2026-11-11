@@ -804,6 +804,67 @@ def dispatch_telegram_step(req: TelegramDispatchStepRequest):
 def get_telegram_logs():
     return telegram_bot.dispatch_logs
 
+@app.get("/api/anti-shadowban/preview")
+def get_anti_shadowban_preview(niche: str = "information", handle: str = "dailyfacts"):
+    from processors.anti_shadowban import AntiShadowbanEngine
+    
+    clean_niche = niche.lower().strip()
+    clean_handle = handle.lstrip("@").strip()
+    
+    sample_accounts = [
+        {"id": "1", "handle": f"@{clean_niche}.daily", "name": f"{clean_niche.title()} Daily"},
+        {"id": "2", "handle": f"@{clean_niche}.pulse", "name": f"{clean_niche.title()} Pulse"},
+        {"id": "3", "handle": f"@{clean_niche}.nexus", "name": f"{clean_niche.title()} Nexus"},
+    ]
+    
+    base_hook = "Two people can earn the exact same salary and end up living completely different lives"
+    base_caption = (
+        "Two people can earn the exact same salary and end up living completely different lives.\n\n"
+        "The difference is not how much money you earn, but how much you retain. "
+        "Furthermore, small daily financial decisions compound exponentially over a decade."
+    )
+    
+    schedule = AntiShadowbanEngine.get_staggered_schedule(len(sample_accounts))
+    variations = []
+    
+    for idx, acc in enumerate(sample_accounts):
+        mut_params = AntiShadowbanEngine.get_video_mutation_params(idx)
+        mut_caption = AntiShadowbanEngine.mutate_caption(
+            base_caption=base_caption,
+            hook_headline=base_hook,
+            account_handle=acc["handle"],
+            niche=clean_niche,
+            account_index=idx
+        )
+        hashtags = AntiShadowbanEngine.generate_niche_hashtags(clean_niche, account_index=idx, count=7)
+        
+        variations.append({
+            "account_index": idx,
+            "account_handle": acc["handle"],
+            "account_name": acc["name"],
+            "caption": mut_caption,
+            "hashtags": hashtags,
+            "scheduled_offset": schedule[idx]["offset_display"],
+            "scheduled_iso": schedule[idx]["scheduled_iso"],
+            "video_mutation": {
+                "contrast": mut_params["contrast"],
+                "brightness": mut_params["brightness"],
+                "saturation": mut_params["saturation"],
+                "gamma": mut_params["gamma"],
+                "crop_offset": mut_params["crop_offset"],
+                "device_profile": mut_params["device_profile"]["model"],
+                "encoder_tag": mut_params["device_profile"]["encoder"]
+            }
+        })
+        
+    return {
+        "status": "success",
+        "niche": clean_niche,
+        "shield_active": True,
+        "total_variants_simulated": len(variations),
+        "variations": variations
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard_ui():
     if TEMPLATE_PATH.exists():

@@ -173,10 +173,46 @@ class InstagramHarvester:
 
     def download_reel(self, permalink: str, custom_id: str) -> Optional[Dict[str, Any]]:
         """
-        Downloads high-res MP4 video from an Instagram Reel permalink using yt-dlp.
+        Downloads high-res MP4 video from an Instagram Reel permalink or direct MP4 stream using yt-dlp,
+        with local file caching and direct stream fallback.
         """
+        # 1. Check local cache first
+        for ext in [".mp4", "_raw.mp4"]:
+            cached_candidate = self.download_dir / f"{custom_id}{ext}"
+            if cached_candidate.exists() and cached_candidate.stat().st_size > 50000:
+                logger.info(f"Local cache hit for {custom_id}: {cached_candidate}")
+                return {
+                    "filepath": str(cached_candidate),
+                    "title": f"Cached Reel {custom_id}",
+                    "description": "Cached media stream ready for multi-account synthesis",
+                    "duration": 15,
+                    "author": "cached_source"
+                }
+
+        # 2. Direct MP4 stream URL check
+        if permalink.startswith("http") and (".mp4" in permalink or "mixkit.co" in permalink or "fbcdn.net" in permalink):
+            try:
+                out_path = self.download_dir / f"{custom_id}_raw.mp4"
+                logger.info(f"Downloading direct MP4 stream: {permalink[:60]}... to {out_path.name}")
+                with requests.get(permalink, headers=self.headers, stream=True, timeout=25) as r:
+                    r.raise_for_status()
+                    with open(out_path, "wb") as f_out:
+                        for chunk in r.iter_content(chunk_size=65536):
+                            if chunk:
+                                f_out.write(chunk)
+                if out_path.exists() and out_path.stat().st_size > 10000:
+                    return {
+                        "filepath": str(out_path),
+                        "title": f"Ingested Reel {custom_id}",
+                        "description": "Direct stream parsed successfully",
+                        "duration": 15,
+                        "author": "direct_stream"
+                    }
+            except Exception as direct_err:
+                logger.warning(f"Direct stream download failed, falling back to yt-dlp: {direct_err}")
+
+        # 3. Enhanced yt-dlp download
         out_template = str(self.download_dir / f"{custom_id}_raw.%(ext)s")
-        # Resolve optional proxy and cookie file for anti-ban resilience
         proxy = getattr(settings, "SCRAPER_PROXY", "") or os.getenv("HTTP_PROXY") or os.getenv("HTTPS_PROXY")
         cookies_file = getattr(settings, "INSTAGRAM_COOKIES_FILE", "")
         if not cookies_file:
@@ -190,10 +226,10 @@ class InstagramHarvester:
             "quiet": True,
             "no_warnings": True,
             "merge_output_format": "mp4",
-            "match_filter": yt_dlp.utils.match_filter_func("duration <= 90"),
+            "match_filter": yt_dlp.utils.match_filter_func("duration <= 120"),
             "socket_timeout": 20,
             "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
                 "Accept-Language": "en-US,en;q=0.9",
             }
         }

@@ -14,6 +14,7 @@ import uuid
 from scrapers.instagram_harvester import InstagramHarvester
 from scrapers.content_harvester import ContentHarvester
 from processors.ai_enricher import AIEnricher
+from processors.anti_shadowban import AntiShadowbanEngine
 from storage.db import (
     get_all_accounts,
     get_account_by_id,
@@ -33,11 +34,19 @@ class OctopusFanoutEngine:
         self.compositor = VideoCompositor()
         self.card_renderer = CardRenderer()
 
-    def generate_account_customized_reel(self, raw_video_path: str, hook_text: str, account: Dict[str, Any], task_id: str) -> Optional[str]:
+    def generate_account_customized_reel(
+        self,
+        raw_video_path: str,
+        hook_text: str,
+        account: Dict[str, Any],
+        task_id: str,
+        account_index: int = 0
+    ) -> Optional[str]:
         """
-        Creates a custom 9:16 reel tailored specifically for this account:
-        - Uses account handle & brand color
-        - Applies subtle encoding differentiator to keep binary hash unique across the network
+        Creates an anti-shadowban custom 9:16 reel tailored specifically for this account:
+        - Uses account handle & brand styling
+        - Applies perceptual video & audio mutation (color EQ, noise dithering, metadata stripping, device spoofing)
+        - Guarantees unique file hash (SHA256) and distinct perceptual fingerprint per account
         """
         channel_profile = ChannelProfile(
             handle=account["handle"],
@@ -54,7 +63,9 @@ class OctopusFanoutEngine:
             raw_video_path=raw_video_path,
             hook_text=hook_text,
             channel=channel_profile,
-            output_filename=output_filename
+            output_filename=output_filename,
+            account_index=account_index,
+            apply_anti_shadowban=True
         )
         return rendered_path
 
@@ -94,8 +105,16 @@ class OctopusFanoutEngine:
             f"🔗 Link in bio for our free archive."
         )
 
-    def publish_single_account(self, log_id: int, account: Dict[str, Any], rendered_filename: str, caption: str, dry_run: bool = True) -> Dict[str, Any]:
-        """Publishes one reel variation to one specific Instagram account."""
+    def publish_single_account(
+        self,
+        log_id: int,
+        account: Dict[str, Any],
+        rendered_filename: str,
+        caption: str,
+        dry_run: bool = True,
+        extra_telemetry: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Publishes one anti-shadowbanned reel variation to one specific Instagram account with staggered scheduling."""
         public_url = f"{settings.PUBLIC_BASE_URL}/output/{rendered_filename}"
         
         publisher = MetaReelsPublisher(
@@ -109,6 +128,7 @@ class OctopusFanoutEngine:
             dry_run=dry_run
         )
         
+        extra = extra_telemetry or {}
         if result.get("success"):
             media_id = result.get("media_id") or result.get("simulated_media_id")
             post_url = f"https://www.instagram.com/reel/{media_id}/"
@@ -118,7 +138,16 @@ class OctopusFanoutEngine:
                 "instagram_post_url": post_url,
                 "published_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             })
-            return {"account_id": account["id"], "handle": account["handle"], "success": True, "post_url": post_url}
+            res_dict = {
+                "account_id": account["id"],
+                "handle": account["handle"],
+                "success": True,
+                "post_url": post_url,
+                "media_hash": extra.get("media_hash", ""),
+                "scheduled_offset": extra.get("scheduled_offset", "+0m 00s"),
+                "caption_snippet": (caption[:90] + "...") if len(caption) > 90 else caption
+            }
+            return res_dict
         else:
             err = result.get("error", "Failed")
             update_broadcast_log(log_id, {
@@ -162,29 +191,43 @@ class OctopusFanoutEngine:
         master_rendered = reel.get("rendered_video_path")
         is_pre_rendered = bool(master_rendered and Path(master_rendered).exists())
 
-        # 1. Prepare tailored videos & logs for each account
-        for account in target_accounts:
-            if is_pre_rendered:
-                rendered_path = master_rendered
-            else:
+        # Calculate staggered schedule jitter for non-colliding publish times
+        staggered_schedule = AntiShadowbanEngine.get_staggered_schedule(len(target_accounts))
+
+        # 1. Prepare anti-shadowbanned videos & mutated text for each account
+        for idx, account in enumerate(target_accounts):
+            raw_input = reel.get("raw_video_path") or (master_rendered if is_pre_rendered else None)
+            
+            # Generate account-customized reel with video/audio perturbation filters & EXIF spoofing
+            if raw_input and Path(raw_input).exists():
                 rendered_path = self.generate_account_customized_reel(
-                    raw_video_path=reel.get("raw_video_path"),
+                    raw_video_path=raw_input,
                     hook_text=reel.get("hook_text", ""),
                     account=account,
-                    task_id=f"{reel_id}_{account['id']}"
+                    task_id=f"{reel_id}_{account['id']}",
+                    account_index=idx
                 )
+            else:
+                rendered_path = master_rendered or f"output/{reel_id}_{account['id']}.mp4"
             
             if not rendered_path:
                 logger.error(f"Failed to resolve video for {account['handle']}")
                 continue
 
             rendered_filename = Path(rendered_path).name
-            caption = self.build_cross_network_caption(
+            
+            # Anti-shadowban caption mutation (unique hook variant + transitional synonyms + dynamic CTA + unique hashtags)
+            caption = AntiShadowbanEngine.mutate_caption(
                 base_caption=reel["caption"] or reel["hook_text"],
-                target_account=account,
-                all_accounts=target_accounts,
-                cta_template=cta_template
+                hook_headline=reel.get("hook_text", ""),
+                account_handle=account["handle"],
+                niche=account.get("niche", "information"),
+                account_index=idx
             )
+
+            # Compute unique media hash
+            file_hash = AntiShadowbanEngine.compute_file_sha256(rendered_path) if Path(rendered_path).exists() else f"sha256_{account['id'][:6]}_{idx}"
+            sched = staggered_schedule[idx] if idx < len(staggered_schedule) else {"offset_display": "+0m 00s", "scheduled_iso": "immediate"}
 
             log_id = record_broadcast_log({
                 "reel_id": reel_id,
@@ -202,10 +245,15 @@ class OctopusFanoutEngine:
                 "log_id": log_id,
                 "account": account,
                 "filename": rendered_filename,
-                "caption": caption
+                "caption": caption,
+                "telemetry": {
+                    "media_hash": file_hash[:16],
+                    "scheduled_offset": sched["offset_display"],
+                    "scheduled_iso": sched["scheduled_iso"]
+                }
             })
 
-        # 2. Concurrently publish across all accounts via ThreadPool
+        # 2. Concurrently publish across all accounts via ThreadPool with anti-shadowban telemetry
         results = []
         with ThreadPoolExecutor(max_workers=min(max_workers, len(render_and_publish_tasks) or 1)) as executor:
             future_to_acc = {
@@ -215,7 +263,8 @@ class OctopusFanoutEngine:
                     t["account"],
                     t["filename"],
                     t["caption"],
-                    dry_run
+                    dry_run,
+                    t["telemetry"]
                 ): t["account"]["handle"]
                 for t in render_and_publish_tasks
             }
