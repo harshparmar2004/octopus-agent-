@@ -166,7 +166,7 @@ class OctopusFanoutEngine:
         extra = extra_telemetry or {}
         if result.get("success"):
             media_id = result.get("media_id") or result.get("simulated_media_id")
-            post_url = f"https://www.instagram.com/reel/{media_id}/"
+            post_url = result.get("permalink") or f"https://www.instagram.com/reel/{media_id}/"
             update_broadcast_log(log_id, {
                 "status": "PUBLISHED",
                 "instagram_media_id": media_id,

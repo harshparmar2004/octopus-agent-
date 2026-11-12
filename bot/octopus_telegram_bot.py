@@ -353,74 +353,57 @@ class OctopusTelegramBot:
                 {"id": "girls_dance", "name": "Dance & Choreography", "avatar_icon": "💃"}
             ]
 
-        # Multimodal Vision Analysis on Inbound Reel
-        analysis = None
-        try:
-            analysis = VisionExtractor.analyze_reel(url)
-        except Exception as ve:
-            logger.warning(f"Telegram Vision analysis error: {ve}")
-
-        headline = analysis.get("headline", "") if analysis else ""
-        highlight_word = analysis.get("highlight_word", "") if analysis else ""
-        context = analysis.get("context", "") if analysis else ""
-        detected_niche = analysis.get("detected_niche", "ai_tech") if analysis else "ai_tech"
+        # Extract clean reel ID / shortcode
+        clean_url = url.strip()
+        reel_id = "reel"
+        if "/reel/" in clean_url:
+            parts = clean_url.split("/reel/")[1].split("/")[0].split("?")[0]
+            if parts:
+                reel_id = parts
+        elif "/p/" in clean_url:
+            parts = clean_url.split("/p/")[1].split("/")[0].split("?")[0]
+            if parts:
+                reel_id = parts
 
         session = {
             "session_id": session_id,
             "chat_id": cid,
-            "url": url,
+            "url": clean_url,
+            "reel_id": reel_id,
             "step": "awaiting_niche",
-            "niche_id": detected_niche,
-            "niche_name": detected_niche.title(),
-            "target": None,
-            "headline": headline,
-            "highlight_word": highlight_word,
-            "context": context,
-            "original_bio": analysis.get("source_caption", ""),
-            "has_competitor_header": analysis.get("has_competitor_header", False),
-            "crop_box": analysis.get("crop_box"),
-            "vision_analysis": analysis,
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         self.sessions[session_id] = session
         if cid:
             self.chat_active_session[cid] = session_id
 
-        def _niche_btn(nid: str, label: str, def_cnt: int) -> Dict[str, str]:
+        # Accurately count ONLY accounts added with Meta Graph API credentials
+        def _niche_btn(nid: str, label: str) -> Dict[str, str]:
             try:
-                cl = get_niche_cluster(nid)
-                cnt = len(cl.get("accounts", [])) or def_cnt
+                cl = get_niche_cluster(nid, allow_placeholders=False)
+                cnt = len(cl.get("accounts", []))
             except Exception:
-                cnt = def_cnt
+                cnt = 0
             unit = "Account" if cnt == 1 else "Accounts"
             return {"text": f"{label} ({cnt} {unit})", "callback_data": f"tg_niche:{session_id}:{nid}"}
 
-        # Niche Broadcast Keyboard (6 Primary Pods + 1-Click Fast-Scale)
+        # 6 Primary Niches with Real Live Connected Account Counts
         keyboard = [
-            [_niche_btn("ai_tech", "💡 Informative AI Tech", 20)],
-            [_niche_btn("clubbing", "🎉 Clubbing & Party", 20)],
-            [_niche_btn("memes", "🔥 Daily Memes", 10)],
-            [_niche_btn("concerts", "🎸 Concerts & Live", 10)],
-            [_niche_btn("ai_content", "🤖 AI Showcase", 15)],
-            [_niche_btn("girls_dance", "💃 Dance & Choreography", 1)],
-            [{"text": "🚀 Auto-Crop Competitor Header & Fanout (20 Pages)", "callback_data": f"tg_scale_20:{session_id}:ai_tech"}],
+            [_niche_btn("girls_dance", "💃 Dance & Choreography")],
+            [_niche_btn("ai_tech", "💡 Informative AI Tech")],
+            [_niche_btn("clubbing", "🎉 Clubbing & Party")],
+            [_niche_btn("memes", "🔥 Daily Memes")],
+            [_niche_btn("concerts", "🎸 Concerts & Live")],
+            [_niche_btn("ai_content", "🤖 AI Showcase")],
             [{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}]
         ]
 
-        vision_block = ""
-        if headline:
-            vision_block = (
-                f"\n\n📝 *Detected Headline on Reel:*\n`\"{headline}\"`\n"
-                f"💡 *Highlight:* `{highlight_word}`\n"
-                f"🧠 *Context:* _{context}_\n"
-                f"🏷️ *Suggested Niche:* *{detected_niche}*\n"
-            )
-
         prompt_text = (
-            f"🐙 *Octopus Agent: Reel Inspected*{vision_block}\n"
-            f"🔗 `{url}`\n\n"
+            f"🐙 *Octopus Agent: Reel Detected*\n"
+            f"🆔 *Reel ID:* `{reel_id}`\n"
+            f"🔗 `{clean_url}`\n\n"
             f"🎯 *Which niche do you want to publish on?*\n"
-            f"Choose below to apply our brand template, adapt caption & bio, and broadcast across all connected accounts:"
+            f"Choose below:"
         )
 
         if self.is_configured() and cid:
@@ -429,11 +412,8 @@ class OctopusTelegramBot:
         return {
             "session_id": session_id,
             "step": "awaiting_niche",
-            "url": url,
-            "headline": headline,
-            "highlight_word": highlight_word,
-            "context": context,
-            "detected_niche": detected_niche,
+            "url": clean_url,
+            "reel_id": reel_id,
             "prompt_text": prompt_text,
             "niches": niches
         }
@@ -529,11 +509,34 @@ class OctopusTelegramBot:
         cluster = get_niche_cluster(niche_id)
         accounts = cluster.get("accounts", [])
         if not accounts:
-            accounts = get_all_accounts(active_only=True)[:10]
+            if dry_run:
+                accounts = get_all_accounts(active_only=True)[:10]
+            else:
+                n_title = session.get("niche_name") or niche_id.title()
+                warn_msg = (
+                    f"⚠️ *No Connected Accounts for [{n_title}]*\n\n"
+                    f"There are no active accounts configured with Meta Graph API credentials for this niche.\n"
+                    f"Please connect an Instagram Business account in the Dashboard (`http://localhost:8000`) first."
+                )
+                if cid:
+                    self.send_text_message(warn_msg, target_chat_id=cid)
+                return {
+                    "session_id": session_id,
+                    "step": "failed",
+                    "niche_id": niche_id,
+                    "error": f"No connected accounts found with Meta Graph API credentials for [{n_title}]."
+                }
 
         target_accs = accounts if target == "all" else [a for a in accounts if a["id"] == target]
         if not target_accs:
-            target_accs = accounts[:1]
+            target_accs = accounts[:1] if accounts else []
+        if not target_accs:
+            return {
+                "session_id": session_id,
+                "step": "failed",
+                "niche_id": niche_id,
+                "error": "No target accounts available."
+            }
 
         target_desc = f"@{target_accs[0]['handle']}" if len(target_accs) == 1 else f"ALL ({len(target_accs)}) Pages"
         n_title = session.get("niche_name") or niche_id.title()
@@ -885,9 +888,17 @@ class OctopusTelegramBot:
             n_info = cluster.get("niche") or {}
             n_name = n_info.get("name") or niche_id.title()
             accounts = cluster.get("accounts", [])
-            accounts = cluster.get("accounts", [])
-            total_pages = len(accounts) or 1
-            if len(accounts) == 1:
+            if not accounts:
+                no_acc_text = (
+                    f"⚠️ *No Accounts Connected in [{n_name}]*\n\n"
+                    f"You currently have *0 accounts* configured with Meta Graph API credentials for this niche.\n\n"
+                    f"👉 Please open the Dashboard (`http://localhost:8000`) and connect an Instagram Business account with a valid Access Token and User ID first."
+                )
+                self.send_text_message(no_acc_text, target_chat_id=chat_id)
+                return
+
+            total_pages = len(accounts)
+            if total_pages == 1:
                 target_desc = f"@{accounts[0]['handle']}"
             else:
                 target_desc = f"ALL ({total_pages}) Pages"

@@ -668,7 +668,7 @@ def delete_niche(niche_id: str):
     conn.commit()
     conn.close()
 
-def get_niche_cluster(niche_id: str) -> Dict[str, Any]:
+def get_niche_cluster(niche_id: str, allow_placeholders: bool = False) -> Dict[str, Any]:
     niche = get_niche_by_id(niche_id)
     if not niche:
         # Fallback to create it if requested
@@ -707,12 +707,12 @@ def get_niche_cluster(niche_id: str) -> Dict[str, Any]:
     """, (*aliases, f"%{niche_id}%"))
     all_accounts = [dict(r) for r in cursor.fetchall()]
 
-    # If any accounts have real Meta Graph credentials, prioritize ONLY those authenticated accounts
+    # Filter strictly to accounts configured with real Meta Graph credentials (access_token + ig_user_id)
     auth_accounts = [
         acc for acc in all_accounts
-        if acc.get("access_token") and len(str(acc["access_token"]).strip()) > 20 and acc.get("ig_user_id") and len(str(acc["ig_user_id"]).strip()) > 0
+        if acc.get("access_token") and len(str(acc["access_token"]).strip()) > 20 and acc.get("ig_user_id") and len(str(acc["ig_user_id"]).strip()) > 3
     ]
-    accounts = auth_accounts if auth_accounts else all_accounts
+    accounts = all_accounts if allow_placeholders else auth_accounts
     
     # 2. Bound competitor source handles for this niche
     cursor.execute(f"""

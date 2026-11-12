@@ -43,25 +43,42 @@ class TestTelegramInboundShareSuite:
         inbound = bot.handle_inbound_url("https://www.instagram.com/reel/C7x9_science", chat_id=12345678)
         session_id = inbound["session_id"]
         
-        # Step 2: Simulate callback query from tapping niche "information"
+        # Step 2: Simulate callback query from tapping niche with connected account (girls_dance)
         cb_payload = {
             "id": "cb_123",
-            "data": f"tg_niche:{session_id}:information",
+            "data": f"tg_niche:{session_id}:girls_dance",
             "message": {"chat": {"id": 12345678}}
         }
         
         with patch("requests.post"):
             with patch.object(bot, "send_text_message") as mock_send_text:
-                with patch.object(bot.fanout, "broadcast_source_reel_to_niche_pages") as mock_broadcast:
-                    mock_broadcast.return_value = {
-                        "successful_publishes": 10,
-                        "total_accounts": 10,
-                        "hook_text": "Fascinating science revelation",
-                        "source_handle": "science_source"
-                    }
+                with patch.object(bot, "handle_execution") as mock_exec:
                     bot._handle_callback_query(cb_payload, async_exec=False)
                     # Verify immediate pipeline acknowledgment was sent to user
                     assert mock_send_text.called
                     messages_sent = [call[0][0] for call in mock_send_text.call_args_list]
                     assert any("Inbound Reel Ingested into" in m for m in messages_sent)
                     assert any("AI Pipeline running automated processing" in m for m in messages_sent)
+                    assert mock_exec.called
+
+    def test_04_niche_click_with_zero_accounts_halts_with_alert(self):
+        bot = OctopusTelegramBot(bot_token="fake_token", chat_id="12345678")
+        inbound = bot.handle_inbound_url("https://www.instagram.com/reel/C7x9_science", chat_id=12345678)
+        session_id = inbound["session_id"]
+        
+        # Click niche with 0 connected accounts (ai_tech)
+        cb_payload = {
+            "id": "cb_456",
+            "data": f"tg_niche:{session_id}:ai_tech",
+            "message": {"chat": {"id": 12345678}}
+        }
+        
+        with patch("requests.post"):
+            with patch.object(bot, "send_text_message") as mock_send_text:
+                with patch.object(bot, "handle_execution") as mock_exec:
+                    bot._handle_callback_query(cb_payload, async_exec=False)
+                    assert mock_send_text.called
+                    messages_sent = [call[0][0] for call in mock_send_text.call_args_list]
+                    assert any("No Accounts Connected" in m for m in messages_sent)
+                    # Pipeline execution MUST NOT be triggered
+                    assert not mock_exec.called

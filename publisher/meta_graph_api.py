@@ -38,10 +38,12 @@ class MetaReelsPublisher:
             logger.info(f"Container {container_id} is ready for publishing.")
             media_id = self._publish_container(container_id)
             logger.info(f"Successfully published Reel! Live Instagram Post ID: {media_id}")
+            permalink = self._get_media_permalink(media_id) or f"https://www.instagram.com/reel/{media_id}/"
 
             return {
                 "success": True,
                 "media_id": media_id,
+                "permalink": permalink,
                 "container_id": container_id
             }
         except Exception as e:
@@ -120,9 +122,13 @@ class MetaReelsPublisher:
             media_id = self._publish_container(container_id)
             logger.info(f"🎉 Successfully published Reel live! Instagram Post ID: {media_id}")
 
+            permalink = self._get_media_permalink(media_id) or f"https://www.instagram.com/reel/{media_id}/"
+            logger.info(f"🔗 Real Instagram Reel Permalink: {permalink}")
+
             return {
                 "success": True,
                 "media_id": media_id,
+                "permalink": permalink,
                 "container_id": container_id,
                 "status": "PUBLISHED"
             }
@@ -132,6 +138,24 @@ class MetaReelsPublisher:
                 "success": False,
                 "error": str(e)
             }
+
+    def _get_media_permalink(self, media_id: str) -> Optional[str]:
+        """Queries Meta Graph API for the public Instagram post permalink (with shortcode)."""
+        if not self.access_token or not media_id:
+            return None
+        try:
+            url = f"{self.base_url}/{media_id}"
+            params = {
+                "fields": "permalink,shortcode",
+                "access_token": self.access_token
+            }
+            res = requests.get(url, params=params, timeout=15)
+            if res.status_code == 200:
+                data = res.json()
+                return data.get("permalink")
+        except Exception as e:
+            logger.warning(f"Could not fetch permalink for media {media_id}: {e}")
+        return None
 
     def _create_container(self, video_url: str, caption: str, share_to_feed: bool) -> str:
         url = f"{self.base_url}/{self.ig_user_id}/media"
