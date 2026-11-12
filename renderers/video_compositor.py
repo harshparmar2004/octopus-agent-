@@ -3,7 +3,7 @@ import logging
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 
 from config import settings, ChannelProfile
 from renderers.card_renderer import CardRenderer
@@ -273,14 +273,50 @@ class VideoCompositor:
         account_id: Optional[str] = None,
         credit_handle: Optional[str] = None,
         output_filename: Optional[str] = None,
+        auto_crop_header: bool = True,
+        crop_box: Optional[Dict[str, int]] = None,
     ) -> Dict[str, Any]:
         """
         Re-skins an incoming reel with our brand theme (custom font, neon highlight colors,
         channel logo badge, and niche-specific visual layout).
-        Extracts a preview frame and returns web URLs for both video and poster frame.
+        If auto_crop_header is enabled and a competitor repost header or card is detected,
+        it automatically slices out the top header so only the clean raw video is used.
         """
         template = get_template_for_niche(niche_id)
         
+        # 0. Surgical Auto-Crop of Competitor Repost Headers / Top Banners
+        working_video = raw_video_path
+        temp_cropped_path = None
+        if auto_crop_header or crop_box:
+            effective_crop = crop_box
+            if not effective_crop:
+                try:
+                    bounds = VideoVisionInspector.detect_active_video_bounds(raw_video_path)
+                    if bounds.get("crop_needed") and bounds.get("crop_box"):
+                        effective_crop = bounds["crop_box"]
+                except Exception as be:
+                    logger.warning(f"Bounds detection skipped: {be}")
+
+            if effective_crop:
+                cx = effective_crop.get("x", 0)
+                cy = effective_crop.get("y", 0)
+                cw = (effective_crop.get("w", 1080) // 2) * 2
+                ch = (effective_crop.get("h", 1920) // 2) * 2
+                
+                temp_cropped_path = self.output_dir / f"clean_crop_{uuid.uuid4().hex[:8]}.mp4"
+                crop_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(raw_video_path),
+                    "-vf", f"crop={cw}:{ch}:{cx}:{cy}",
+                    "-c:v", "libx264", "-preset", "fast",
+                    "-c:a", "copy",
+                    str(temp_cropped_path)
+                ]
+                logger.info(f"Slicing competitor header: crop={cw}:{ch}:{cx}:{cy}")
+                crop_res = subprocess.run(crop_cmd, capture_output=True, text=True, timeout=30)
+                if crop_res.returncode == 0 and temp_cropped_path.exists():
+                    working_video = str(temp_cropped_path)
+
         # 1. Resolve Channel Profile
         channel_data = None
         if account_id:
@@ -337,9 +373,9 @@ class VideoCompositor:
         # 2. Prepare output filename
         out_name = output_filename or f"reskinned_{niche_id}_{uuid.uuid4().hex[:8]}.mp4"
         
-        # 3. Build reel
+        # 3. Build reel using working_video (cropped or raw)
         res_path = self.build_reel(
-            raw_video_path=raw_video_path,
+            raw_video_path=working_video,
             hook_text=headline,
             channel=channel,
             output_filename=out_name,
@@ -384,6 +420,103 @@ class VideoCompositor:
             "channel_handle": channel.handle,
             "headline": headline,
             "highlight_word": highlight_word or template.sample_highlight,
-            "niche_id": niche_id
+            "niche_id": niche_id,
+            "cropped": bool(temp_cropped_path and temp_cropped_path.exists())
+        }
+
+    def batch_reskin_network(
+        self,
+        raw_video_path: str,
+        headline: str,
+        highlight_word: Optional[str] = None,
+        niche_id: str = "ai_tech",
+        account_ids: Optional[List[str]] = None,
+        auto_crop_header: bool = True,
+        crop_box: Optional[Dict[str, int]] = None,
+        original_bio: Optional[str] = None,
+        cta_template: Optional[str] = None,
+        max_accounts: int = 20,
+    ) -> Dict[str, Any]:
+        """
+        Scales the reel across the entire network (e.g. 20 accounts) in a single pass.
+        The video is cleaned and cropped ONCE, and then re-skinned for each account
+        with its unique logo, handle, and bio CTA attribution.
+        """
+        from storage.db import get_all_accounts
+
+        working_video = raw_video_path
+        if auto_crop_header or crop_box:
+            effective_crop = crop_box
+            if not effective_crop:
+                try:
+                    bounds = VideoVisionInspector.detect_active_video_bounds(raw_video_path)
+                    if bounds.get("crop_needed") and bounds.get("crop_box"):
+                        effective_crop = bounds["crop_box"]
+                except Exception as be:
+                    logger.warning(f"Bounds detection skipped: {be}")
+
+            if effective_crop:
+                cx = effective_crop.get("x", 0)
+                cy = effective_crop.get("y", 0)
+                cw = (effective_crop.get("w", 1080) // 2) * 2
+                ch = (effective_crop.get("h", 1920) // 2) * 2
+                
+                clean_video_path = self.output_dir / f"clean_master_{uuid.uuid4().hex[:8]}.mp4"
+                crop_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(raw_video_path),
+                    "-vf", f"crop={cw}:{ch}:{cx}:{cy}",
+                    "-c:v", "libx264", "-preset", "fast",
+                    "-c:a", "copy",
+                    str(clean_video_path)
+                ]
+                crop_res = subprocess.run(crop_cmd, capture_output=True, text=True, timeout=30)
+                if crop_res.returncode == 0 and clean_video_path.exists():
+                    working_video = str(clean_video_path)
+
+        all_accs = get_all_accounts(active_only=True)
+        if account_ids and len(account_ids) > 0:
+            target_accs = [a for a in all_accs if a["id"] in account_ids]
+        else:
+            n_clean = niche_id.lower().replace("ai_", "").replace("_tech", "").replace("_cult", "")
+            target_accs = [a for a in all_accs if n_clean in (a.get("niche") or "").lower() or a.get("niche_id") == niche_id]
+            if not target_accs:
+                target_accs = all_accs
+            target_accs = target_accs[:max_accounts]
+
+        results = []
+        cta = cta_template or "Follow @{handle} for daily deep tech breakdowns!"
+        bio_text = original_bio or ""
+
+        for idx, acc in enumerate(target_accs):
+            acc_handle = acc.get("handle") or f"@{acc['id']}"
+            out_filename = f"batch_{niche_id}_{acc['id']}_{uuid.uuid4().hex[:6]}.mp4"
+            
+            reskin_res = self.reskin_reel(
+                raw_video_path=working_video,
+                headline=headline,
+                highlight_word=highlight_word,
+                niche_id=niche_id,
+                account_id=acc["id"],
+                output_filename=out_filename,
+                auto_crop_header=False
+            )
+
+            per_acc_cta = cta.replace("{handle}", acc_handle.lstrip("@")).replace("{niche}", "tech" if "tech" in niche_id else niche_id)
+            full_caption = f"{bio_text}\n\n{per_acc_cta}".strip()
+
+            reskin_res["account_id"] = acc["id"]
+            reskin_res["account_handle"] = acc_handle
+            reskin_res["display_name"] = acc.get("display_name", acc_handle)
+            reskin_res["bio_caption"] = full_caption
+            results.append(reskin_res)
+
+        return {
+            "success": True,
+            "total_accounts": len(results),
+            "niche_id": niche_id,
+            "headline": headline,
+            "clean_video_path": working_video,
+            "results": results
         }
 

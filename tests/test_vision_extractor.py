@@ -129,3 +129,51 @@ def test_server_vision_reskin_api():
     assert data["status"] == "success"
     assert data["reskin"]["success"] is True
     assert data["reskin"]["rendered_video_url"].startswith("/output/")
+
+
+def test_batch_reskin_network_scaling():
+    comp = VideoCompositor()
+    res = comp.batch_reskin_network(
+        raw_video_path=SAMPLE_VIDEO,
+        headline="The most expensive AI chips in the world are now worth more than $10,000,000,000",
+        highlight_word="expensive AI chips",
+        niche_id="ai_tech",
+        auto_crop_header=True,
+        original_bio="Jensen Huang presenting the latest DGX supercomputer.",
+        max_accounts=2
+    )
+    assert res["success"] is True
+    assert res["total_accounts"] >= 1
+    for r in res["results"]:
+        assert Path(r["rendered_video_path"]).exists()
+        assert "expensive AI chips" in r["headline"]
+        assert "Jensen Huang" in r["bio_caption"]
+        assert "@" in r["account_handle"]
+
+
+def test_server_vision_batch_reskin_api():
+    payload = {
+        "video_path_or_url": SAMPLE_VIDEO,
+        "headline": "The most expensive AI chips in the world are now worth more than $10,000,000,000",
+        "highlight_word": "expensive AI chips",
+        "niche_id": "ai_tech",
+        "auto_crop_header=True": True,
+        "original_bio": "Original video caption from NVIDIA keynote.",
+        "max_accounts": 2
+    }
+    resp = client.post("/api/vision/batch-reskin-network", json={
+        "video_path_or_url": SAMPLE_VIDEO,
+        "headline": "The most expensive AI chips in the world are now worth more than $10,000,000,000",
+        "highlight_word": "expensive AI chips",
+        "niche_id": "ai_tech",
+        "auto_crop_header": True,
+        "original_bio": "Original video caption from NVIDIA keynote.",
+        "max_accounts": 2
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    batch = data["batch"]
+    assert batch["success"] is True
+    assert len(batch["results"]) >= 1
+    assert "Original video caption" in batch["results"][0]["bio_caption"]

@@ -307,6 +307,9 @@ class OctopusTelegramBot:
             "headline": headline,
             "highlight_word": highlight_word,
             "context": context,
+            "original_bio": analysis.get("source_caption", ""),
+            "has_competitor_header": analysis.get("has_competitor_header", False),
+            "crop_box": analysis.get("crop_box"),
             "vision_analysis": analysis,
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -316,6 +319,9 @@ class OctopusTelegramBot:
 
         # Quick Re-Skin & Niche Broadcast Options
         keyboard = [
+            [
+                {"text": "🚀 Scale to 20 Tech Pages (Auto-Crop & Fanout)", "callback_data": f"tg_scale_20:{session_id}:ai_tech"}
+            ],
             [
                 {"text": "🎨 Re-Skin (Informative Tech: Top Card)", "callback_data": f"tg_reskin:{session_id}:ai_tech"}
             ],
@@ -617,6 +623,60 @@ class OctopusTelegramBot:
                 kwargs={"session_id": session_id, "niche_id": niche_id, "target": target, "chat_id": chat_id},
                 daemon=True
             ).start()
+
+        elif data.startswith("tg_scale_20:"):
+            parts = data.split(":")
+            session_id = parts[1]
+            niche_id = parts[2] if len(parts) > 2 else "ai_tech"
+            session = self.sessions.get(session_id) or {}
+            reel_url = session.get("url", "")
+            headline = session.get("headline") or "Viral breakthrough changing how this works"
+            highlight_word = session.get("highlight_word")
+            original_bio = session.get("original_bio", "")
+            crop_box = session.get("crop_box")
+
+            self.send_text_message(
+                f"🚀 *Scaling Reel Across 20 Tech Network Accounts...*\n\n"
+                f"✂️ *Auto-Crop Header:* Active (slicing competitor repost headers)\n"
+                f"📝 *Headline:* `{headline}`\n"
+                f"💡 *Highlight:* `{highlight_word}`\n\n"
+                f"Processing clean master video and rendering 20 unique branded variants with custom handles & bio CTAs...",
+                target_chat_id=chat_id
+            )
+
+            def _do_scale_job():
+                try:
+                    comp = VideoCompositor()
+                    res = comp.batch_reskin_network(
+                        raw_video_path=reel_url,
+                        headline=headline,
+                        highlight_word=highlight_word,
+                        niche_id=niche_id,
+                        auto_crop_header=True,
+                        crop_box=crop_box,
+                        original_bio=original_bio,
+                        max_accounts=20
+                    )
+                    if res.get("success"):
+                        total = res.get("total_accounts", 0)
+                        results = res.get("results", [])
+                        summary_handles = ", ".join([r.get("account_handle", "") for r in results[:5]])
+                        self.send_text_message(
+                            f"✅ *20-Page Network Fanout Complete!*\n\n"
+                            f"⚡ *Rendered:* {total} branded reels ready\n"
+                            f"👥 *Accounts:* {summary_handles} (+{max(0, total - 5)} more)\n"
+                            f"✂️ *Competitor Header:* Sliced out successfully\n"
+                            f"📋 *Source Bio:* Copied with per-account CTA\n\n"
+                            f"Reels are rendered and staged for 1-click broadcast across the network!",
+                            target_chat_id=chat_id
+                        )
+                    else:
+                        self.send_text_message(f"❌ Batch network scale failed: {res.get('error')}", target_chat_id=chat_id)
+                except Exception as e:
+                    logger.error(f"Error during async Telegram batch scale: {e}")
+                    self.send_text_message(f"❌ Error during batch scale: {e}", target_chat_id=chat_id)
+
+            threading.Thread(target=_do_scale_job, daemon=True).start()
 
         elif data.startswith("tg_reskin:"):
             parts = data.split(":")

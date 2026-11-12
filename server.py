@@ -1063,8 +1063,22 @@ class VisionReskinRequest(BaseModel):
     niche_id: str = "ai_tech"
     account_id: Optional[str] = None
     credit_handle: Optional[str] = None
+    auto_crop_header: bool = True
+    crop_box: Optional[Dict[str, int]] = None
     auto_publish: bool = False
     dry_run: bool = True
+
+class VisionBatchNetworkRequest(BaseModel):
+    video_path_or_url: str
+    headline: str
+    highlight_word: Optional[str] = None
+    niche_id: str = "ai_tech"
+    account_ids: Optional[List[str]] = None
+    auto_crop_header: bool = True
+    crop_box: Optional[Dict[str, int]] = None
+    original_bio: Optional[str] = None
+    cta_template: Optional[str] = None
+    max_accounts: int = 20
 
 @app.post("/api/vision/read-reel")
 def api_vision_read_reel(req: VisionReadRequest):
@@ -1088,9 +1102,14 @@ def api_vision_reskin_reel(req: VisionReskinRequest):
     if source.startswith("http://") or source.startswith("https://"):
         from scrapers.content_harvester import ContentHarvester
         downloaded = ContentHarvester().download_video(source)
-        if not downloaded or not Path(downloaded).exists():
-            raise HTTPException(status_code=400, detail=f"Failed to download video from {source}")
-        source = downloaded
+        if isinstance(downloaded, dict):
+            source = downloaded.get("video_path") or ""
+        elif isinstance(downloaded, str):
+            source = downloaded
+        else:
+            source = ""
+        if not source or not Path(source).exists():
+            raise HTTPException(status_code=400, detail=f"Failed to download video from {req.video_path_or_url}")
     
     if not Path(source).exists():
         raise HTTPException(status_code=404, detail=f"Source video file not found: {source}")
@@ -1101,7 +1120,9 @@ def api_vision_reskin_reel(req: VisionReskinRequest):
         highlight_word=req.highlight_word,
         niche_id=req.niche_id,
         account_id=req.account_id,
-        credit_handle=req.credit_handle
+        credit_handle=req.credit_handle,
+        auto_crop_header=req.auto_crop_header,
+        crop_box=req.crop_box,
     )
     
     if not result.get("success"):
@@ -1129,6 +1150,47 @@ def api_vision_reskin_reel(req: VisionReskinRequest):
         "status": "success",
         "reskin": result,
         "publish": publish_result
+    }
+
+@app.post("/api/vision/batch-reskin-network")
+def api_vision_batch_reskin_network(req: VisionBatchNetworkRequest):
+    compositor = VideoCompositor()
+    source = req.video_path_or_url.strip()
+    
+    if source.startswith("http://") or source.startswith("https://"):
+        from scrapers.content_harvester import ContentHarvester
+        downloaded = ContentHarvester().download_video(source)
+        if isinstance(downloaded, dict):
+            source = downloaded.get("video_path") or ""
+        elif isinstance(downloaded, str):
+            source = downloaded
+        else:
+            source = ""
+        if not source or not Path(source).exists():
+            raise HTTPException(status_code=400, detail=f"Failed to download video from {req.video_path_or_url}")
+    
+    if not Path(source).exists():
+        raise HTTPException(status_code=404, detail=f"Source video file not found: {source}")
+
+    result = compositor.batch_reskin_network(
+        raw_video_path=source,
+        headline=req.headline,
+        highlight_word=req.highlight_word,
+        niche_id=req.niche_id,
+        account_ids=req.account_ids,
+        auto_crop_header=req.auto_crop_header,
+        crop_box=req.crop_box,
+        original_bio=req.original_bio,
+        cta_template=req.cta_template,
+        max_accounts=req.max_accounts,
+    )
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Batch video composition failed."))
+
+    return {
+        "status": "success",
+        "batch": result
     }
 
 @app.get("/", response_class=HTMLResponse)

@@ -1,4 +1,4 @@
-﻿import cv2
+import cv2
 import numpy as np
 import subprocess
 import json
@@ -141,12 +141,104 @@ class VideoVisionInspector:
             "recommended_placement": placement
         }
 
+    @staticmethod
+    def detect_active_video_bounds(video_path: str) -> Dict[str, Any]:
+        """
+        Detects if an incoming video has static top headers (like competitor repost cards),
+        watermark bars, or letterbox black bars, and returns the bounding box of the active
+        moving video content for automatic surgical cropping.
+        """
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            return {
+                "has_header": False,
+                "has_footer": False,
+                "crop_needed": False,
+                "crop_box": None,
+                "active_y_range": (0, 1920)
+            }
+
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 100)
+        vid_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1080)
+        vid_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1920)
+
+        frames = []
+        for r in [0.15, 0.30, 0.45, 0.60, 0.75, 0.90]:
+            target_idx = max(0, min(total_frames - 1, int(total_frames * r)))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+            ret, frame = cap.read()
+            if ret and frame is not None:
+                small = cv2.resize(frame, (360, 640), interpolation=cv2.INTER_AREA)
+                frames.append(cv2.cvtColor(small, cv2.COLOR_BGR2GRAY))
+        cap.release()
+
+        if len(frames) < 3:
+            return {
+                "has_header": False,
+                "has_footer": False,
+                "crop_needed": False,
+                "crop_box": None,
+                "active_y_range": (0, vid_h)
+            }
+
+        diffs = [cv2.absdiff(frames[i], frames[i+1]) for i in range(len(frames) - 1)]
+        avg_diff = np.mean(diffs, axis=0)
+
+        row_motion = np.mean(avg_diff, axis=1)
+        max_motion = float(np.max(row_motion)) if np.max(row_motion) > 0 else 1.0
+
+        avg_gray = np.mean(frames, axis=0)
+        row_bright = np.mean(avg_gray, axis=1)
+
+        active_rows = np.where((row_motion > max_motion * 0.12) & (row_bright > 12.0))[0]
+
+        if len(active_rows) == 0:
+            return {
+                "has_header": False,
+                "has_footer": False,
+                "crop_needed": False,
+                "crop_box": None,
+                "active_y_range": (0, vid_h)
+            }
+
+        scale_y = vid_h / 640.0
+        y_min = int(active_rows[0] * scale_y)
+        y_max = int(active_rows[-1] * scale_y)
+
+        y_min = (max(0, y_min) // 2) * 2
+        y_max = (min(vid_h, y_max) // 2) * 2
+
+        has_header = (y_min / vid_h) > 0.08
+        has_footer = ((vid_h - y_max) / vid_h) > 0.08
+        crop_needed = has_header or has_footer
+
+        crop_h = max(100, y_max - y_min)
+        crop_w = vid_w
+
+        return {
+            "has_header": has_header,
+            "has_footer": has_footer,
+            "crop_needed": crop_needed,
+            "crop_box": {
+                "x": 0,
+                "y": y_min,
+                "w": crop_w,
+                "h": crop_h
+            } if crop_needed else None,
+            "header_height": y_min,
+            "footer_offset": vid_h - y_max,
+            "active_y_range": (y_min, y_max),
+            "original_dims": (vid_w, vid_h)
+        }
+
     @classmethod
     def analyze(cls, video_path: str) -> Dict[str, Any]:
         """Complete unified analysis of incoming video."""
         meta = cls.get_video_metadata(video_path)
         text_info = cls.inspect_text_occupancy(video_path)
+        bounds_info = cls.detect_active_video_bounds(video_path)
         return {
             **meta,
-            **text_info
+            **text_info,
+            "active_bounds": bounds_info
         }

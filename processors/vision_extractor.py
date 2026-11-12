@@ -111,16 +111,21 @@ class VisionExtractor:
         prompt_text = (
             "You are an expert social media computer vision and viral copywriting director. "
             "Analyze these sequential frames from an Instagram Reel and return a strictly valid JSON object.\n\n"
+            "CRITICAL INSTRUCTIONS FOR REPOSTS & COMPOSITE REELS:\n"
+            "Videos often have multiple headers (e.g. an outer reposter account on top like 'Cult Information', "
+            "and an inner catchy headline right above the video like 'The most expensive AI chips in the world are now worth more than $10,000,000,000'). "
+            "Always identify the CORE hook headline that directly introduces the actual video subject matter!\n\n"
             "TASKS:\n"
-            "1. 'exact_text': Transcribe the EXACT on-screen text, headline, or subtitle written/baked into the video. "
-            "If no text is written, return empty string \"\".\n"
-            "2. 'headline': A clean, magnetic, hook headline (8 to 16 words) based on the video's core idea or on-screen text. "
-            "It must grab attention instantly when displayed on top of the video.\n"
-            "3. 'highlight_word': The 1 to 3 most powerful words in the headline to highlight in glowing neon yellow or pink.\n"
-            "4. 'context': A concise 1-2 sentence description of what happens in the video (setting, actions, subjects).\n"
+            "1. 'exact_text': Transcribe the EXACT on-screen headline written/baked into the video. "
+            "If multiple lines exist, prioritize the punchy hook line directly above the video.\n"
+            "2. 'headline': The catchy, eye-grabbing hook headline (8 to 16 words) to write on our re-skinned reel.\n"
+            "3. 'highlight_word': The 1 to 3 most impactful or bold words in that headline (e.g. 'expensive AI chips') "
+            "that should glow in high-contrast neon yellow (#DDF51A) or hot pink (#FF007F).\n"
+            "4. 'context': A concise 1-2 sentence description of what happens in the video.\n"
             "5. 'detected_niche': Pick strictly ONE from: 'ai_tech', 'memes', 'clubbing', 'concerts', 'ai_content', 'girls_dance'.\n"
-            "6. 'suggested_caption': A high-retention 3-paragraph caption tailored for Instagram audience.\n"
-            "7. 'has_baked_in_text': Boolean true if the video already has visible on-screen text.\n\n"
+            "6. 'suggested_caption': A high-retention caption formatted for Instagram.\n"
+            "7. 'has_baked_in_text': Boolean true if the video has visible on-screen text.\n"
+            "8. 'has_competitor_header': Boolean true if there is a competitor logo, card, or top banner that should be cropped out.\n\n"
             "Return JSON schema only:\n"
             "{\n"
             '  "exact_text": "...",\n'
@@ -130,6 +135,7 @@ class VisionExtractor:
             '  "detected_niche": "ai_tech",\n'
             '  "suggested_caption": "...",\n'
             '  "has_baked_in_text": false,\n'
+            '  "has_competitor_header": false,\n'
             '  "confidence": 0.95\n'
             "}"
         )
@@ -282,25 +288,35 @@ class VisionExtractor:
         local_video_path = src
 
         # 1. Resolve / download URL if remote
+        source_caption = ""
+        source_title = ""
         if src.startswith("http://") or src.startswith("https://"):
             logger.info(f"Downloading remote video from URL: {src}")
             from scrapers.content_harvester import ContentHarvester
             harvester = ContentHarvester()
             downloaded = harvester.download_video(src)
-            if not downloaded or not Path(downloaded).exists():
+            if not downloaded:
                 return {
                     "success": False,
                     "error": f"Failed to download video from link: {src}"
                 }
-            local_video_path = downloaded
+            if isinstance(downloaded, dict):
+                local_video_path = downloaded.get("filepath", "")
+                source_caption = downloaded.get("description", "")
+                source_title = downloaded.get("title", "")
+            else:
+                local_video_path = str(downloaded)
 
-        if not Path(local_video_path).exists():
+        if not local_video_path or not Path(local_video_path).exists():
             return {
                 "success": False,
                 "error": f"Video file not found at path: {local_video_path}"
             }
 
-        # 2. Extract representative keyframes
+        # 2. Extract active video bounds (detects static competitor headers to crop)
+        bounds_info = VideoVisionInspector.detect_active_video_bounds(local_video_path)
+
+        # 3. Extract representative keyframes
         frame_paths = cls.extract_representative_frames(local_video_path, count=3)
         if not frame_paths:
             return {
@@ -308,27 +324,27 @@ class VisionExtractor:
                 "error": f"Failed to extract video frames from: {local_video_path}"
             }
 
-        # 3. Determine Gemini API Key
+        # 4. Determine Gemini API Key
         effective_key = api_key or os.getenv("GEMINI_API_KEY")
         if not effective_key:
             mgr_cfg = LLMManager().config
             if mgr_cfg.get("provider") == "gemini" and mgr_cfg.get("api_key"):
                 effective_key = mgr_cfg["api_key"]
 
-        # 4. Perform analysis
+        # 5. Perform analysis
         analysis: Dict[str, Any] = {}
         if effective_key:
             try:
                 analysis = cls.analyze_with_gemini(frame_paths, api_key=effective_key)
             except Exception as e:
                 logger.warning(f"Gemini Vision call failed, switching to local fallback: {e}")
-                analysis = cls.analyze_fallback(local_video_path, frame_paths)
+                analysis = cls.analyze_fallback(local_video_path, frame_paths, fallback_title=source_title)
                 analysis["fallback_reason"] = str(e)
         else:
             logger.info("No Gemini API key detected; utilizing intelligent local vision fallback.")
-            analysis = cls.analyze_fallback(local_video_path, frame_paths)
+            analysis = cls.analyze_fallback(local_video_path, frame_paths, fallback_title=source_title)
 
-        # 5. Format web thumbnail paths
+        # 6. Format web thumbnail paths
         frame_web_urls = []
         for fp in frame_paths:
             fname = Path(fp).name
@@ -337,4 +353,10 @@ class VisionExtractor:
         analysis["video_path"] = local_video_path
         analysis["frame_paths"] = frame_paths
         analysis["frame_thumbnails"] = frame_web_urls
+        analysis["source_caption"] = source_caption or analysis.get("suggested_caption", "")
+        analysis["original_bio"] = source_caption or ""
+        analysis["active_bounds"] = bounds_info
+        analysis["has_competitor_header"] = bounds_info.get("has_header", False)
+        analysis["crop_needed"] = bounds_info.get("crop_needed", False)
+        analysis["crop_box"] = bounds_info.get("crop_box")
         return analysis

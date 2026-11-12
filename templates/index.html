@@ -1885,6 +1885,18 @@
                 <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Brand Theme Ready</span>
               </div>
 
+              <!-- Competitor Header Auto-Crop Alert Banner -->
+              <div id="visionCompetitorHeaderAlert" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2 text-amber-900">
+                  <span class="text-base">✂️</span>
+                  <span><strong>Competitor Repost Header Detected:</strong> Static top header will be sliced away to retain only the clean moving video in center.</span>
+                </div>
+                <label class="flex items-center gap-1.5 font-bold text-amber-900 cursor-pointer">
+                  <input type="checkbox" id="visionAutoCropCheck" checked class="rounded text-amber-600">
+                  <span>Auto-Crop Header</span>
+                </label>
+              </div>
+
               <!-- Editable Headline Input -->
               <div class="space-y-1">
                 <div class="flex justify-between items-center text-[11px]">
@@ -1922,10 +1934,25 @@
                 </div>
               </div>
 
+              <!-- Source Caption / Bio (Copied As-Is) -->
+              <div class="space-y-1">
+                <div class="flex justify-between items-center text-[11px]">
+                  <label class="font-bold text-[#1C1917]">Source Caption / Bio (Copied As-Is into Bio):</label>
+                  <button type="button" onclick="copySourceBioText()" class="text-purple-600 font-semibold hover:underline flex items-center gap-1 cursor-pointer">
+                    <span>📋</span>
+                    <span id="copyBioBtnText">Copy Bio</span>
+                  </button>
+                </div>
+                <textarea id="visionOriginalBioInput" rows="2" 
+                  class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs font-sans transition"
+                  placeholder="Original caption/bio extracted from source reel..."></textarea>
+                <span class="text-[10px] text-[#78716C]">Copied exactly from source reel. Follow CTA (e.g. <i>Follow @handle for daily deep tech breakdowns!</i>) is appended dynamically per account.</span>
+              </div>
+
               <!-- Destination Account Selector -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div class="space-y-1">
-                  <label class="block text-[11px] font-bold text-[#1C1917]">Destination Account / Channel Logo:</label>
+                  <label class="block text-[11px] font-bold text-[#1C1917]">Single Destination Account:</label>
                   <select id="visionAccountSelect" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600">
                     <!-- Populated dynamically via JS -->
                   </select>
@@ -1956,11 +1983,15 @@
                 </div>
               </div>
 
-              <!-- Trigger Re-Skin Button -->
-              <div class="pt-2">
-                <button onclick="runVisionReskin()" id="btnVisionReskin" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-sm py-2.5 px-4 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+              <!-- Dual Action Buttons: Single Reel Re-Skin vs Scale to 20 Tech Pages -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                <button onclick="runVisionReskin()" id="btnVisionReskin" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs py-2.5 px-3 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
                   <span>🎨</span>
-                  <span id="btnVisionReskinText">Re-Skin with Our Brand Theme</span>
+                  <span id="btnVisionReskinText">Re-Skin Single Reel</span>
+                </button>
+                <button onclick="runVisionScale20()" id="btnVisionScale20" class="orange-gradient-btn text-white font-extrabold text-xs py-2.5 px-3 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                  <span>🚀</span>
+                  <span id="btnVisionScale20Text">Scale to 20 Tech Pages (1-Click)</span>
                 </button>
               </div>
             </div>
@@ -2003,6 +2034,29 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 20-Page Network Scaling Matrix Results -->
+          <div id="visionBatchCard" class="cloud-card rounded-lg p-5 space-y-4 hidden border border-[#E6E0D6] mt-4 col-span-1 lg:col-span-12">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#E6E0D6]">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🚀</span>
+                <div>
+                  <h4 class="text-xs font-bold text-[#1C1917]">20-Page Network Scaling Results (Auto-Cropped Video Master)</h4>
+                  <p class="text-[10px] text-[#78716C]">Video cropped once to slice competitor header. Scaled across network accounts with unique handles, logos, and bio CTAs.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="visionBatchCountBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">20 Accounts Scaled</span>
+                <button type="button" onclick="copyAllBios()" id="btnCopyAllBios" class="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-md cursor-pointer flex items-center gap-1 shadow-2xs">
+                  <span>📋</span> Copy All Bios
+                </button>
+              </div>
+            </div>
+            
+            <div id="visionBatchGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Dynamically populated cards for each account with handle, thumbnail, custom bio, download -->
             </div>
           </div>
 
@@ -6726,6 +6780,21 @@ Duration: ${data.harvest.duration_seconds}s`);
         const wordInp = document.getElementById('visionHighlightInput');
         if (wordInp) wordInp.value = a.highlight_word || '';
 
+        // Populate Source Caption / Bio (Copied As-Is)
+        const bioInp = document.getElementById('visionOriginalBioInput');
+        if (bioInp) bioInp.value = a.source_caption || a.suggested_caption || '';
+
+        // Auto-Crop Detection Alert Banner & Checkbox
+        const headerAlert = document.getElementById('visionCompetitorHeaderAlert');
+        const autoCropCheck = document.getElementById('visionAutoCropCheck');
+        if (a.has_competitor_header) {
+          if (headerAlert) headerAlert.classList.remove('hidden');
+          if (autoCropCheck) autoCropCheck.checked = true;
+        } else {
+          if (headerAlert) headerAlert.classList.add('hidden');
+          if (autoCropCheck) autoCropCheck.checked = false;
+        }
+
         // Select Niche
         const nicheSel = document.getElementById('visionNicheSelect');
         if (nicheSel && a.detected_niche) {
@@ -6741,6 +6810,18 @@ Duration: ${data.harvest.duration_seconds}s`);
       } finally {
         if (btn) btn.disabled = false;
         if (btnText) btnText.innerHTML = 'Scan & Read Reel';
+      }
+    }
+
+    function copySourceBioText() {
+      const bio = document.getElementById('visionOriginalBioInput')?.value || '';
+      if (!bio) return;
+      navigator.clipboard.writeText(bio);
+      const btn = document.getElementById('copyBioBtnText');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
       }
     }
 
@@ -6795,6 +6876,7 @@ Duration: ${data.harvest.duration_seconds}s`);
       const accSel = document.getElementById('visionAccountSelect');
       const creditInp = document.getElementById('visionCreditInput');
       const autoPubCheck = document.getElementById('visionAutoPublishCheck');
+      const autoCropCheck = document.getElementById('visionAutoCropCheck');
 
       const btn = document.getElementById('btnVisionReskin');
       const btnText = document.getElementById('btnVisionReskinText');
@@ -6818,6 +6900,8 @@ Duration: ${data.harvest.duration_seconds}s`);
           niche_id: nicheSel ? nicheSel.value : 'ai_tech',
           account_id: accSel && accSel.value ? accSel.value : null,
           credit_handle: creditInp ? creditInp.value.trim() : null,
+          auto_crop_header: autoCropCheck ? autoCropCheck.checked : true,
+          crop_box: currentVisionAnalysis ? currentVisionAnalysis.crop_box : null,
           auto_publish: autoPubCheck ? autoPubCheck.checked : false,
           dry_run: false
         };
@@ -6870,8 +6954,144 @@ Duration: ${data.harvest.duration_seconds}s`);
         alert('Re-Skinning Error: ' + err.message);
       } finally {
         if (btn) btn.disabled = false;
-        if (btnText) btnText.innerHTML = '🎨 Re-Skin with Our Brand Theme';
+        if (btnText) btnText.innerHTML = 'Re-Skin Single Reel';
       }
+    }
+
+    let currentBatchResults = [];
+
+    async function runVisionScale20() {
+      const urlInp = document.getElementById('visionInputUrl');
+      const headInp = document.getElementById('visionHeadlineInput');
+      const hlInp = document.getElementById('visionHighlightInput');
+      const nicheSel = document.getElementById('visionNicheSelect');
+      const bioInp = document.getElementById('visionOriginalBioInput');
+      const autoCropCheck = document.getElementById('visionAutoCropCheck');
+
+      const btn = document.getElementById('btnVisionScale20');
+      const btnText = document.getElementById('btnVisionScale20Text');
+
+      const source = (currentVisionAnalysis && currentVisionAnalysis.video_path) || (urlInp ? urlInp.value.trim() : '');
+      const headline = headInp ? headInp.value.trim() : '';
+
+      if (!source || !headline) {
+        alert('Please ensure both source video and headline hook line are provided.');
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.innerHTML = '<span class="inline-block animate-spin mr-1">🌀</span> Scaling to 20 Tech Pages...';
+
+      try {
+        const payload = {
+          video_path_or_url: source,
+          headline: headline,
+          highlight_word: hlInp ? hlInp.value.trim() : null,
+          niche_id: nicheSel ? nicheSel.value : 'ai_tech',
+          auto_crop_header: autoCropCheck ? autoCropCheck.checked : true,
+          crop_box: currentVisionAnalysis ? currentVisionAnalysis.crop_box : null,
+          original_bio: bioInp ? bioInp.value.trim() : '',
+          cta_template: 'Follow @{handle} for daily deep tech breakdowns!',
+          max_accounts: 20
+        };
+
+        const res = await fetch('/api/vision/batch-reskin-network', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+          throw new Error(data.detail || data.error || 'Batch network scaling failed.');
+        }
+
+        const batch = data.batch;
+        currentBatchResults = batch.results || [];
+
+        // Reveal Batch Results Card
+        const batchCard = document.getElementById('visionBatchCard');
+        if (batchCard) batchCard.classList.remove('hidden');
+
+        const badge = document.getElementById('visionBatchCountBadge');
+        if (badge) badge.textContent = `${currentBatchResults.length} Accounts Scaled`;
+
+        // Render Grid
+        const grid = document.getElementById('visionBatchGrid');
+        if (grid) {
+          grid.innerHTML = '';
+          currentBatchResults.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg border border-[#E8DCD1] p-3 space-y-2.5 shadow-2xs hover:border-purple-300 transition';
+            card.innerHTML = `
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-xs font-bold text-purple-700">${item.account_handle || '@channel'}</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-purple-50 text-purple-700 border border-purple-200">#${idx+1}</span>
+              </div>
+              <div class="relative bg-black rounded aspect-[9/16] overflow-hidden group">
+                <video src="${item.rendered_video_url}" controls class="w-full h-full object-cover" playsinline preload="metadata"></video>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between items-center text-[10px]">
+                  <span class="font-bold text-[#78716C]">Bio Caption:</span>
+                  <button type="button" onclick="copyBatchBio(${idx})" id="copyBioBtn_${idx}" class="text-purple-600 font-bold hover:underline cursor-pointer">Copy</button>
+                </div>
+                <div class="text-[10px] font-mono bg-[#FAF8F5] p-2 rounded border border-[#E6E0D6] max-h-24 overflow-y-auto whitespace-pre-wrap select-all text-[#1C1917] leading-relaxed">
+${escapeHtml(item.bio_caption || '')}
+                </div>
+              </div>
+              <div class="pt-1 flex gap-1.5">
+                <a href="${item.rendered_video_url}" download class="flex-1 bg-white hover:bg-[#FAF8F5] border border-[#E6E0D6] text-xs font-bold py-1.5 px-2 rounded text-center flex items-center justify-center gap-1 text-[#1C1917] shadow-2xs">
+                  <span>💾</span> Download
+                </a>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+        }
+
+        batchCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      } catch (err) {
+        alert('Batch Scaling Error: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerHTML = 'Scale to 20 Tech Pages (1-Click)';
+      }
+    }
+
+    function copyBatchBio(idx) {
+      if (!currentBatchResults[idx]) return;
+      const bio = currentBatchResults[idx].bio_caption || '';
+      navigator.clipboard.writeText(bio);
+      const btn = document.getElementById(`copyBioBtn_${idx}`);
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      }
+    }
+
+    function copyAllBios() {
+      if (!currentBatchResults.length) {
+        alert('No batch network results to copy.');
+        return;
+      }
+      const aggregated = currentBatchResults.map((item, idx) => 
+        `=== ${item.account_handle} ===\n${item.bio_caption}\n`
+      ).join('\n----------------------------------------\n\n');
+      
+      navigator.clipboard.writeText(aggregated);
+      const btn = document.getElementById('btnCopyAllBios');
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span>✅</span> All 20 Bios Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     async function broadcastVisionReelNow() {
