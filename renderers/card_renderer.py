@@ -1,8 +1,8 @@
 import os
 import textwrap
 from pathlib import Path
-from typing import Optional
-from PIL import Image, ImageDraw, ImageFont
+from typing import Optional, Tuple
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from config import ChannelProfile, settings
 from renderers.niche_templates import NicheTemplate, get_template_for_niche, get_template_by_id
 
@@ -491,4 +491,143 @@ class CardRenderer:
 
         canvas.save(output_path, "PNG")
         return output_path
+
+    # 6. ASPECT-RATIO ADAPTIVE CONTAINER BOX (1:1, 9:16, 16:9, etc.)
+    def render_adaptive_box_layers(
+        self,
+        box_coords: Tuple[int, int, int, int],  # (box_x, box_y, box_w, box_h)
+        channel: ChannelProfile,
+        hook_text: str = "",
+        hook_placement: str = "bottom",         # "bottom", "middle", "none"
+        template: Optional[NicheTemplate] = None,
+        bg_output_path: Optional[Path] = None,
+        fg_output_path: Optional[Path] = None
+    ) -> Tuple[Optional[Path], Optional[Path]]:
+        """
+        Renders the two-layer adaptive container:
+        1. bg_output_path: 1080x1920 matte tech background + diffuse neon pink outer glow shadow radiating OUTSIDE the box.
+        2. fg_output_path: 1080x1920 transparent overlay with sharp neon border lines, corner HUD brackets,
+                           top [ C U T E   A A R O H I ] header badge (strictly ABOVE the box),
+                           bottom live ticker, and collision-aware hook text placement.
+        """
+        canvas_w, canvas_h = 1080, 1920
+        box_x, box_y, box_w, box_h = box_coords
+
+        glow_hex = getattr(template, "highlight_color", "#FF007F") or "#FF007F"
+        glow_rgb = self._hex_to_rgb(glow_hex)
+        glow_rgba = glow_rgb + (255,)
+
+        # ---------------- 1. BACKGROUND & OUTER GLOW SHADOW ----------------
+        bg = Image.new("RGBA", (canvas_w, canvas_h), (8, 6, 12, 255))
+        bg_draw = ImageDraw.Draw(bg)
+        for y in range(0, canvas_h, 8):
+            bg_draw.line([(0, y), (canvas_w, y)], fill=(14, 11, 18, 255), width=1)
+
+        # Multi-pass outer glowing shadow radiating OUTSIDE the box lines
+        shadow_layer = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(shadow_layer)
+        s_draw.rectangle([box_x - 6, box_y - 6, box_x + box_w + 6, box_y + box_h + 6], fill=glow_rgb + (140,))
+        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=28))
+
+        mid_glow = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        m_draw = ImageDraw.Draw(mid_glow)
+        m_draw.rectangle([box_x - 2, box_y - 2, box_x + box_w + 2, box_y + box_h + 2], fill=glow_rgb + (210,))
+        mid_glow = mid_glow.filter(ImageFilter.GaussianBlur(radius=12))
+
+        bg.paste(shadow_layer, (0, 0), shadow_layer)
+        bg.paste(mid_glow, (0, 0), mid_glow)
+
+        if bg_output_path:
+            bg.save(bg_output_path, "PNG")
+
+        # ---------------- 2. FOREGROUND OVERLAY ----------------
+        fg = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        fg_draw = ImageDraw.Draw(fg)
+
+        # Crisp neon frame line bordering the video box
+        fg_draw.rectangle([box_x, box_y, box_x + box_w, box_y + box_h], outline=glow_rgba, width=3)
+
+        # Corner heavy HUD bracket accents
+        blen = 50
+        # TL
+        fg_draw.line([(box_x - 8, box_y - 8 + blen), (box_x - 8, box_y - 8), (box_x - 8 + blen, box_y - 8)], fill=glow_rgba, width=5)
+        # TR
+        fg_draw.line([(box_x + box_w + 8 - blen, box_y - 8), (box_x + box_w + 8, box_y - 8), (box_x + box_w + 8, box_y - 8 + blen)], fill=glow_rgba, width=5)
+        # BL
+        fg_draw.line([(box_x - 8, box_y + box_h + 8 - blen), (box_x - 8, box_y + box_h + 8), (box_x - 8 + blen, box_y + box_h + 8)], fill=glow_rgba, width=5)
+        # BR
+        fg_draw.line([(box_x + box_w + 8 - blen, box_y + box_h + 8), (box_x + box_w + 8, box_y + box_h + 8), (box_x + box_w + 8, box_y + box_h + 8 - blen)], fill=glow_rgba, width=5)
+
+        # Fonts
+        try:
+            font_badge = ImageFont.truetype(self.font_bold_path, 30)
+            font_sub = ImageFont.truetype(self.font_regular_path, 20)
+            font_handle = ImageFont.truetype(self.font_bold_path, 24)
+            font_hook = ImageFont.truetype(self.font_bold_path, 34)
+        except Exception:
+            font_badge = font_sub = font_handle = font_hook = ImageFont.load_default()
+
+        # Top Badge: [ C U T E   A A R O H I ] strictly ABOVE the video box!
+        raw_name = (channel.display_name or "OCTOPUS").strip()
+        spaced_words = [" ".join(list(w.upper())) for w in raw_name.split()]
+        badge_text = "   ".join(spaced_words)
+
+        tb = fg_draw.textbbox((0, 0), badge_text, font=font_badge)
+        pill_w = max(560, (tb[2] - tb[0]) + 80)
+        pill_h = 70
+        pill_x1 = (canvas_w - pill_w) // 2
+        pill_y1 = max(60, min(100, box_y - 95))
+        pill_x2 = pill_x1 + pill_w
+        pill_y2 = pill_y1 + pill_h
+
+        b_pts = [
+            (pill_x1 + 14, pill_y1), (pill_x2 - 14, pill_y1),
+            (pill_x2, pill_y1 + 14), (pill_x2, pill_y2 - 14),
+            (pill_x2 - 14, pill_y2), (pill_x1 + 14, pill_y2),
+            (pill_x1, pill_y2 - 14), (pill_x1, pill_y1 + 14),
+            (pill_x1 + 14, pill_y1)
+        ]
+        fg_draw.polygon(b_pts, fill=(18, 8, 22, 240), outline=glow_rgba, width=2)
+        self._draw_glow_text(fg_draw, (canvas_w // 2, pill_y1 + pill_h // 2), badge_text, font_badge, (255, 255, 255, 255), glow_rgba, radius=3)
+
+        # Horizontal antenna lines
+        mid_y = pill_y1 + pill_h // 2
+        fg_draw.line([(60, mid_y), (pill_x1 - 15, mid_y)], fill=glow_rgb + (200,), width=2)
+        fg_draw.ellipse([(pill_x1 - 22, mid_y - 4), (pill_x1 - 14, mid_y + 4)], fill=glow_rgba)
+        fg_draw.line([(pill_x2 + 15, mid_y), (canvas_w - 60, mid_y)], fill=glow_rgb + (200,), width=2)
+        fg_draw.ellipse([(pill_x2 + 14, mid_y - 4), (pill_x2 + 22, mid_y + 4)], fill=glow_rgba)
+
+        # Bottom Live Ticker: ● LIVE   @HANDLE   GIRLS PARTY
+        bot_y = 1810
+        fg_draw.line([(80, bot_y - 35), (canvas_w - 80, bot_y - 35)], fill=glow_rgb + (160,), width=1)
+        fg_draw.rectangle([(canvas_w // 2 - 5, bot_y - 35 - 5), (canvas_w // 2 + 5, bot_y - 35 + 5)], fill=glow_rgba)
+
+        fg_draw.ellipse([(110, bot_y - 8), (126, bot_y + 8)], fill=(255, 0, 80, 255))
+        self._draw_glow_text(fg_draw, (170, bot_y), "LIVE", font_sub, (255, 255, 255, 255), glow_rgba, radius=2)
+
+        h_text = channel.handle.upper()
+        if not h_text.startswith("@"):
+            h_text = f"@{h_text}"
+        self._draw_glow_text(fg_draw, (canvas_w // 2, bot_y), h_text, font_handle, (255, 255, 255, 255), glow_rgba, radius=2)
+
+        niche_label = "GIRLS PARTY"
+        self._draw_glow_text(fg_draw, (canvas_w - 170, bot_y), niche_label, font_sub, (255, 255, 255, 255), glow_rgba, radius=2)
+
+        # Smart Hook Text Placement (only if video is clean of baked-in text)
+        if hook_text and hook_placement != "none":
+            wrapped = textwrap.wrap(hook_text, width=32)[:2]
+            if hook_placement == "middle":
+                target_y = box_y + box_h // 2 - (len(wrapped) - 1) * 22
+            else:  # "bottom"
+                target_y = box_y + box_h - 75 - (len(wrapped) - 1) * 22
+
+            for line in wrapped:
+                self._draw_glow_text(fg_draw, (canvas_w // 2, target_y), line, font_hook, (255, 255, 255, 255), glow_rgba, radius=3)
+                target_y += 44
+
+        if fg_output_path:
+            fg.save(fg_output_path, "PNG")
+
+        return bg_output_path, fg_output_path
+
 
