@@ -297,6 +297,10 @@ def init_octopus_db():
     from storage.scheduler_db import init_scheduler_tables
     init_scheduler_tables()
 
+    # Network tables (content ledger, rights, account profiles, insights) + 6 core niches
+    from storage.network_db import init_network_tables
+    init_network_tables()
+
 # Accounts operations
 def get_all_accounts(active_only: bool = True) -> List[Dict]:
     conn = get_connection()

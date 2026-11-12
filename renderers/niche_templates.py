@@ -23,6 +23,14 @@ class NicheTemplate(BaseModel):
     sample_highlight: str
     audio_ducking: bool = True
     speed_factor: float = 1.0
+    # Visual treatment strategy:
+    #   'full_template'  - branded frame/card (clubbing, informative tech)
+    #   'light_brand'    - full-bleed video + corner handle + optional short top hook (AI showcase)
+    #   'meme_native'    - white caption bar on top + small handle (memes)
+    #   'concert_tag'    - full-bleed video + lower-third ARTIST • CITY • VENUE + filmer credit
+    #   'raw_watermark'  - full-bleed raw video + semi-transparent micro watermark only
+    render_profile: str = "full_template"
+    requires_permission: bool = False  # Rights gate: block publish until creator permission is granted
 
 # 1. Informative & Deep Tech (Cult Aesthetic)
 TEMPLATE_INFORMATIVE = NicheTemplate(
@@ -276,9 +284,185 @@ TEMPLATE_GIRLS_PARTY = NicheTemplate(
     speed_factor=1.0
 )
 
+# ============================================================================
+# CORE NETWORK NICHES (6) — tailored to user specifications
+# ============================================================================
+
+# N1. AI Content (produced by AI channels) — 100% Raw, No Template, No Framework
+TEMPLATE_AI_SHOWCASE = NicheTemplate(
+    id="ai_showcase",
+    name="AI Content (100% Raw Video, No Framework/Template)",
+    category="ai_content",
+    overlay_layout="full_bleed",
+    primary_color="#FFFFFF",
+    highlight_color="#7C5CFF",
+    card_background="rgba(0, 0, 0, 0)",
+    font_family="sans_bold",
+    badge_icon="🤖",
+    hook_formula="curiosity_paradox",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You curate pure AI-generated videos and tools for {channel_handle}. "
+        "1. 'hook_text': empty string (no on-screen text overlays). "
+        "2. 'caption_paragraphs': 2 short blocks. Block 1: what the tool/model is and what it did. Block 2: question CTA to drive comments. "
+        "3. 'credit': original creator handle and tool name if known. "
+        "4. 'hashtags': 8 to 12 AI hashtags."
+    ),
+    default_hashtags=["#ai", "#aiart", "#aivideo", "#generativeai", "#aitools"],
+    sample_headline="",
+    sample_highlight="",
+    audio_ducking=False,
+    render_profile="raw_full_bleed",
+)
+
+# N2. Memes — native meme format (white top caption bar), no branded frame
+TEMPLATE_MEME_NATIVE = NicheTemplate(
+    id="meme_native",
+    name="Meme Native (Top White Caption Bar)",
+    category="memes",
+    overlay_layout="meme_caption_bar",
+    primary_color="#000000",
+    highlight_color="#000000",
+    card_background="#FFFFFF",
+    font_family="sans_bold",
+    badge_icon="😂",
+    hook_formula="relatable",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You write original meme captions for {channel_handle}. "
+        "1. 'hook_text': the meme caption shown in the white bar above the video. 4 to 16 words, relatable, lowercase-casual, no hashtags, no emojis overload. "
+        "2. 'caption_paragraphs': 1 short line + 'tag someone who...' CTA. "
+        "3. 'credit': original creator handle. "
+        "4. 'hashtags': 5 to 8 meme hashtags."
+    ),
+    default_hashtags=["#memes", "#funny", "#relatable", "#memesdaily"],
+    sample_headline="me pretending to understand the group project after 3 weeks of silence",
+    sample_highlight="",
+    audio_ducking=False,
+    render_profile="meme_native",
+)
+
+# N3. Concerts — full-bleed live video + ONLY our logo watermark (no templates/borders)
+TEMPLATE_CONCERT_TAG = NicheTemplate(
+    id="concert_tag",
+    name="Concerts (Full-Screen Live Video + Logo Only)",
+    category="concerts",
+    overlay_layout="full_bleed",
+    primary_color="#FFFFFF",
+    highlight_color="#FFD23F",
+    card_background="rgba(0, 0, 0, 0)",
+    font_family="sans_bold",
+    badge_icon="🎤",
+    hook_formula="fomo_hype",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You curate live concert moments for {channel_handle}. "
+        "1. 'hook_text': empty string (video stays clean, only our logo watermark is rendered). "
+        "2. 'caption_paragraphs': 2 short blocks. Block 1: the artist, city, venue, and track name if known. Block 2: 'Were you there?' CTA. "
+        "3. 'credit': original filmer handle (required). "
+        "4. 'hashtags': 8 to 12 concert/artist hashtags."
+    ),
+    default_hashtags=["#concert", "#livemusic", "#tour", "#concertvibes"],
+    sample_headline="",
+    sample_highlight="",
+    audio_ducking=False,
+    render_profile="logo_only",
+)
+
+# N4. Girls' Dance & Parties — 100% Raw Full-Screen (No Template)
+TEMPLATE_GIRLS_RAW = NicheTemplate(
+    id="girls_raw",
+    name="Girls' Dance & Parties (100% Raw Video, No Template)",
+    category="girls_dance",
+    overlay_layout="full_bleed",
+    primary_color="#FFFFFF",
+    highlight_color="#FF4FA3",
+    card_background="rgba(0, 0, 0, 0)",
+    font_family="clean_humanist",
+    badge_icon="💃",
+    hook_formula="aesthetic_vibe",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You curate dance and girls'-night content for {channel_handle}, posted with the creator's permission. "
+        "1. 'hook_text': empty string (no on-video text for this niche). "
+        "2. 'caption_paragraphs': 1 to 2 short, respectful lines about the dance/vibe + tag-your-bestie CTA. Never comment on bodies or appearance. "
+        "3. 'credit': the creator's handle (required). "
+        "4. 'hashtags': 8 to 10 dance/party hashtags."
+    ),
+    default_hashtags=["#dance", "#dancereels", "#girlsnightout", "#partyvibes"],
+    sample_headline="",
+    sample_highlight="",
+    audio_ducking=False,
+    render_profile="raw_full_bleed",
+    requires_permission=True,
+)
+
+# N5. Clubbing Parties — End-to-End Branded Neon Frame Template
+TEMPLATE_CLUBBING_BRANDED = NicheTemplate(
+    id="clubbing_branded",
+    name="Club Neon Frame (Clubbing Network Brand)",
+    category="clubbing",
+    overlay_layout="full_screen_neon_hud",
+    primary_color="#FFFFFF",
+    highlight_color="#FF007F",
+    card_background="rgba(20, 5, 25, 0.75)",
+    font_family="punchy_kinetic",
+    badge_icon="🪩",
+    hook_formula="fomo_hype",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You curate clubbing and nightlife moments for {channel_handle}. "
+        "1. 'hook_text': empty string (video interior stays clean). "
+        "2. 'caption_paragraphs': 2 short blocks. Block 1: venue/city/DJ vibe (facts only from metadata). Block 2: 'tag your party crew' CTA. "
+        "3. 'credit': original creator or venue handle (required). "
+        "4. 'hashtags': 8 to 12 clubbing hashtags."
+    ),
+    default_hashtags=["#clubbing", "#nightlife", "#clublife", "#djset", "#weekendvibes"],
+    sample_headline="",
+    sample_highlight="",
+    audio_ducking=False,
+    render_profile="full_template",
+)
+
+# N6. Informative AI Tech (20 pages) — Light Template (Top Logo + Hook + Center Video)
+TEMPLATE_INFORMATIVE = NicheTemplate(
+    id="informative_cult",
+    name="Informative AI Tech (Light Template: Logo, Hook, Center Video)",
+    category="ai_tech",
+    overlay_layout="top_card_cult",
+    primary_color="#FFFFFF",
+    highlight_color="#DDF51A",        # High-contrast Neon Yellow
+    card_background="rgba(10, 10, 10, 0.85)",
+    font_family="sans_bold",
+    badge_icon="💡",
+    hook_formula="curiosity_paradox",
+    caption_format="three_paragraph_depth",
+    persona_system_instruction=(
+        "You are the chief viral media curator for {channel_handle} specializing in {niche}. "
+        "Objective: craft an educational 9:16 vertical reel package from source video metadata: "
+        "1. 'hook_text': 10 to 18 words on-screen headline with key word highlighted. Direct, observational, curiosity-inducing, tech authority. "
+        "2. 'caption_paragraphs': Exactly 3 paragraphs. Para 1: Phenomenon hook. Para 2: Underlying mechanics/tools. Para 3: Key takeaway and CTA to discuss. "
+        "3. 'credit': Original researcher/creator or attribution tag. "
+        "4. 'hashtags': 8 to 12 targeted tech hashtags."
+    ),
+    default_hashtags=["#ai", "#tech", "#innovation", "#technews", "#futuretech", "#didyouknow", "#deepfacts"],
+    sample_headline="Two people can earn the exact same salary and end up living completely different lives",
+    sample_highlight="completely",
+    audio_ducking=True,
+    speed_factor=1.0,
+    render_profile="light_template",
+)
+
 # Master Registry of All Templates
 DEFAULT_TEMPLATES: Dict[str, NicheTemplate] = {
+    # Core network niches
+    "ai_showcase": TEMPLATE_AI_SHOWCASE,
+    "meme_native": TEMPLATE_MEME_NATIVE,
+    "concert_tag": TEMPLATE_CONCERT_TAG,
+    "girls_raw": TEMPLATE_GIRLS_RAW,
+    "clubbing_branded": TEMPLATE_CLUBBING_BRANDED,
     "informative_cult": TEMPLATE_INFORMATIVE,
+    # Legacy / additional templates
     "girls_party_neon": TEMPLATE_GIRLS_PARTY,
     "nightlife_party": TEMPLATE_NIGHTLIFE,
     "organizing_home": TEMPLATE_ORGANIZING,
@@ -289,8 +473,36 @@ DEFAULT_TEMPLATES: Dict[str, NicheTemplate] = {
     "psychology_depth": TEMPLATE_PSYCHOLOGY,
 }
 
+# The six core niches of the network and their template IDs.
+CORE_NICHE_TEMPLATES: Dict[str, str] = {
+    "ai_content": "ai_showcase",
+    "memes": "meme_native",
+    "concerts": "concert_tag",
+    "girls_dance": "girls_raw",
+    "clubbing": "clubbing_branded",
+    "ai_tech": "informative_cult",
+}
+
 # Mapping from Niche IDs to Template IDs
 NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
+    # Core network niches
+    **CORE_NICHE_TEMPLATES,
+    "meme": "meme_native",
+    "concert": "concert_tag",
+    "live_music": "concert_tag",
+    "girls_dance": "girls_raw",
+    "girls_dance_party": "girls_raw",
+    "girls_party": "girls_party_neon",
+    "girls_nightlife": "girls_party_neon",
+    "girls_pages": "girls_party_neon",
+    "clubbing": "clubbing_branded",
+    "club": "clubbing_branded",
+    "parties": "clubbing_branded",
+    "nightlife": "clubbing_branded",
+    "ai_showcase": "ai_showcase",
+    "informative_tech": "informative_cult",
+    "tech": "informative_cult",
+
     # 1. Informative / Science / Deep Tech
     "information": "informative_cult",
     "quantum": "informative_cult",
@@ -302,12 +514,7 @@ NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
     "history": "informative_cult",
     "technology": "informative_cult",
 
-    # 2. Nightlife / EDM / Parties
-    "parties": "nightlife_party",
-    "nightlife": "nightlife_party",
-    "girls_party": "girls_party_neon",
-    "girls_nightlife": "girls_party_neon",
-    "girls_pages": "girls_party_neon",
+    # 2. EDM / Festivals
     "edm": "nightlife_party",
     "music": "nightlife_party",
     "festivals": "nightlife_party",
@@ -361,7 +568,7 @@ NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
 
 def get_template_for_niche(niche_id: str) -> NicheTemplate:
     """Resolves the best matching template for a given niche identifier."""
-    clean_niche = niche_id.lower().strip()
+    clean_niche = niche_id.lower().strip().replace(" ", "_").replace("-", "_")
     template_id = NICHE_TO_TEMPLATE_MAP.get(clean_niche, "informative_cult")
     return DEFAULT_TEMPLATES.get(template_id, TEMPLATE_INFORMATIVE)
 

@@ -652,14 +652,191 @@ class CardRenderer:
         # Bottom subtle footer with glowing hearts
         footer_y = 1820
         fg_draw.line([(120, footer_y - 22), (canvas_w - 120, footer_y - 22)], fill=(45, 28, 55, 200), width=1)
-        _draw_heart(fg_draw, (canvas_w // 2 - 105, footer_y), 9, (255, 40, 130, 255))
-        fg_draw.text((canvas_w // 2 - 85, footer_y), "CUTE GIRLS PARTY VIBES", font=font_sub, fill="#F0D5E8", anchor="lm")
-        _draw_heart(fg_draw, (canvas_w // 2 + 165, footer_y), 9, (255, 40, 130, 255))
+        footer_text = (getattr(channel, "display_name", "") or handle_text.lstrip("@")).upper()
+        ft_w = fg_draw.textlength(footer_text, font=font_sub)
+        _draw_heart(fg_draw, (int(canvas_w // 2 - ft_w / 2 - 22), footer_y), 9, (255, 40, 130, 255))
+        fg_draw.text((canvas_w // 2, footer_y), footer_text, font=font_sub, fill="#F0D5E8", anchor="mm")
+        _draw_heart(fg_draw, (int(canvas_w // 2 + ft_w / 2 + 22), footer_y), 9, (255, 40, 130, 255))
 
         # Video interior is kept 100% clean and raw (no text written over the footage)
         if fg_output_path:
             fg.save(fg_output_path, "PNG")
 
         return bg_output_path, fg_output_path
+
+    # ------------------------------------------------------------------
+    # Lightweight overlays for full-bleed niches
+    # (AI showcase, concerts, girls' dance) and the native meme format.
+    # Instagram's Reels UI covers roughly the top ~150px and bottom ~420px,
+    # plus a right-hand button rail, so all text stays inside a safe zone.
+    # ------------------------------------------------------------------
+    SAFE_TOP = 170
+    SAFE_BOTTOM = 1500
+
+    def _font(self, path: str, size: int):
+        try:
+            return ImageFont.truetype(path, size)
+        except Exception:
+            return ImageFont.load_default()
+
+    @staticmethod
+    def _hex_to_rgb(color: str, default=(255, 255, 255)) -> Tuple[int, int, int]:
+        try:
+            c = color.lstrip("#")
+            return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+        except Exception:
+            return default
+
+    @staticmethod
+    def _clean_handle(channel: ChannelProfile) -> str:
+        h = channel.handle or ""
+        return h if h.startswith("@") else f"@{h}"
+
+    def _wrap(self, draw: ImageDraw.ImageDraw, text: str, font, max_w: int):
+        words, lines, cur = text.split(), [], ""
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if draw.textlength(trial, font=font) <= max_w:
+                cur = trial
+            else:
+                if cur:
+                    lines.append(cur)
+                cur = w
+        if cur:
+            lines.append(cur)
+        return lines
+
+    def measure_meme_bar(self, caption: str, canvas_w: int = 1080) -> int:
+        """Height of the white meme caption bar needed for this caption."""
+        font = self._font(self.font_bold_path, 54)
+        tmp = ImageDraw.Draw(Image.new("RGB", (10, 10)))
+        lines = self._wrap(tmp, caption or "", font, canvas_w - 120) or [""]
+        line_h = 68
+        return max(220, len(lines) * line_h + 110)
+
+    def render_minimal_overlay(
+        self,
+        profile: str,
+        channel: ChannelProfile,
+        output_path: Path,
+        hook_text: str = "",
+        credit_handle: Optional[str] = None,
+        template: Optional[NicheTemplate] = None,
+        meme_bar_y: int = 0,
+        meme_bar_h: int = 0,
+        canvas_w: int = 1080,
+        canvas_h: int = 1920,
+    ) -> Path:
+        """
+        Renders a transparent 1080x1920 overlay for the non-template render profiles:
+        - 'light_brand'   : corner handle chip + optional short hook near the top
+        - 'concert_tag'   : lower-third 'ARTIST • CITY • VENUE' + filmer credit + corner handle
+        - 'raw_watermark' : semi-transparent micro watermark only (no on-video text)
+        - 'meme_native'   : white caption bar (black text) + small grey handle inside the bar
+        """
+        accent = self._hex_to_rgb(getattr(template, "highlight_color", "#FFFFFF"))
+        handle = self._clean_handle(channel)
+        img = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+
+        def handle_chip(x: int, y: int, alpha: int = 150):
+            f = self._font(self.font_bold_path, 28)
+            tw = draw.textlength(handle, font=f)
+            draw.rounded_rectangle([x, y, x + tw + 36, y + 50], radius=10, fill=(0, 0, 0, alpha))
+            draw.rectangle([x, y + 10, x + 4, y + 40], fill=accent + (255,))
+            draw.text((x + 20, y + 25), handle, font=f, fill=(255, 255, 255, 235), anchor="lm")
+
+        def shadow_text(xy, text, font, fill, anchor="mm"):
+            x, y = xy
+            draw.text((x + 2, y + 3), text, font=font, fill=(0, 0, 0, 170), anchor=anchor)
+            draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
+
+        if profile == "raw_full_bleed":
+            # 100% clean video — no graphics, no watermark, no framework at all
+            pass
+
+        elif profile == "logo_only":
+            # Live concerts: clean full-screen video with ONLY the logo watermark
+            logo_path = self._find_logo_path(channel)
+            logo_placed = False
+            if logo_path and logo_path.exists():
+                try:
+                    logo_img = Image.open(logo_path).convert("RGBA")
+                    # Maintain aspect ratio, max 64x64
+                    logo_img.thumbnail((64, 64), Image.Resampling.LANCZOS)
+                    # Apply subtle opacity (85%) for clean watermark look
+                    r, g, b, a = logo_img.split()
+                    a = a.point(lambda p: int(p * 0.85))
+                    logo_img.putalpha(a)
+                    # Paste with a soft subtle circular shadow behind for contrast
+                    lx, ly = 52, self.SAFE_TOP
+                    draw.ellipse([lx - 4, ly - 4, lx + logo_img.width + 4, ly + logo_img.height + 4], fill=(0, 0, 0, 90))
+                    img.paste(logo_img, (lx, ly), logo_img)
+                    logo_placed = True
+                except Exception as e:
+                    logger.warning(f"Could not load logo image for logo_only overlay: {e}")
+
+            if not logo_placed:
+                # Minimalist watermark logo badge fallback
+                handle_chip(52, self.SAFE_TOP, alpha=130)
+
+        elif profile == "light_brand":
+            handle_chip(48, self.SAFE_TOP)
+            if hook_text and hook_text.strip():
+                f = self._font(self.font_bold_path, 50)
+                lines = self._wrap(draw, hook_text.strip(), f, canvas_w - 200)[:2]
+                y = self.SAFE_TOP + 120
+                for ln in lines:
+                    shadow_text((canvas_w // 2, y), ln, f, (255, 255, 255, 255))
+                    y += 62
+
+        elif profile == "concert_tag":
+            handle_chip(48, self.SAFE_TOP, alpha=120)
+            tag = (hook_text or "").strip().upper()
+            credit = (credit_handle or "").strip()
+            if credit and not credit.startswith("@"):
+                credit = f"@{credit}"
+            if tag or credit:
+                f_tag = self._font(self.font_bold_path, 40)
+                f_cr = self._font(self.font_regular_path, 26)
+                tag_lines = self._wrap(draw, tag, f_tag, canvas_w - 260)[:2] if tag else []
+                block_h = len(tag_lines) * 50 + (40 if credit else 0) + 30
+                y0 = self.SAFE_BOTTOM - block_h - 40
+                plate = Image.new("RGBA", (canvas_w, block_h + 60), (0, 0, 0, 0))
+                pd = ImageDraw.Draw(plate)
+                for i in range(block_h + 60):
+                    a = int(140 * min(1.0, i / max(1, (block_h + 60) * 0.6)))
+                    pd.line([(0, i), (canvas_w, i)], fill=(0, 0, 0, a))
+                img.alpha_composite(plate, (0, y0 - 30))
+                draw.rectangle([48, y0, 54, y0 + block_h - 20], fill=accent + (255,))
+                y = y0 + 25
+                for ln in tag_lines:
+                    draw.text((76, y), ln, font=f_tag, fill=(255, 255, 255, 255), anchor="lm")
+                    y += 50
+                if credit:
+                    draw.text((76, y), f"filmed by {credit}", font=f_cr, fill=accent + (255,), anchor="lm")
+
+        elif profile == "raw_watermark":
+            f = self._font(self.font_bold_path, 30)
+            draw.text((52, self.SAFE_TOP + 10), handle, font=f, fill=(0, 0, 0, 60), anchor="lm")
+            draw.text((50, self.SAFE_TOP + 8), handle, font=f, fill=(255, 255, 255, 110), anchor="lm")
+
+        elif profile == "meme_native":
+            bar_h = meme_bar_h or self.measure_meme_bar(hook_text, canvas_w)
+            y0 = meme_bar_y
+            draw.rectangle([0, y0, canvas_w, y0 + bar_h], fill=(255, 255, 255, 255))
+            f = self._font(self.font_bold_path, 54)
+            lines = self._wrap(draw, (hook_text or "").strip(), f, canvas_w - 120)
+            line_h = 68
+            text_h = len(lines) * line_h
+            y = y0 + (bar_h - text_h) // 2 + line_h // 2 - 8
+            for ln in lines:
+                draw.text((canvas_w // 2, y), ln, font=f, fill=(0, 0, 0, 255), anchor="mm")
+                y += line_h
+            f_h = self._font(self.font_regular_path, 22)
+            draw.text((canvas_w - 24, y0 + bar_h - 14), handle, font=f_h, fill=(140, 140, 140, 255), anchor="rb")
+
+        img.save(output_path, "PNG")
+        return output_path
 
 
