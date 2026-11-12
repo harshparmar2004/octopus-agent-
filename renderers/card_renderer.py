@@ -513,26 +513,83 @@ class CardRenderer:
         canvas_w, canvas_h = 1080, 1920
         box_x, box_y, box_w, box_h = box_coords
 
-        glow_hex = getattr(template, "highlight_color", "#FF007F") or "#FF007F"
+        glow_hex = getattr(template, "highlight_color", "#FF1493") or "#FF1493"
         glow_rgb = self._hex_to_rgb(glow_hex)
         glow_rgba = glow_rgb + (255,)
 
-        # ---------------- 1. BACKGROUND & OUTER GLOW SHADOW ----------------
-        bg = Image.new("RGBA", (canvas_w, canvas_h), (8, 6, 12, 255))
+        # Helper vector drawing methods
+        import math
+        def _draw_sparkle(draw, center, size, color):
+            cx, cy = center
+            pts = [
+                (cx, cy - size), (cx + size * 0.26, cy - size * 0.26),
+                (cx + size, cy), (cx + size * 0.26, cy + size * 0.26),
+                (cx, cy + size), (cx - size * 0.26, cy + size * 0.26),
+                (cx - size, cy), (cx - size * 0.26, cy - size * 0.26)
+            ]
+            draw.polygon(pts, fill=color)
+
+        def _draw_heart(draw, center, size, color):
+            cx, cy = center
+            pts = []
+            for step in range(0, 360, 10):
+                t = math.radians(step)
+                x = 16 * (math.sin(t) ** 3)
+                y = -(13 * math.cos(t) - 5 * math.cos(2*t) - 2 * math.cos(3*t) - math.cos(4*t))
+                pts.append((cx + x * (size / 18.0), cy + y * (size / 18.0)))
+            draw.polygon(pts, fill=color)
+
+        # ---------------- 1. BACKGROUND, CUTE DECOR & OUTER GLOW SHADOW ----------------
+        bg = Image.new("RGBA", (canvas_w, canvas_h), (10, 7, 14, 255))
         bg_draw = ImageDraw.Draw(bg)
-        for y in range(0, canvas_h, 8):
-            bg_draw.line([(0, y), (canvas_w, y)], fill=(14, 11, 18, 255), width=1)
+        for y in range(canvas_h):
+            t = abs(y - canvas_h // 2) / (canvas_h // 2)
+            r = int(18 * (1 - 0.45 * t))
+            g = int(9 * (1 - 0.45 * t))
+            b = int(24 * (1 - 0.45 * t))
+            bg_draw.line([(0, y), (canvas_w, y)], fill=(r, g, b, 255))
+
+        # Cute aesthetic floating elements (sparkles and hearts) outside boundary box
+        decor = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        d_draw = ImageDraw.Draw(decor)
+
+        sparkle_items = [
+            ((75, 80), 20, (255, 120, 200, 240)), ((1005, 85), 18, (255, 255, 255, 255)),
+            ((180, 140), 14, (255, 160, 220, 210)), ((900, 145), 16, (220, 180, 255, 220)),
+            ((40, 450), 16, (255, 140, 210, 220)), ((1040, 480), 18, (255, 255, 255, 240)),
+            ((45, 880), 14, (255, 100, 180, 210)), ((1035, 920), 15, (220, 160, 255, 210)),
+            ((40, 1320), 17, (255, 140, 210, 220)), ((1040, 1360), 18, (255, 255, 255, 230)),
+            ((90, 1770), 22, (255, 120, 200, 240)), ((990, 1780), 20, (255, 255, 255, 255)),
+            ((220, 1845), 15, (255, 160, 220, 210)), ((860, 1855), 16, (220, 180, 255, 220))
+        ]
+        for pos, sz, col in sparkle_items:
+            if not (box_x - 8 <= pos[0] <= box_x + box_w + 8 and box_y - 8 <= pos[1] <= box_y + box_h + 8):
+                _draw_sparkle(d_draw, pos, sz, col)
+
+        heart_items = [
+            ((70, 240), 14, (255, 40, 130, 230)), ((1010, 260), 16, (255, 80, 160, 240)),
+            ((45, 680), 12, (255, 60, 150, 200)), ((1035, 720), 14, (255, 70, 160, 210)),
+            ((50, 1540), 15, (255, 50, 140, 220)), ((1030, 1560), 16, (255, 80, 160, 230)),
+            ((150, 1810), 13, (255, 50, 140, 220)), ((930, 1820), 14, (255, 80, 160, 230))
+        ]
+        for pos, sz, col in heart_items:
+            if not (box_x - 8 <= pos[0] <= box_x + box_w + 8 and box_y - 8 <= pos[1] <= box_y + box_h + 8):
+                _draw_heart(d_draw, pos, sz, col)
+
+        decor_glow = decor.filter(ImageFilter.GaussianBlur(radius=5))
+        bg.paste(decor_glow, (0, 0), decor_glow)
+        bg.paste(decor, (0, 0), decor)
 
         # Multi-pass outer glowing shadow radiating OUTSIDE the box lines
         shadow_layer = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         s_draw = ImageDraw.Draw(shadow_layer)
-        s_draw.rectangle([box_x - 6, box_y - 6, box_x + box_w + 6, box_y + box_h + 6], fill=glow_rgb + (140,))
+        s_draw.rectangle([box_x - 16, box_y - 16, box_x + box_w + 16, box_y + box_h + 16], fill=glow_rgb + (85,))
         shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=28))
 
         mid_glow = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
         m_draw = ImageDraw.Draw(mid_glow)
-        m_draw.rectangle([box_x - 2, box_y - 2, box_x + box_w + 2, box_y + box_h + 2], fill=glow_rgb + (210,))
-        mid_glow = mid_glow.filter(ImageFilter.GaussianBlur(radius=12))
+        m_draw.rectangle([box_x - 4, box_y - 4, box_x + box_w + 4, box_y + box_h + 4], fill=glow_rgb + (180,))
+        mid_glow = mid_glow.filter(ImageFilter.GaussianBlur(radius=10))
 
         bg.paste(shadow_layer, (0, 0), shadow_layer)
         bg.paste(mid_glow, (0, 0), mid_glow)
@@ -547,83 +604,72 @@ class CardRenderer:
         # Crisp neon frame line bordering the video box
         fg_draw.rectangle([box_x, box_y, box_x + box_w, box_y + box_h], outline=glow_rgba, width=3)
 
-        # Corner heavy HUD bracket accents
-        blen = 50
-        # TL
-        fg_draw.line([(box_x - 8, box_y - 8 + blen), (box_x - 8, box_y - 8), (box_x - 8 + blen, box_y - 8)], fill=glow_rgba, width=5)
-        # TR
-        fg_draw.line([(box_x + box_w + 8 - blen, box_y - 8), (box_x + box_w + 8, box_y - 8), (box_x + box_w + 8, box_y - 8 + blen)], fill=glow_rgba, width=5)
-        # BL
-        fg_draw.line([(box_x - 8, box_y + box_h + 8 - blen), (box_x - 8, box_y + box_h + 8), (box_x - 8 + blen, box_y + box_h + 8)], fill=glow_rgba, width=5)
-        # BR
-        fg_draw.line([(box_x + box_w + 8 - blen, box_y + box_h + 8), (box_x + box_w + 8, box_y + box_h + 8), (box_x + box_w + 8, box_y + box_h + 8 - blen)], fill=glow_rgba, width=5)
+        # Corner squarish notches
+        c_len = 24
+        fg_draw.line([(box_x - 4, box_y - 4), (box_x + c_len, box_y - 4)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x - 4, box_y - 4), (box_x - 4, box_y + c_len)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x + box_w + 4, box_y - 4), (box_x + box_w - c_len, box_y - 4)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x + box_w + 4, box_y - 4), (box_x + box_w + 4, box_y + c_len)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x - 4, box_y + box_h + 4), (box_x + c_len, box_y + box_h + 4)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x - 4, box_y + box_h + 4), (box_x - 4, box_y + box_h - c_len)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x + box_w + 4, box_y + box_h + 4), (box_x + box_w - c_len, box_y + box_h + 4)], fill=(255, 140, 210, 255), width=3)
+        fg_draw.line([(box_x + box_w + 4, box_y + box_h + 4), (box_x + box_w + 4, box_y + box_h - c_len)], fill=(255, 140, 210, 255), width=3)
 
         # Fonts
         try:
             font_badge = ImageFont.truetype(self.font_bold_path, 30)
             font_sub = ImageFont.truetype(self.font_regular_path, 20)
-            font_handle = ImageFont.truetype(self.font_bold_path, 24)
-            font_hook = ImageFont.truetype(self.font_bold_path, 34)
+            font_hook = ImageFont.truetype(self.font_bold_path, 42)
         except Exception:
-            font_badge = font_sub = font_handle = font_hook = ImageFont.load_default()
+            font_badge = font_sub = font_hook = ImageFont.load_default()
 
-        # Top Badge: [ C U T E   A A R O H I ] strictly ABOVE the video box!
-        raw_name = (channel.display_name or "OCTOPUS").strip()
-        spaced_words = [" ".join(list(w.upper())) for w in raw_name.split()]
-        badge_text = "   ".join(spaced_words)
+        # Top Badge in SQUARISH form: contains original handle (e.g. @cute.aarohi.007)
+        handle_text = channel.handle
+        if not handle_text.startswith("@"):
+            handle_text = f"@{handle_text}"
 
-        tb = fg_draw.textbbox((0, 0), badge_text, font=font_badge)
-        pill_w = max(560, (tb[2] - tb[0]) + 80)
-        pill_h = 70
-        pill_x1 = (canvas_w - pill_w) // 2
-        pill_y1 = max(60, min(100, box_y - 95))
-        pill_x2 = pill_x1 + pill_w
-        pill_y2 = pill_y1 + pill_h
+        tb = fg_draw.textbbox((0, 0), handle_text, font=font_badge)
+        badge_w = (tb[2] - tb[0]) + 44
+        badge_h = 54
+        badge_x1 = (canvas_w - badge_w) // 2
+        badge_y1 = max(72, box_y - 82)
+        badge_x2 = badge_x1 + badge_w
+        badge_y2 = badge_y1 + badge_h
 
-        b_pts = [
-            (pill_x1 + 14, pill_y1), (pill_x2 - 14, pill_y1),
-            (pill_x2, pill_y1 + 14), (pill_x2, pill_y2 - 14),
-            (pill_x2 - 14, pill_y2), (pill_x1 + 14, pill_y2),
-            (pill_x1, pill_y2 - 14), (pill_x1, pill_y1 + 14),
-            (pill_x1 + 14, pill_y1)
-        ]
-        fg_draw.polygon(b_pts, fill=(18, 8, 22, 240), outline=glow_rgba, width=2)
-        self._draw_glow_text(fg_draw, (canvas_w // 2, pill_y1 + pill_h // 2), badge_text, font_badge, (255, 255, 255, 255), glow_rgba, radius=3)
+        # Squarish box glow
+        b_glow = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        bg_draw = ImageDraw.Draw(b_glow)
+        bg_draw.rounded_rectangle([badge_x1 - 3, badge_y1 - 3, badge_x2 + 3, badge_y2 + 3], radius=4, fill=glow_rgb + (140,))
+        b_glow = b_glow.filter(ImageFilter.GaussianBlur(radius=8))
+        fg.paste(b_glow, (0, 0), b_glow)
 
-        # Horizontal antenna lines
-        mid_y = pill_y1 + pill_h // 2
-        fg_draw.line([(60, mid_y), (pill_x1 - 15, mid_y)], fill=glow_rgb + (200,), width=2)
-        fg_draw.ellipse([(pill_x1 - 22, mid_y - 4), (pill_x1 - 14, mid_y + 4)], fill=glow_rgba)
-        fg_draw.line([(pill_x2 + 15, mid_y), (canvas_w - 60, mid_y)], fill=glow_rgb + (200,), width=2)
-        fg_draw.ellipse([(pill_x2 + 14, mid_y - 4), (pill_x2 + 22, mid_y + 4)], fill=glow_rgba)
+        # Draw clean squarish box (radius=4)
+        fg_draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=4, fill=(24, 14, 32, 245), outline=glow_rgba, width=2)
+        fg_draw.rectangle([badge_x1 + 4, badge_y1 + 4, badge_x1 + 7, badge_y1 + 7], fill=(255, 160, 220, 255))
+        fg_draw.rectangle([badge_x2 - 7, badge_y2 - 7, badge_x2 - 4, badge_y2 - 4], fill=(255, 160, 220, 255))
+        fg_draw.text((canvas_w // 2, badge_y1 + badge_h // 2), handle_text, font=font_badge, fill="#FFFFFF", anchor="mm")
 
-        # Bottom Live Ticker: ● LIVE   @HANDLE   GIRLS PARTY
-        bot_y = 1810
-        fg_draw.line([(80, bot_y - 35), (canvas_w - 80, bot_y - 35)], fill=glow_rgb + (160,), width=1)
-        fg_draw.rectangle([(canvas_w // 2 - 5, bot_y - 35 - 5), (canvas_w // 2 + 5, bot_y - 35 + 5)], fill=glow_rgba)
+        # Bottom subtle footer with glowing hearts
+        footer_y = 1820
+        fg_draw.line([(120, footer_y - 22), (canvas_w - 120, footer_y - 22)], fill=(45, 28, 55, 200), width=1)
+        _draw_heart(fg_draw, (canvas_w // 2 - 105, footer_y), 9, (255, 40, 130, 255))
+        fg_draw.text((canvas_w // 2 - 85, footer_y), "CUTE GIRLS PARTY VIBES", font=font_sub, fill="#F0D5E8", anchor="lm")
+        _draw_heart(fg_draw, (canvas_w // 2 + 165, footer_y), 9, (255, 40, 130, 255))
 
-        fg_draw.ellipse([(110, bot_y - 8), (126, bot_y + 8)], fill=(255, 0, 80, 255))
-        self._draw_glow_text(fg_draw, (170, bot_y), "LIVE", font_sub, (255, 255, 255, 255), glow_rgba, radius=2)
-
-        h_text = channel.handle.upper()
-        if not h_text.startswith("@"):
-            h_text = f"@{h_text}"
-        self._draw_glow_text(fg_draw, (canvas_w // 2, bot_y), h_text, font_handle, (255, 255, 255, 255), glow_rgba, radius=2)
-
-        niche_label = "GIRLS PARTY"
-        self._draw_glow_text(fg_draw, (canvas_w - 170, bot_y), niche_label, font_sub, (255, 255, 255, 255), glow_rgba, radius=2)
-
-        # Smart Hook Text Placement (only if video is clean of baked-in text)
+        # Smart Hook Text: NO BOX! Positioned in elevated lower-third with pink highlight
         if hook_text and hook_placement != "none":
-            wrapped = textwrap.wrap(hook_text, width=32)[:2]
-            if hook_placement == "middle":
-                target_y = box_y + box_h // 2 - (len(wrapped) - 1) * 22
-            else:  # "bottom"
-                target_y = box_y + box_h - 75 - (len(wrapped) - 1) * 22
-
-            for line in wrapped:
-                self._draw_glow_text(fg_draw, (canvas_w // 2, target_y), line, font_hook, (255, 255, 255, 255), glow_rgba, radius=3)
-                target_y += 44
+            wrapped = textwrap.wrap(hook_text, width=28)[:2]
+            # Sweet spot: 74% down the box (~250px breathing room from bottom)
+            hook_center_y = box_y + int(box_h * 0.74)
+            if len(wrapped) == 1:
+                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y), wrapped[0], font_hook, (255, 255, 255, 255), glow_rgba, radius=4)
+                _draw_sparkle(fg_draw, (canvas_w // 2 + 250, hook_center_y), 12, (255, 255, 255, 255))
+                _draw_sparkle(fg_draw, (canvas_w // 2 - 250, hook_center_y), 12, (255, 140, 210, 240))
+            else:
+                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y - 28), wrapped[0], font_hook, (255, 255, 255, 255), glow_rgba, radius=4)
+                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y + 32), wrapped[1], font_hook, (255, 45, 141, 255), (255, 255, 255, 220), radius=3)
+                _draw_sparkle(fg_draw, (canvas_w // 2 + 250, hook_center_y + 32), 12, (255, 255, 255, 255))
+                _draw_sparkle(fg_draw, (canvas_w // 2 - 250, hook_center_y + 32), 12, (255, 140, 210, 240))
 
         if fg_output_path:
             fg.save(fg_output_path, "PNG")

@@ -1,6 +1,7 @@
 import time
 import logging
 from typing import Optional, Dict, Any, List
+from pathlib import Path
 import requests
 
 from config import settings
@@ -45,6 +46,88 @@ class MetaReelsPublisher:
             }
         except Exception as e:
             logger.error(f"Failed to publish reel via Meta Graph API: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def publish_local_reel(
+        self,
+        local_video_path: str,
+        caption: str,
+        share_to_feed: bool = True,
+        dry_run: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Publishes a local video file directly to Instagram Reels using the Meta Resumable Upload API.
+        Does not require a public URL or tunnel.
+        """
+        if dry_run or not self.ig_user_id or not self.access_token:
+            logger.info("[DRY RUN] Simulating local Instagram Reel publication.")
+            return {
+                "success": True,
+                "mode": "dry_run",
+                "simulated_media_id": "18012345678901234",
+                "message": "Local reel verified for publishing. Add INSTAGRAM_USER_ID and META_GRAPH_ACCESS_TOKEN to post live."
+            }
+
+        p = Path(local_video_path)
+        if not p.exists():
+            return {"success": False, "error": f"File not found: {local_video_path}"}
+
+        file_size = p.stat().st_size
+
+        try:
+            # 1. Initialize resumable upload container
+            init_url = f"{self.base_url}/{self.ig_user_id}/media"
+            init_payload = {
+                "media_type": "REELS",
+                "upload_type": "resumable",
+                "caption": caption,
+                "share_to_feed": share_to_feed,
+                "thumb_offset": 1000,
+                "access_token": self.access_token
+            }
+            res = requests.post(init_url, data=init_payload, timeout=30)
+            init_data = res.json()
+            if "id" not in init_data or "uri" not in init_data:
+                raise RuntimeError(f"Failed to initialize resumable container: {init_data}")
+
+            container_id = init_data["id"]
+            upload_uri = init_data["uri"]
+            logger.info(f"Initialized Resumable Reel container: {container_id}")
+
+            # 2. Upload video binary bytes to upload_uri
+            upload_headers = {
+                "Authorization": f"OAuth {self.access_token}",
+                "offset": "0",
+                "file_size": str(file_size),
+                "Content-Type": "application/octet-stream"
+            }
+            with open(p, "rb") as f:
+                up_res = requests.post(upload_uri, headers=upload_headers, data=f, timeout=120)
+
+            if up_res.status_code not in (200, 201):
+                raise RuntimeError(f"Failed to upload binary bytes: {up_res.status_code} - {up_res.text}")
+
+            logger.info(f"Successfully uploaded {file_size} bytes to Meta. Waiting for container to process...")
+
+            # 3. Wait until ready
+            self._wait_until_ready(container_id)
+            logger.info(f"Container {container_id} is ready for publishing.")
+
+            # 4. Publish container
+            media_id = self._publish_container(container_id)
+            logger.info(f"🎉 Successfully published Reel live! Instagram Post ID: {media_id}")
+
+            return {
+                "success": True,
+                "media_id": media_id,
+                "container_id": container_id,
+                "status": "PUBLISHED"
+            }
+        except Exception as e:
+            logger.error(f"Failed to publish local reel via Meta Graph API: {e}")
             return {
                 "success": False,
                 "error": str(e)
