@@ -82,7 +82,7 @@ class ContentHarvester:
             return None
 
         ydl_opts = {
-            "format": "best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
+            "format": "bestvideo+bestaudio/best[ext=mp4]/best",
             "outtmpl": out_template,
             "quiet": True,
             "no_warnings": True,
