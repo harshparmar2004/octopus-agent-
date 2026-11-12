@@ -3,8 +3,8 @@ import uuid
 import logging
 from pathlib import Path
 from typing import Optional, Dict, List, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -863,6 +863,61 @@ def get_anti_shadowban_preview(niche: str = "information", handle: str = "dailyf
         "shield_active": True,
         "total_variants_simulated": len(variations),
         "variations": variations
+    }
+
+
+# ==============================================================================
+# META INSTAGRAM WEBHOOKS (Callback URL & Challenge Handshake)
+# ==============================================================================
+META_WEBHOOK_VERIFY_TOKEN = os.getenv("META_WEBHOOK_VERIFY_TOKEN", "octopus_webhook_secret_2026")
+
+@app.get("/api/webhook/instagram")
+def verify_meta_instagram_webhook(
+    hub_mode: Optional[str] = Query(None, alias="hub.mode"),
+    hub_challenge: Optional[str] = Query(None, alias="hub.challenge"),
+    hub_verify_token: Optional[str] = Query(None, alias="hub.verify_token")
+):
+    """
+    Handles Meta's Hub Challenge verification handshake:
+    Meta sends GET ?hub.mode=subscribe&hub.challenge=...&hub.verify_token=...
+    Must respond with hub.challenge as plain text and HTTP 200.
+    """
+    logger.info(f"Received Meta Webhook verification handshake: mode={hub_mode}, token={hub_verify_token}")
+    if hub_mode == "subscribe" and hub_verify_token == META_WEBHOOK_VERIFY_TOKEN:
+        logger.info(f"Webhook verified successfully! Returning challenge: {hub_challenge}")
+        return PlainTextResponse(content=hub_challenge or "OK", status_code=200)
+    logger.warning(f"Webhook verification failed. Provided: {hub_verify_token!r}, expected: {META_WEBHOOK_VERIFY_TOKEN!r}")
+    raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+@app.post("/api/webhook/instagram")
+async def handle_meta_instagram_webhook(request: Request):
+    """
+    Receives real-time Instagram Webhook event updates:
+    Messages, comments, media container processing status updates.
+    """
+    try:
+        payload = await request.json()
+        logger.info(f"Meta Instagram Webhook event received: {str(payload)[:250]}")
+    except Exception as e:
+        logger.warning(f"Could not parse webhook payload: {e}")
+        payload = {}
+    return {"status": "EVENT_RECEIVED"}
+
+@app.get("/api/webhook/info")
+def get_webhook_info():
+    """
+    Helper endpoint returning the configured Callback URL path and Verify Token.
+    """
+    return {
+        "status": "success",
+        "callback_path": "/api/webhook/instagram",
+        "verify_token": META_WEBHOOK_VERIFY_TOKEN,
+        "instructions": (
+            "1. If testing locally, expose port 8000 using ngrok: 'ngrok http 8000'\n"
+            "2. In Meta App Dashboard, set Callback URL to: 'https://<your-ngrok-domain>/api/webhook/instagram'\n"
+            "3. Set Verify token to: '" + META_WEBHOOK_VERIFY_TOKEN + "'\n"
+            "4. Click 'Verify and save'."
+        )
     }
 
 

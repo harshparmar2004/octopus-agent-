@@ -276,6 +276,8 @@ NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
     # 2. Nightlife / EDM / Parties
     "parties": "nightlife_party",
     "nightlife": "nightlife_party",
+    "girls_party": "nightlife_party",
+    "girls_nightlife": "nightlife_party",
     "edm": "nightlife_party",
     "music": "nightlife_party",
     "festivals": "nightlife_party",
