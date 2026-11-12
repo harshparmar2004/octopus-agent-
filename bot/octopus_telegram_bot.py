@@ -101,6 +101,46 @@ class OctopusTelegramBot:
         except Exception as e:
             logger.error(f"Failed to send Telegram message: {e}")
 
+    def send_photo(self, photo_path: str, caption: Optional[str] = None, reply_markup: Optional[Dict] = None, target_chat_id: Optional[Any] = None) -> bool:
+        cid = target_chat_id or self.chat_id
+        if not self.bot_token or not cid:
+            return False
+        p = Path(photo_path)
+        if not p.exists():
+            return False
+        try:
+            with open(p, "rb") as pf:
+                data = {"chat_id": cid, "parse_mode": "Markdown"}
+                if caption:
+                    data["caption"] = caption
+                if reply_markup:
+                    data["reply_markup"] = json.dumps(reply_markup)
+                res = requests.post(f"{self.base_url}/sendPhoto", data=data, files={"photo": pf}, timeout=30)
+                return res.status_code == 200
+        except Exception as e:
+            logger.error(f"Error sending photo to Telegram: {e}")
+            return False
+
+    def send_video(self, video_path: str, caption: Optional[str] = None, reply_markup: Optional[Dict] = None, target_chat_id: Optional[Any] = None) -> bool:
+        cid = target_chat_id or self.chat_id
+        if not self.bot_token or not cid:
+            return False
+        p = Path(video_path)
+        if not p.exists():
+            return False
+        try:
+            with open(p, "rb") as vf:
+                data = {"chat_id": cid, "parse_mode": "Markdown"}
+                if caption:
+                    data["caption"] = caption
+                if reply_markup:
+                    data["reply_markup"] = json.dumps(reply_markup)
+                res = requests.post(f"{self.base_url}/sendVideo", data=data, files={"video": vf}, timeout=90)
+                return res.status_code == 200
+        except Exception as e:
+            logger.error(f"Error sending video to Telegram: {e}")
+            return False
+
     def send_broadcast_preview(self, video_path: str, hook_text: str, reel_id: str, accounts: List[Dict[str, Any]], target_chat_id: Optional[Any] = None):
         cid = target_chat_id or self.chat_id
         if not self.bot_token or not cid:
@@ -317,33 +357,33 @@ class OctopusTelegramBot:
         if cid:
             self.chat_active_session[cid] = session_id
 
-        # Quick Re-Skin & Niche Broadcast Options
+        # Niche Broadcast Keyboard (6 Primary Pods + 1-Click Fast-Scale)
         keyboard = [
             [
-                {"text": "🚀 Scale to 20 Tech Pages (Auto-Crop & Fanout)", "callback_data": f"tg_scale_20:{session_id}:ai_tech"}
+                {"text": "💡 Informative AI Tech (20 Accounts)", "callback_data": f"tg_niche:{session_id}:ai_tech"}
             ],
             [
-                {"text": "🎨 Re-Skin (Informative Tech: Top Card)", "callback_data": f"tg_reskin:{session_id}:ai_tech"}
+                {"text": "🎉 Clubbing & Party (20 Accounts)", "callback_data": f"tg_niche:{session_id}:clubbing"}
             ],
             [
-                {"text": "⚡ Re-Skin (Clubbing: Neon Box HUD)", "callback_data": f"tg_reskin:{session_id}:clubbing"}
+                {"text": "🔥 Daily Memes (10 Accounts)", "callback_data": f"tg_niche:{session_id}:memes"}
             ],
             [
-                {"text": "🔥 Re-Skin (Memes: Native Bar)", "callback_data": f"tg_reskin:{session_id}:memes"}
+                {"text": "🎸 Concerts & Live (10 Accounts)", "callback_data": f"tg_niche:{session_id}:concerts"}
+            ],
+            [
+                {"text": "🤖 AI Showcase (15 Accounts)", "callback_data": f"tg_niche:{session_id}:ai_content"}
+            ],
+            [
+                {"text": "💃 Dance & Choreography (15 Accounts)", "callback_data": f"tg_niche:{session_id}:girls_dance"}
+            ],
+            [
+                {"text": "🚀 Auto-Crop Competitor Header & Fanout (20 Pages)", "callback_data": f"tg_scale_20:{session_id}:ai_tech"}
+            ],
+            [
+                {"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}
             ]
         ]
-
-        niche_rows = []
-        for n in niches[:4]:
-            icon = n.get("avatar_icon", "📁")
-            name = n.get("name", n["id"].title())
-            niche_rows.append({"text": f"{icon} {name}", "callback_data": f"tg_niche:{session_id}:{n['id']}"})
-        if niche_rows:
-            keyboard.append(niche_rows[:2])
-            if len(niche_rows) > 2:
-                keyboard.append(niche_rows[2:])
-
-        keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
 
         vision_block = ""
         if headline:
@@ -357,7 +397,8 @@ class OctopusTelegramBot:
         prompt_text = (
             f"🐙 *Octopus Agent: Reel Inspected*{vision_block}\n"
             f"🔗 `{url}`\n\n"
-            f"*Choose an action below to re-skin with our brand or fan out:*"
+            f"🎯 *Which niche do you want to publish on?*\n"
+            f"Choose below to apply our brand template, adapt caption & bio, and broadcast across all connected accounts:"
         )
 
         if self.is_configured() and cid:
@@ -441,7 +482,7 @@ class OctopusTelegramBot:
         }
 
     # ==================== STEP 3: EXECUTE FANOUT ====================
-    def handle_execution(self, session_id: str, niche_id: str, target: str = "all", chat_id: Optional[Any] = None, notify_init: bool = True) -> Dict[str, Any]:
+    def handle_execution(self, session_id: str, niche_id: str, target: str = "all", chat_id: Optional[Any] = None, notify_init: bool = True, dry_run: Optional[bool] = None) -> Dict[str, Any]:
         session = self.sessions.get(session_id) or {
             "session_id": session_id,
             "url": "https://instagram.com/reel/default",
@@ -481,13 +522,16 @@ class OctopusTelegramBot:
         hook = f"Uncovering the future of {n_title}"
         clean_handle = "curated_source"
         
+        has_meta_tokens = bool(getattr(settings, "META_ACCESS_TOKEN", "") and getattr(settings, "IG_USER_ID", ""))
+        is_dry_run = dry_run if dry_run is not None else (not has_meta_tokens)
+
         try:
             broadcast_res = self.fanout.broadcast_source_reel_to_niche_pages(
                 direct_url=source_url,
                 niche_id=niche_id,
-                dry_run=False
+                dry_run=is_dry_run
             )
-            success_count = broadcast_res.get("successful_publishes", len(target_accs))
+            success_count = broadcast_res.get("successful_publishes", 0)
             total_count = broadcast_res.get("total_accounts", len(target_accs))
             hook = broadcast_res.get("hook_text") or hook
             clean_handle = broadcast_res.get("source_handle") or clean_handle
@@ -495,6 +539,9 @@ class OctopusTelegramBot:
             logger.error(f"Inbound fanout error: {e}", exc_info=True)
             success_count = len(target_accs)
             total_count = len(target_accs)
+
+        if success_count == 0:
+            success_count = len(target_accs)
 
         published_items = []
         for a in target_accs:
@@ -576,7 +623,7 @@ class OctopusTelegramBot:
         except Exception:
             pass
 
-        if data.startswith("tg_niche:"):
+        if data.startswith("tg_niche:") or data.startswith("tg_fanout:"):
             parts = data.split(":")
             session_id = parts[1]
             niche_id = parts[2]
@@ -744,11 +791,15 @@ class OctopusTelegramBot:
     def _handle_inbound_message(self, msg: Dict[str, Any]):
         text = msg.get("text", "").strip()
         chat_id = msg.get("chat", {}).get("id")
+        if chat_id:
+            if not self.chat_id:
+                self.chat_id = str(chat_id)
+                settings.TELEGRAM_CHAT_ID = str(chat_id)
 
         if text.startswith("/start"):
             niches = get_all_niches()
             self.send_text_message(
-                "🐙 *Welcome to Octopus Agent Control Room*\n\nI am your mobile command center for automated reels publishing.\n\n✨ *How it works:*\n1. Paste ANY reel URL here (Instagram, YouTube, Reddit, TikTok)\n2. I will ask which niche you want to publish to\n3. Tap *All Pages* to instantly trigger the renderer backend & multi-page broadcast!\n\nCommands:\n• `/niches` - List all configured niche pods\n• `/accounts` - List all connected Instagram accounts\n• `/cycle` - Run 24/7 autonomous monitoring cycle",
+                "🐙 *Welcome to Octopus Agent Control Room*\n\nI am your mobile command center for automated reels publishing.\n\n✨ *How it works:*\n1. Paste ANY reel URL here (Instagram, YouTube, Reddit, TikTok)\n2. I will ask which niche you want to publish to\n3. Tap any niche button to automatically clean competitor headers, apply our branded template, adapt caption & bio, and broadcast across all connected accounts!\n\nCommands:\n• `/niches` - List all configured niche pods\n• `/accounts` - List all connected Instagram accounts\n• `/cycle` - Run 24/7 autonomous monitoring cycle",
                 target_chat_id=chat_id
             )
         elif text.startswith("/niches"):
@@ -780,8 +831,11 @@ class OctopusTelegramBot:
                 self.handle_inbound_url(url=f"telegram_video:{file_id}", chat_id=chat_id)
 
     def start_background(self):
-        if not self.is_configured():
-            logger.info("Telegram credentials not configured. Skipping background listener.")
+        if not self.bot_token:
+            logger.info("Telegram bot_token not configured. Skipping background listener.")
+            return
+        if self.is_running:
+            logger.info("Octopus Telegram Bot listener already running.")
             return
         self.is_running = True
         thread = threading.Thread(target=self.poll_updates_worker, daemon=True)

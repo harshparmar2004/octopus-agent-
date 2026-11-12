@@ -58,8 +58,7 @@ class TestTelegramCompletionNotificationSuite:
         run = create_slot_run("information", "18:00", now.date().isoformat(), now, dry_run=True)
         
         # Attach dummy payload
-        import json
-        from storage.scheduler_db import update_slot_run
+        from storage.scheduler_db import update_slot_run, to_iso
         payload = {
             "tasks": [
                 {"account": {"id": "acc_1", "handle": "@info.one"}, "log_id": 1, "filename": "v1.mp4", "caption": "c1"},
@@ -70,7 +69,8 @@ class TestTelegramCompletionNotificationSuite:
             "status": "APPROVED",
             "reel_id": "test_reel_123",
             "prepared_payload": payload,
-            "accounts_total": 2
+            "accounts_total": 2,
+            "scheduled_for": to_iso(now)
         })
         
         with patch.object(sched.fanout, "execute_broadcast", return_value={"successful_posts_count": 2, "skipped_accounts": []}):

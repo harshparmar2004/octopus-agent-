@@ -62,6 +62,7 @@ class Settings:
     META_GRAPH_VERSION = os.getenv("META_GRAPH_API_VERSION", "v21.0")
     INSTAGRAM_USER_ID = IG_USER_ID
     META_GRAPH_ACCESS_TOKEN = META_ACCESS_TOKEN
+    META_INSTAGRAM_ACCOUNT_ID = IG_USER_ID
     
     # LLM Settings (Groq, Ollama, Gemini, OpenAI, Claude, Grok)
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

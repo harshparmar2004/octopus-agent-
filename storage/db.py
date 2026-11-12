@@ -301,6 +301,32 @@ def init_octopus_db():
     from storage.network_db import init_network_tables
     init_network_tables()
 
+    # Seed 6 Core Network Niches' Accounts if missing or below target count
+    conn = get_connection()
+    c = conn.cursor()
+    core_niche_seeds = [
+        ("ai_tech", "ai_tech", "@aitech.daily", "AI Tech Daily", "Informative AI & Tech", "AT", "#DDF51A", 20),
+        ("clubbing", "clubbing", "@clubbing.pulse", "Clubbing Nights", "Clubbing Parties", "CP", "#FF007F", 20),
+        ("memes", "memes", "@daily.memes", "Daily Memes", "Memes", "DM", "#111111", 10),
+        ("concerts", "concerts", "@concert.live", "Concert Moments", "Concerts & Live Music", "CL", "#FFD23F", 10),
+        ("ai_content", "ai_content", "@ai.showcase", "AI Showcase", "AI Content & Showcase", "AS", "#7C5CFF", 15),
+        ("girls_dance", "girls_dance", "@dance.vibes", "Dance Vibes", "Girls' Dance & Parties", "DV", "#FF4FA3", 15),
+    ]
+    for nid, prefix, h_prefix, d_prefix, n_name, initials, color, target_count in core_niche_seeds:
+        c.execute("SELECT COUNT(*) FROM accounts WHERE niche_id = ?", (nid,))
+        curr = c.fetchone()[0]
+        if curr < target_count:
+            for i in range(curr + 1, target_count + 1):
+                acc_id = f"{prefix}_{i:02d}"
+                handle = f"{h_prefix}{i:02d}"
+                disp_name = f"{d_prefix} {i:02d}"
+                c.execute("""
+                    INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
+                    VALUES (?, ?, ?, ?, ?, '', '', ?, ?, 1)
+                """, (acc_id, handle, disp_name, n_name, nid, initials, color))
+    conn.commit()
+    conn.close()
+
 # Accounts operations
 def get_all_accounts(active_only: bool = True) -> List[Dict]:
     conn = get_connection()
@@ -657,33 +683,54 @@ def get_niche_cluster(niche_id: str) -> Dict[str, Any]:
     
     conn = get_connection()
     cursor = conn.cursor()
+
+    NICHE_ALIASES = {
+        "ai_tech": ["ai_tech", "information", "ai", "tech"],
+        "information": ["information", "ai_tech", "ai", "tech"],
+        "clubbing": ["clubbing", "parties", "party"],
+        "parties": ["parties", "clubbing", "party"],
+        "girls_dance": ["girls_dance", "girls_party", "girls", "dance"],
+        "girls_party": ["girls_party", "girls_dance", "girls", "dance"],
+        "ai_content": ["ai_content", "ai"],
+        "memes": ["memes", "meme"],
+        "concerts": ["concerts", "concert"],
+    }
+    aliases = NICHE_ALIASES.get(niche_id, [niche_id])
+    placeholders = ",".join(["?"] * len(aliases))
     
     # 1. Connected destination accounts for this niche
     cursor.execute("""
         SELECT * FROM accounts 
-        WHERE niche_id = ? OR niche LIKE ?
+        WHERE niche_id = ? AND is_active = 1
         ORDER BY id
-    """, (niche_id, f"%{niche_id}%"))
+    """, (niche_id,))
     accounts = [dict(r) for r in cursor.fetchall()]
+    if not accounts:
+        cursor.execute(f"""
+            SELECT * FROM accounts 
+            WHERE (niche_id IN ({placeholders}) OR niche LIKE ?) AND is_active = 1
+            ORDER BY id
+        """, (*aliases, f"%{niche_id}%"))
+        accounts = [dict(r) for r in cursor.fetchall()]
     
     # 2. Bound competitor source handles for this niche
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT * FROM monitored_sources 
-        WHERE niche_id = ? OR category = ?
+        WHERE (niche_id IN ({placeholders}) OR category IN ({placeholders})) AND is_active = 1
         ORDER BY id
-    """, (niche_id, niche_id))
+    """, (*aliases, *aliases))
     sources = [dict(r) for r in cursor.fetchall()]
     
     # 3. Recent broadcasts for this niche
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT b.*, a.handle, a.display_name, a.avatar_initials, a.brand_color, a.profile_pic_url, a.niche, r.hook_text, r.original_title, r.source_url
         FROM broadcast_logs b
         JOIN accounts a ON b.account_id = a.id
         JOIN reels_tracker r ON b.reel_id = r.id
-        WHERE a.niche_id = ? OR a.niche LIKE ?
+        WHERE a.niche_id IN ({placeholders}) OR a.niche LIKE ?
         ORDER BY b.created_at DESC
         LIMIT 15
-    """, (niche_id, f"%{niche_id}%"))
+    """, (*aliases, f"%{niche_id}%"))
     recent_broadcasts = [dict(r) for r in cursor.fetchall()]
     
     conn.close()
