@@ -656,21 +656,7 @@ class CardRenderer:
         fg_draw.text((canvas_w // 2 - 85, footer_y), "CUTE GIRLS PARTY VIBES", font=font_sub, fill="#F0D5E8", anchor="lm")
         _draw_heart(fg_draw, (canvas_w // 2 + 165, footer_y), 9, (255, 40, 130, 255))
 
-        # Smart Hook Text: NO BOX! Positioned in elevated lower-third with pink highlight
-        if hook_text and hook_placement != "none":
-            wrapped = textwrap.wrap(hook_text, width=28)[:2]
-            # Sweet spot: 74% down the box (~250px breathing room from bottom)
-            hook_center_y = box_y + int(box_h * 0.74)
-            if len(wrapped) == 1:
-                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y), wrapped[0], font_hook, (255, 255, 255, 255), glow_rgba, radius=4)
-                _draw_sparkle(fg_draw, (canvas_w // 2 + 250, hook_center_y), 12, (255, 255, 255, 255))
-                _draw_sparkle(fg_draw, (canvas_w // 2 - 250, hook_center_y), 12, (255, 140, 210, 240))
-            else:
-                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y - 28), wrapped[0], font_hook, (255, 255, 255, 255), glow_rgba, radius=4)
-                self._draw_glow_text(fg_draw, (canvas_w // 2, hook_center_y + 32), wrapped[1], font_hook, (255, 45, 141, 255), (255, 255, 255, 220), radius=3)
-                _draw_sparkle(fg_draw, (canvas_w // 2 + 250, hook_center_y + 32), 12, (255, 255, 255, 255))
-                _draw_sparkle(fg_draw, (canvas_w // 2 - 250, hook_center_y + 32), 12, (255, 140, 210, 240))
-
+        # Video interior is kept 100% clean and raw (no text written over the footage)
         if fg_output_path:
             fg.save(fg_output_path, "PNG")
 
