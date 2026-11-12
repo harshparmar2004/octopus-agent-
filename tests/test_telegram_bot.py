@@ -29,11 +29,29 @@ def test_telegram_conversational_workflow():
     print("[PASS] Step 2 (Niche -> Prompt Pages) verified: 10 Connected Pages")
 
     # 4. Step 3: Execute Fan-out
-    step3 = bot.handle_execution(session_id, "information", target="all")
+    step3 = bot.handle_execution(session_id, "information", target="all", dry_run=True)
     assert step3["step"] == "completed"
     assert step3["published_count"] >= 10
     print(f"[PASS] Step 3 (Execute -> Fan-Out) verified: {step3['published_count']}/{step3['total_count']} published")
 
+def test_girls_dance_single_account_pipeline():
+    bot = OctopusTelegramBot()
+    step1 = bot.handle_inbound_url("https://www.instagram.com/reel/C8yDanceTest")
+    session_id = step1["session_id"]
+    
+    # Execute for girls_dance
+    result = bot.handle_execution(session_id, "girls_dance", target="all", dry_run=True)
+    assert result["step"] == "completed"
+    # Must target ONLY 1 account (@cute.aarohi.007)
+    assert result["total_count"] == 1
+    assert result["published_count"] == 1
+    item = result["published_items"][0]
+    assert item["handle"] == "@cute.aarohi.007"
+    assert item["status"] == "PUBLISHED"
+    assert "instagram.com" in item["url"]
+    print("[PASS] Girls Dance single authenticated account (@cute.aarohi.007) verified with link:", item["url"])
+
 if __name__ == "__main__":
     test_telegram_conversational_workflow()
+    test_girls_dance_single_account_pipeline()
     print("\nAll Octopus Telegram tests passed successfully!")

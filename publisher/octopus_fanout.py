@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from config import settings, ChannelProfile
 from renderers.card_renderer import CardRenderer
 from renderers.video_compositor import VideoCompositor
+from renderers.niche_templates import get_template_for_niche
 from publisher.meta_graph_api import MetaReelsPublisher
 import uuid
 from scrapers.instagram_harvester import InstagramHarvester
@@ -48,6 +49,24 @@ class OctopusFanoutEngine:
         - Applies perceptual video & audio mutation (color EQ, noise dithering, metadata stripping, device spoofing)
         - Guarantees unique file hash (SHA256) and distinct perceptual fingerprint per account
         """
+        niche_key = account.get("niche_id") or account.get("niche", "")
+        template = get_template_for_niche(niche_key)
+        output_filename = f"{task_id}_{account['id']}.mp4"
+
+        # Raw video niches (girls_dance, raw_full_bleed): bypass overlays, keep 100% original video & audio
+        if (
+            getattr(template, "id", "") == "girls_raw"
+            or getattr(template, "render_profile", "") == "raw_full_bleed"
+            or niche_key in ("girls_dance", "girls", "girls_party")
+        ):
+            output_path = self.compositor.output_dir / output_filename
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            if Path(raw_video_path).resolve() != output_path.resolve():
+                import shutil
+                shutil.copy2(raw_video_path, output_path)
+            logger.info(f"Preserved clean raw video for {account.get('handle')} ({output_filename}) with 100% audio intact.")
+            return str(output_path)
+
         channel_profile = ChannelProfile(
             handle=account["handle"],
             display_name=account["display_name"],
@@ -58,7 +77,6 @@ class OctopusFanoutEngine:
             cta_link="bit.ly/free-ai-newsletter"
         )
         
-        output_filename = f"{task_id}_{account['id']}.mp4"
         rendered_path = self.compositor.build_reel(
             raw_video_path=raw_video_path,
             hook_text=hook_text,
@@ -115,18 +133,35 @@ class OctopusFanoutEngine:
         extra_telemetry: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Publishes one anti-shadowbanned reel variation to one specific Instagram account with staggered scheduling."""
-        public_url = f"{settings.PUBLIC_BASE_URL}/output/{rendered_filename}"
-        
+        local_candidates = [
+            settings.OUTPUT_DIR / rendered_filename,
+            Path(rendered_filename),
+            settings.STORAGE_DIR / "temp" / rendered_filename,
+            settings.OUTPUT_DIR / Path(rendered_filename).name,
+        ]
+        local_file = next((p for p in local_candidates if p.exists() and p.is_file()), None)
+
         publisher = MetaReelsPublisher(
             ig_user_id=account.get("ig_user_id"),
             access_token=account.get("access_token")
         )
-        
-        result = publisher.publish_reel(
-            video_public_url=public_url,
-            caption=caption,
-            dry_run=dry_run
-        )
+
+        # When local video file is present, binary stream directly to Meta Resumable Upload API
+        # This completely avoids Meta Error 2207076 (unreachable localhost/127.0.0.1 public URLs)
+        if local_file and (not dry_run or "localhost" in settings.PUBLIC_BASE_URL):
+            logger.info(f"Publishing via Meta Resumable Upload for {account.get('handle')}: {local_file.name}")
+            result = publisher.publish_local_reel(
+                local_video_path=str(local_file),
+                caption=caption,
+                dry_run=dry_run
+            )
+        else:
+            public_url = f"{settings.PUBLIC_BASE_URL}/output/{rendered_filename}"
+            result = publisher.publish_reel(
+                video_public_url=public_url,
+                caption=caption,
+                dry_run=dry_run
+            )
         
         extra = extra_telemetry or {}
         if result.get("success"):

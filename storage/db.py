@@ -201,6 +201,7 @@ def init_octopus_db():
     cursor.execute("UPDATE accounts SET niche_id = 'space' WHERE id = 'space' OR niche LIKE '%space%'")
     cursor.execute("UPDATE accounts SET niche_id = 'biotech' WHERE id = 'biotech' OR niche LIKE '%biotech%'")
     cursor.execute("UPDATE accounts SET niche_id = 'information' WHERE id LIKE 'info_%'")
+    cursor.execute("UPDATE accounts SET niche_id = 'girls_dance', niche = 'Girls'' Dance & Parties' WHERE id = 'cute_aarohi_007' OR handle LIKE '%cute.aarohi%'")
 
     # Seed extended niches (Parties, Organizing, Fashion) with their templates
     extended_niches = [
@@ -699,19 +700,19 @@ def get_niche_cluster(niche_id: str) -> Dict[str, Any]:
     placeholders = ",".join(["?"] * len(aliases))
     
     # 1. Connected destination accounts for this niche
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT * FROM accounts 
-        WHERE niche_id = ? AND is_active = 1
+        WHERE (niche_id IN ({placeholders}) OR niche LIKE ?) AND is_active = 1
         ORDER BY id
-    """, (niche_id,))
-    accounts = [dict(r) for r in cursor.fetchall()]
-    if not accounts:
-        cursor.execute(f"""
-            SELECT * FROM accounts 
-            WHERE (niche_id IN ({placeholders}) OR niche LIKE ?) AND is_active = 1
-            ORDER BY id
-        """, (*aliases, f"%{niche_id}%"))
-        accounts = [dict(r) for r in cursor.fetchall()]
+    """, (*aliases, f"%{niche_id}%"))
+    all_accounts = [dict(r) for r in cursor.fetchall()]
+
+    # If any accounts have real Meta Graph credentials, prioritize ONLY those authenticated accounts
+    auth_accounts = [
+        acc for acc in all_accounts
+        if acc.get("access_token") and len(str(acc["access_token"]).strip()) > 20 and acc.get("ig_user_id") and len(str(acc["ig_user_id"]).strip()) > 0
+    ]
+    accounts = auth_accounts if auth_accounts else all_accounts
     
     # 2. Bound competitor source handles for this niche
     cursor.execute(f"""
