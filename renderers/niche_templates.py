@@ -248,9 +248,38 @@ TEMPLATE_PSYCHOLOGY = NicheTemplate(
     speed_factor=1.0
 )
 
+# 9. Girls Party & VIP Nightlife (Full-Screen Cyber Neon HUD)
+TEMPLATE_GIRLS_PARTY = NicheTemplate(
+    id="girls_party_neon",
+    name="Full-Screen Cyber Neon HUD (Girls Party & Nightlife)",
+    category="girls_party",
+    overlay_layout="full_screen_neon_hud",
+    primary_color="#FFFFFF",
+    highlight_color="#FF007F",        # Vibrant Neon Hot Pink
+    card_background="rgba(20, 5, 25, 0.75)",
+    font_family="punchy_kinetic",
+    badge_icon="🪩",
+    hook_formula="fomo_hype",
+    caption_format="hype_punchline",
+    persona_system_instruction=(
+        "You are the social media director and nightlife party curator for {channel_handle} specializing in girls night out, clubbing vibes, festival aesthetics, and VIP parties. "
+        "Objective: craft an electrifying, ultra-viral 9:16 vertical reel package from source video metadata: "
+        "1. 'hook_text': 8 to 14 words ultra-punchy party hook, girl gang vibes, or nightlife energy. No boring text, high energy. "
+        "2. 'caption_paragraphs': Exactly 2 short punchy blocks. Block 1: The sheer party vibe, venue mood, and pure unhinged fun. Block 2: Track/DJ vibe + tag your besties/girls squad CTA. "
+        "3. 'credit': Original creator or venue credit. "
+        "4. 'hashtags': 8 to 12 targeted viral girls party and nightlife hashtags (e.g. #girlsparty #girlsnightout #partyvibes #clubbing #nightlife #vip #reelsvideo)."
+    ),
+    default_hashtags=["#girlsparty", "#girlsnightout", "#partyvibes", "#clubbing", "#nightlife", "#reelsvideo", "#weekendmood", "#partynight", "#baddie", "#viralreels"],
+    sample_headline="When the girls squad finally reunites for the ultimate weekend takeover",
+    sample_highlight="ultimate weekend",
+    audio_ducking=False,
+    speed_factor=1.0
+)
+
 # Master Registry of All Templates
 DEFAULT_TEMPLATES: Dict[str, NicheTemplate] = {
     "informative_cult": TEMPLATE_INFORMATIVE,
+    "girls_party_neon": TEMPLATE_GIRLS_PARTY,
     "nightlife_party": TEMPLATE_NIGHTLIFE,
     "organizing_home": TEMPLATE_ORGANIZING,
     "fashion_editorial": TEMPLATE_FASHION,
@@ -276,8 +305,9 @@ NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
     # 2. Nightlife / EDM / Parties
     "parties": "nightlife_party",
     "nightlife": "nightlife_party",
-    "girls_party": "nightlife_party",
-    "girls_nightlife": "nightlife_party",
+    "girls_party": "girls_party_neon",
+    "girls_nightlife": "girls_party_neon",
+    "girls_pages": "girls_party_neon",
     "edm": "nightlife_party",
     "music": "nightlife_party",
     "festivals": "nightlife_party",

@@ -55,6 +55,11 @@ NICHE_HASHTAG_TAXONOMY: Dict[str, Dict[str, List[str]]] = {
         "tier2_mid": ["#miaminightlife", "#electronicmusic", "#housemusic", "#bottleservice", "#djset", "#afterhours"],
         "tier3_micro": ["#miamiclubs", "#technovibes", "#livmiami", "#e11evenmiami", "#clubspace", "#nightlifeculture"]
     },
+    "girls_party": {
+        "tier1_high": ["#girlsparty", "#girlsnightout", "#partyvibes", "#clubbing", "#nightlife", "#reelsvideo", "#weekendmood"],
+        "tier2_mid": ["#partynight", "#baddie", "#girlgang", "#bottleservice", "#vipnightlife", "#viralreels", "#outfitgoals"],
+        "tier3_micro": ["#partyaesthetic", "#bestievibes", "#clubbingoutfit", "#weekendtakeover", "#afterhoursvibes", "#girlshavingfun"]
+    },
     "organizing": {
         "tier1_high": ["#organization", "#homeorganization", "#declutter", "#minimalism", "#aesthetic", "#lifestyle"],
         "tier2_mid": ["#pantryorganization", "#restock", "#satisfyingvideos", "#homehacks", "#cleanhome", "#closetgoals"],
@@ -194,8 +199,16 @@ class AntiShadowbanEngine:
         Dynamically selects and shuffles hashtags from 3 volume tiers.
         Ensures NO TWO ACCOUNTS receive the identical hashtag set or order.
         """
-        clean_niche = niche.lower().strip()
-        tax = NICHE_HASHTAG_TAXONOMY.get(clean_niche, NICHE_HASHTAG_TAXONOMY["information"])
+        clean_niche = niche.lower().strip().replace(" ", "_")
+        tax = NICHE_HASHTAG_TAXONOMY.get(clean_niche)
+        if not tax:
+            # Fallback checks
+            for k in NICHE_HASHTAG_TAXONOMY:
+                if k in clean_niche or clean_niche in k:
+                    tax = NICHE_HASHTAG_TAXONOMY[k]
+                    break
+        if not tax:
+            tax = NICHE_HASHTAG_TAXONOMY["information"]
 
         t1 = list(tax["tier1_high"])
         t2 = list(tax["tier2_mid"])

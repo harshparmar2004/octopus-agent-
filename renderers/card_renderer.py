@@ -68,7 +68,9 @@ class CardRenderer:
 
         layout = getattr(template, "overlay_layout", "top_card_cult")
         
-        if layout == "center_kinetic":
+        if layout == "full_screen_neon_hud":
+            return self._render_full_screen_neon_hud(hook_text, channel, output_path, credit_handle, highlight_word, template)
+        elif layout == "center_kinetic":
             return self._render_center_kinetic(hook_text, channel, output_path, credit_handle, highlight_word, template)
         elif layout == "minimal_step_bar":
             return self._render_minimal_step_bar(hook_text, channel, output_path, credit_handle, highlight_word, template)
@@ -333,3 +335,160 @@ class CardRenderer:
 
         canvas.save(output_path, "PNG")
         return output_path
+
+    def _hex_to_rgb(self, hex_str: str):
+        hex_clean = hex_str.lstrip("#")
+        if len(hex_clean) == 6:
+            return tuple(int(hex_clean[i:i+2], 16) for i in (0, 2, 4))
+        return (255, 0, 127)
+
+    def _draw_glow_text(self, draw, pos, text, font, fill_core, glow_color, radius=3, anchor="mm"):
+        gx, gy = pos
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if dx != 0 or dy != 0:
+                    draw.text((gx + dx, gy + dy), text, font=font, fill=glow_color, anchor=anchor)
+        draw.text(pos, text, font=font, fill=fill_core, anchor=anchor)
+
+    # 5. FULL-SCREEN CYBER NEON HUD (Girls Party, VIP Nightlife & EDM)
+    def _render_full_screen_neon_hud(self, hook_text, channel, output_path, credit_handle, highlight_word, template):
+        canvas = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(canvas)
+
+        width, height = 1080, 1920
+
+        # Check for pre-built custom template PNG (e.g. designed with nano banana / Photoshop)
+        custom_candidates = [
+            self.assets_dir / f"overlay_{channel.handle.lstrip('@').replace('.', '_')}.png",
+            self.assets_dir / f"overlay_{channel.handle.lstrip('@')}.png",
+            self.assets_dir / "girls_party_overlay.png",
+            self.assets_dir / "templates" / "girls_party_neon.png"
+        ]
+        for cand in custom_candidates:
+            if cand.exists():
+                try:
+                    custom_img = Image.open(cand).convert("RGBA")
+                    if custom_img.size != (width, height):
+                        custom_img = custom_img.resize((width, height), Image.Resampling.LANCZOS)
+                    canvas.paste(custom_img, (0, 0), custom_img)
+                    canvas.save(output_path, "PNG")
+                    return output_path
+                except Exception as e:
+                    pass
+
+        margin_x = 45
+        margin_top = 80
+        margin_bot = 1830
+
+        glow_hex = getattr(template, "highlight_color", "#FF007F") or "#FF007F"
+        glow_rgb = self._hex_to_rgb(glow_hex)
+        glow_rgba = glow_rgb + (220,)
+        neon_core = (255, 255, 255, 255)
+
+        # 1. Outer chamfered cyber frame
+        notch = 40
+        frame_pts = [
+            (margin_x + notch, margin_top),
+            (width - margin_x - notch, margin_top),
+            (width - margin_x, margin_top + notch),
+            (width - margin_x, margin_bot - notch),
+            (width - margin_x - notch, margin_bot),
+            (margin_x + notch, margin_bot),
+            (margin_x, margin_bot - notch),
+            (margin_x, margin_top + notch),
+            (margin_x + notch, margin_top)
+        ]
+        draw.line(frame_pts, fill=glow_rgba, width=3)
+
+        # 2. Corner heavy bracket accents
+        bracket_len = 60
+        # TL
+        draw.line([(margin_x - 12, margin_top - 12 + bracket_len), (margin_x - 12, margin_top - 12), (margin_x - 12 + bracket_len, margin_top - 12)], fill=glow_rgba, width=6)
+        # TR
+        draw.line([(width - margin_x + 12 - bracket_len, margin_top - 12), (width - margin_x + 12, margin_top - 12), (width - margin_x + 12, margin_top - 12 + bracket_len)], fill=glow_rgba, width=6)
+        # BL
+        draw.line([(margin_x - 12, margin_bot + 12 - bracket_len), (margin_x - 12, margin_bot + 12), (margin_x - 12 + bracket_len, margin_bot + 12)], fill=glow_rgba, width=6)
+        # BR
+        draw.line([(width - margin_x + 12 - bracket_len, margin_bot + 12), (width - margin_x + 12, margin_bot + 12), (width - margin_x + 12, margin_bot + 12 - bracket_len)], fill=glow_rgba, width=6)
+
+        # Fonts
+        try:
+            font_badge = ImageFont.truetype(self.font_bold_path, 32)
+            font_sub = ImageFont.truetype(self.font_regular_path, 20)
+            font_handle = ImageFont.truetype(self.font_bold_path, 26)
+            font_hook = ImageFont.truetype(self.font_bold_path, 36)
+        except Exception:
+            font_badge = font_sub = font_handle = font_hook = ImageFont.load_default()
+
+        # 3. Top Glowing Branded Pill: [ C U T E   A A R O H I ]
+        raw_name = (channel.display_name or "OCTOPUS").strip()
+        spaced_words = [" ".join(list(w.upper())) for w in raw_name.split()]
+        badge_text = "   ".join(spaced_words)
+
+        tb = draw.textbbox((0, 0), badge_text, font=font_badge)
+        text_w = tb[2] - tb[0]
+        pill_w = max(580, text_w + 100)
+        pill_h = 76
+        pill_x1 = (width - pill_w) // 2
+        pill_y1 = 110
+        pill_x2 = pill_x1 + pill_w
+        pill_y2 = pill_y1 + pill_h
+
+        b_notch = 16
+        badge_pts = [
+            (pill_x1 + b_notch, pill_y1),
+            (pill_x2 - b_notch, pill_y1),
+            (pill_x2, pill_y1 + b_notch),
+            (pill_x2, pill_y2 - b_notch),
+            (pill_x2 - b_notch, pill_y2),
+            (pill_x1 + b_notch, pill_y2),
+            (pill_x1, pill_y2 - b_notch),
+            (pill_x1, pill_y1 + b_notch),
+            (pill_x1 + b_notch, pill_y1)
+        ]
+        draw.polygon(badge_pts, fill=(18, 5, 24, 215), outline=glow_rgba, width=3)
+        # Inner accent lines
+        draw.line([(pill_x1 + 10 + b_notch, pill_y1 + 8), (pill_x2 - 10 - b_notch, pill_y1 + 8)], fill=glow_rgba, width=1)
+        draw.line([(pill_x1 + 10 + b_notch, pill_y2 - 8), (pill_x2 - 10 - b_notch, pill_y2 - 8)], fill=glow_rgba, width=1)
+
+        # Horizontal connector antenna lines with terminal microdots
+        mid_y = pill_y1 + pill_h // 2
+        draw.line([(55, mid_y), (pill_x1 - 15, mid_y)], fill=glow_rgba, width=2)
+        draw.ellipse([(pill_x1 - 22, mid_y - 4), (pill_x1 - 14, mid_y + 4)], fill=glow_rgba)
+        draw.line([(pill_x2 + 15, mid_y), (width - 55, mid_y)], fill=glow_rgba, width=2)
+        draw.ellipse([(pill_x2 + 14, mid_y - 4), (pill_x2 + 22, mid_y + 4)], fill=glow_rgba)
+
+        # Center Name in Badge
+        self._draw_glow_text(draw, (width // 2, mid_y), badge_text, font_badge, neon_core, glow_rgba, radius=4)
+
+        # 4. Optional Hook Text Banner (below pill, y ~ 220)
+        if hook_text and len(hook_text.strip()) > 0:
+            clean_hook = hook_text.strip()
+            # If hook is short, draw a glowing floating subtitle
+            wrapped_lines = textwrap.wrap(clean_hook, width=34)[:2]
+            start_y = pill_y2 + 25
+            for idx, line in enumerate(wrapped_lines):
+                self._draw_glow_text(draw, (width // 2, start_y + (idx * 46)), line, font_hook, neon_core, glow_rgba, radius=2)
+
+        # 5. Bottom Sleek Footer: ● LIVE      @HANDLE      GIRLS PARTY
+        bot_y = 1800
+        draw.line([(80, bot_y - 40), (width - 80, bot_y - 40)], fill=glow_rgba, width=1)
+        draw.rectangle([(width // 2 - 6, bot_y - 40 - 6), (width // 2 + 6, bot_y - 40 + 6)], fill=glow_rgba)
+
+        # Red/Pink LIVE dot and text
+        draw.ellipse([(110, bot_y - 8), (126, bot_y + 8)], fill=(255, 0, 80, 255))
+        self._draw_glow_text(draw, (170, bot_y), "LIVE", font_sub, neon_core, glow_rgba, radius=2)
+
+        # Central Handle
+        h_text = channel.handle.upper()
+        if not h_text.startswith("@"):
+            h_text = f"@{h_text}"
+        self._draw_glow_text(draw, (width // 2, bot_y), h_text, font_handle, neon_core, glow_rgba, radius=3)
+
+        # Right Niche Tag
+        niche_label = "GIRLS PARTY"
+        self._draw_glow_text(draw, (width - 170, bot_y), niche_label, font_sub, neon_core, glow_rgba, radius=2)
+
+        canvas.save(output_path, "PNG")
+        return output_path
+

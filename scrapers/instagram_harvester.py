@@ -312,13 +312,19 @@ class InstagramHarvester:
             if default_cookie.exists():
                 cookies_file = str(default_cookie)
 
+        def _duration_filter(info_dict, *, incomplete):
+            dur = info_dict.get("duration")
+            if dur is not None and dur > 120:
+                return "Video is too long (> 120s)"
+            return None
+
         ydl_opts = {
-            "format": "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            "format": "best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
             "outtmpl": out_template,
             "quiet": True,
             "no_warnings": True,
             "merge_output_format": "mp4",
-            "match_filter": yt_dlp.utils.match_filter_func("duration <= 120"),
+            "match_filter": _duration_filter,
             "socket_timeout": 20,
             "http_headers": {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",

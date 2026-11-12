@@ -6,6 +6,7 @@ from typing import Optional
 
 from config import settings, ChannelProfile
 from renderers.card_renderer import CardRenderer
+from renderers.niche_templates import NicheTemplate, get_template_for_niche, get_template_by_id
 from processors.anti_shadowban import AntiShadowbanEngine
 
 logger = logging.getLogger("Compositor")
@@ -25,14 +26,15 @@ class VideoCompositor:
         credit_handle: Optional[str] = None,
         highlight_word: Optional[str] = None,
         account_index: int = 0,
-        apply_anti_shadowban: bool = True
+        apply_anti_shadowban: bool = True,
+        template: Optional[NicheTemplate] = None,
+        template_id: Optional[str] = None
     ) -> Optional[str]:
         """
         Takes a raw video and composits it into a 9:16 Instagram Reel with:
-        1. Pure black 1080x1920 background
-        2. Uncover-style header card + hook headline + template logo
-        3. Centered source video in lower portion
-        4. Anti-shadowban perceptual mutation (color EQ, noise dithering, metadata stripping & device spoofing)
+        1. Full-screen 9:16 (for cyber neon HUD / nightlife) OR black letterboxed top-card (for informative)
+        2. Aesthetic branded header / cyber HUD overlay
+        3. Anti-shadowban perceptual mutation (color EQ, noise dithering, metadata stripping & device spoofing)
         """
         input_path = Path(raw_video_path)
         if not input_path.exists():
@@ -43,13 +45,24 @@ class VideoCompositor:
         overlay_png = self.output_dir / f"temp_overlay_{input_path.stem}_{account_index}.png"
 
         try:
-            # 1. Render the header, template logo & hook overlay PNG
+            # 0. Resolve Niche Template
+            if template is None:
+                if template_id:
+                    template = get_template_by_id(template_id)
+                if template is None:
+                    niche_val = getattr(channel, "niche", "information") or "information"
+                    template = get_template_for_niche(niche_val)
+
+            layout = getattr(template, "overlay_layout", "top_card_cult")
+
+            # 1. Render the header / HUD overlay PNG
             self.card_renderer.render_header_overlay(
                 hook_text=hook_text,
                 channel=channel,
                 output_path=overlay_png,
                 credit_handle=credit_handle,
-                highlight_word=highlight_word
+                highlight_word=highlight_word,
+                template=template
             )
 
             # 2. Run FFmpeg composition with anti-shadowban filters
@@ -61,25 +74,44 @@ class VideoCompositor:
             else:
                 vcodec_args = ["-c:v", "libx264", "-preset", "fast", "-crf", "22"]
 
-            if apply_anti_shadowban:
-                mut_params = AntiShadowbanEngine.get_video_mutation_params(account_index)
-                v_eq_filter = mut_params["video_filters"]
-                metadata_args = mut_params["metadata_args"]
-                filter_complex = (
-                    f"[0:v]{v_eq_filter},"
-                    f"scale=1080:1180:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2[scaled];"
-                    f"color=c=black:s=1080x1920[bg];"
-                    f"[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
-                    f"[with_vid][1:v]overlay=0:0:shortest=1[outv]"
-                )
+            if layout == "full_screen_neon_hud":
+                # 100% Full-Screen Video (cropped/scaled to 1080x1920 fill, preserving entire subject)
+                if apply_anti_shadowban:
+                    mut_params = AntiShadowbanEngine.get_video_mutation_params(account_index)
+                    v_eq_filter = mut_params["video_filters"]
+                    metadata_args = mut_params["metadata_args"]
+                    filter_complex = (
+                        f"[0:v]{v_eq_filter},"
+                        f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[vid];"
+                        f"[vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
+                else:
+                    metadata_args = []
+                    filter_complex = (
+                        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[vid];"
+                        "[vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
             else:
-                metadata_args = []
-                filter_complex = (
-                    "[0:v]scale=1080:1180:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2[scaled];"
-                    "color=c=black:s=1080x1920[bg];"
-                    "[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
-                    "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
-                )
+                # Classic Informative top card layout
+                if apply_anti_shadowban:
+                    mut_params = AntiShadowbanEngine.get_video_mutation_params(account_index)
+                    v_eq_filter = mut_params["video_filters"]
+                    metadata_args = mut_params["metadata_args"]
+                    filter_complex = (
+                        f"[0:v]{v_eq_filter},"
+                        f"scale=1080:1180:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2[scaled];"
+                        f"color=c=black:s=1080x1920[bg];"
+                        f"[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
+                        f"[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
+                else:
+                    metadata_args = []
+                    filter_complex = (
+                        "[0:v]scale=1080:1180:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2[scaled];"
+                        "color=c=black:s=1080x1920[bg];"
+                        "[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
+                        "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
 
             cmd = [
                 "ffmpeg", "-y",

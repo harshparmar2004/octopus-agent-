@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 import json
 import logging
@@ -65,23 +65,30 @@ class ContentHarvester:
             logger.error(f"Error fetching r/{subreddit}: {e}")
             return []
 
-    def download_video(self, source_url: str, custom_id: Optional[str] = None) -> Optional[Dict]:
+    def download_video(self, source_url: str, custom_id: Optional[str] = None, **kwargs) -> Optional[Dict]:
         """
-        Downloads the best MP4 video under 60 seconds from any URL using yt-dlp.
+        Downloads the best MP4 video under 120 seconds from any URL using yt-dlp.
         Returns metadata including local file path.
         """
+        cid = custom_id or kwargs.get("task_id")
         out_template = str(self.download_dir / f"%(id)s_raw.%(ext)s")
-        if custom_id:
-            out_template = str(self.download_dir / f"{custom_id}_raw.%(ext)s")
+        if cid:
+            out_template = str(self.download_dir / f"{cid}_raw.%(ext)s")
+
+        def _duration_filter(info_dict, *, incomplete):
+            dur = info_dict.get("duration")
+            if dur is not None and dur > 120:
+                return "Video is too long (> 120s)"
+            return None
 
         ydl_opts = {
-            "format": "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            "format": "best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
             "outtmpl": out_template,
             "quiet": True,
             "no_warnings": True,
             "merge_output_format": "mp4",
-            # Ensure duration is max 90 seconds
-            "match_filter": yt_dlp.utils.match_filter_func("duration <= 90"),
+            "match_filter": _duration_filter,
+            "socket_timeout": 20,
         }
 
         try:

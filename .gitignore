@@ -17,7 +17,10 @@ env/
 
 # Video renders & temporary media (preserve folder structure via .gitkeep)
 output/*.mp4
+output/*.png
+storage/*.mp4
 storage/test_sample.mp4
+storage/llm_config.json
 
 # OS generated files
 .DS_Store
