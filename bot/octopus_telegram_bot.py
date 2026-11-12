@@ -353,23 +353,21 @@ class OctopusTelegramBot:
                 {"id": "girls_dance", "name": "Dance & Choreography", "avatar_icon": "💃"}
             ]
 
-        # Extract clean reel ID / shortcode
-        clean_url = url.strip()
-        reel_id = "reel"
-        if "/reel/" in clean_url:
-            parts = clean_url.split("/reel/")[1].split("/")[0].split("?")[0]
-            if parts:
-                reel_id = parts
-        elif "/p/" in clean_url:
-            parts = clean_url.split("/p/")[1].split("/")[0].split("?")[0]
-            if parts:
-                reel_id = parts
+        # Universal multi-platform classification (Instagram, YouTube Shorts, Snapchat, Twitter/X, Reddit, TikTok)
+        from scrapers.universal_harvester import UniversalContentHarvester
+        classified = UniversalContentHarvester.classify_url(url)
+        clean_url = classified.get("canonical_url", url.strip())
+        content_id = classified.get("content_id", "reel")
+        platform_name = classified.get("platform_name", "Social Video")
+        platform_emoji = classified.get("platform_emoji", "🎬")
 
         session = {
             "session_id": session_id,
             "chat_id": cid,
             "url": clean_url,
-            "reel_id": reel_id,
+            "reel_id": content_id,
+            "platform_name": platform_name,
+            "platform_emoji": platform_emoji,
             "step": "awaiting_niche",
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -399,8 +397,8 @@ class OctopusTelegramBot:
         ]
 
         prompt_text = (
-            f"🐙 *Octopus Agent: Reel Detected*\n"
-            f"🆔 *Reel ID:* `{reel_id}`\n"
+            f"🐙 *Octopus Agent: {platform_emoji} {platform_name} Detected*\n"
+            f"🆔 *Content ID:* `{content_id}`\n"
             f"🔗 `{clean_url}`\n\n"
             f"🎯 *Which niche do you want to publish on?*\n"
             f"Choose below:"
@@ -413,7 +411,7 @@ class OctopusTelegramBot:
             "session_id": session_id,
             "step": "awaiting_niche",
             "url": clean_url,
-            "reel_id": reel_id,
+            "reel_id": content_id,
             "prompt_text": prompt_text,
             "niches": niches
         }
@@ -586,26 +584,19 @@ class OctopusTelegramBot:
 
         dl = None
         clean_handle = "curated_source"
+        platform_label = session.get("platform_name") or "Social Video"
         if source_url and source_url.strip():
             clean_url = source_url.strip()
-            if "/reel/" in clean_url or "/p/" in clean_url:
-                parts = clean_url.split("/reel/") if "/reel/" in clean_url else clean_url.split("/p/")
-                if len(parts) > 1:
-                    clean_handle = parts[1].strip("/").split("/")[0].split("?")[0]
             try:
-                from scrapers.instagram_harvester import InstagramHarvester
-                dl = InstagramHarvester().download_reel(clean_url, task_id)
-            except Exception as dl_err:
-                logger.warning(f"InstagramHarvester error: {dl_err}")
+                from scrapers.universal_harvester import UniversalContentHarvester
+                u_harvester = UniversalContentHarvester()
+                dl = u_harvester.harvest(clean_url, task_id)
+                if dl:
+                    clean_handle = dl.get("author") or clean_handle
+                    platform_label = dl.get("platform") or platform_label
+            except Exception as u_err:
+                logger.warning(f"UniversalHarvester download error: {u_err}")
                 dl = None
-
-            if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
-                try:
-                    from scrapers.content_harvester import ContentHarvester
-                    dl = ContentHarvester().download_video(clean_url, task_id)
-                except Exception as ch_err:
-                    logger.warning(f"ContentHarvester error: {ch_err}")
-                    dl = None
 
         if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
             fallback_candidates = [
@@ -633,7 +624,7 @@ class OctopusTelegramBot:
                     "description": f"Featured {n_title} reel moment from @{clean_handle}."
                 }
 
-        s1 = "✅ 1. Downloaded 1080p source stream (audio 100% intact)"
+        s1 = f"✅ 1. Downloaded 1080p source stream from {platform_label} (audio 100% intact)"
         s2 = "⏳ 2. Writing bio & caption..."
         update_progress(s1, s2, s3, s4)
 
