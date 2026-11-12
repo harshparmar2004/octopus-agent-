@@ -353,8 +353,37 @@ def add_or_update_account(account_data: Dict[str, Any]):
     conn = get_connection()
     cursor = conn.cursor()
     data = dict(account_data)
-    if "niche_id" not in data or not data["niche_id"]:
-        data["niche_id"] = data.get("niche", "information").lower().replace(" ", "_").split("_")[0]
+
+    NICHE_MAP = {
+        "dance": "girls_dance",
+        "girls": "girls_dance",
+        "girls dance": "girls_dance",
+        "girls' dance": "girls_dance",
+        "girls' dance & parties": "girls_dance",
+        "dance & choreography": "girls_dance",
+        "ai": "ai_tech",
+        "ai tech": "ai_tech",
+        "informative ai": "ai_tech",
+        "informative ai tech": "ai_tech",
+        "informative ai & tech": "ai_tech",
+        "artificial intelligence & tech": "ai_tech",
+        "tech": "ai_tech",
+        "information": "ai_tech",
+        "clubbing": "clubbing",
+        "clubbing & party": "clubbing",
+        "parties": "clubbing",
+        "memes": "memes",
+        "daily memes": "memes",
+        "concerts": "concerts",
+        "concerts & live": "concerts",
+        "ai content": "ai_content",
+        "ai showcase": "ai_content",
+    }
+
+    if not data.get("niche_id"):
+        raw_niche = str(data.get("niche", "ai_tech")).strip().lower()
+        data["niche_id"] = NICHE_MAP.get(raw_niche, raw_niche.replace(" ", "_").replace("'", "").replace("&", "").strip("_"))
+
     data.setdefault("ig_user_id", None)
     data.setdefault("access_token", None)
     data.setdefault("avatar_initials", "OC")
@@ -369,8 +398,8 @@ def add_or_update_account(account_data: Dict[str, Any]):
             display_name = excluded.display_name,
             niche = excluded.niche,
             niche_id = excluded.niche_id,
-            ig_user_id = COALESCE(excluded.ig_user_id, accounts.ig_user_id),
-            access_token = COALESCE(excluded.access_token, accounts.access_token),
+            ig_user_id = CASE WHEN excluded.ig_user_id IS NOT NULL AND LENGTH(TRIM(excluded.ig_user_id)) > 0 THEN excluded.ig_user_id ELSE accounts.ig_user_id END,
+            access_token = CASE WHEN excluded.access_token IS NOT NULL AND LENGTH(TRIM(excluded.access_token)) > 0 THEN excluded.access_token ELSE accounts.access_token END,
             avatar_initials = excluded.avatar_initials,
             brand_color = excluded.brand_color,
             profile_pic_url = COALESCE(excluded.profile_pic_url, accounts.profile_pic_url),

@@ -2763,15 +2763,28 @@
         </div>
         <div>
           <label class="block text-[#78716C] font-semibold mb-1">Niche Category</label>
-          <input id="modalAccNiche" type="text" placeholder="Artificial Intelligence & Tech" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917]">
+          <select id="modalAccNicheSelect" onchange="toggleCustomNicheInput()" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917] font-semibold">
+            <option value="girls_dance">💃 Dance & Choreography (girls_dance)</option>
+            <option value="ai_tech" selected>💡 Informative AI & Tech (ai_tech)</option>
+            <option value="clubbing">🎉 Clubbing & Party (clubbing)</option>
+            <option value="memes">🔥 Daily Memes (memes)</option>
+            <option value="concerts">🎸 Concerts & Live Music (concerts)</option>
+            <option value="ai_content">🤖 AI Showcase (ai_content)</option>
+            <option value="custom">➕ Custom / Other Niche</option>
+          </select>
+          <input id="modalAccCustomNiche" type="text" placeholder="Enter custom niche name..." class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 text-[#1C1917] mt-2 hidden">
         </div>
         <div>
           <label class="block text-[#78716C] font-semibold mb-1">Meta Graph IG User ID</label>
           <input id="modalAccIgId" type="text" placeholder="17841400000000000" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 font-mono text-[#1C1917]">
         </div>
         <div>
-          <label class="block text-[#78716C] font-semibold mb-1">Page Access Token</label>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-[#78716C] font-semibold">Page Access Token</label>
+            <button type="button" onclick="testModalAccountToken()" class="text-[10px] text-[#C86237] hover:underline font-bold">🔍 Test Token Health</button>
+          </div>
           <input id="modalAccToken" type="password" placeholder="EAAB..." class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3 py-2 font-mono text-[#1C1917]">
+          <div id="modalTokenFeedback" class="text-[10px] mt-1 hidden font-semibold"></div>
         </div>
         <div>
           <label class="block text-[#78716C] font-semibold mb-1">Profile Logo / Picture URL (Optional)</label>
@@ -3811,11 +3824,17 @@
                 <div class="text-[10px] text-[#78716C] font-mono">ID: ${a.id}</div>
               </div>
             </div>
-          </td>
           <td class="p-3 font-semibold text-[#44403C]">${a.display_name}</td>
-          <td class="p-3"><span class="px-2.5 py-0.5 rounded text-[10px] font-semibold bg-[#FAF8F5] text-[#57534E] border border-[#E8DCD1]">${a.niche}</span></td>
-          <td class="p-3 font-mono text-[11px] text-[#78716C]">${a.ig_user_id ? a.ig_user_id : '<span class="text-amber-600 font-semibold">Dry-Run</span>'}</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">● Active</span></td>
+          <td class="p-3"><span class="px-2.5 py-0.5 rounded text-[10px] font-semibold bg-[#FAF8F5] text-[#57534E] border border-[#E8DCD1]">${a.niche || a.niche_id || 'General'}</span></td>
+          <td class="p-3 font-mono text-[11px] text-[#78716C]">
+            ${a.ig_user_id ? `<span class="text-[#1C1917] font-semibold">${a.ig_user_id}</span>` : '<span class="text-amber-600 font-semibold italic">Unconfigured</span>'}
+          </td>
+          <td class="p-3">
+            ${(a.access_token && a.access_token.length > 20 && a.ig_user_id && a.ig_user_id.length > 3)
+              ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>🟢 Live Meta Graph</span>'
+              : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⚪ Placeholder / Draft</span>'
+            }
+          </td>
           <td class="p-3 text-right space-x-1">
             <button onclick="deleteAccount('${a.id}')" class="text-[11px] text-[#A8A29E] hover:text-rose-600 px-2 py-1">Remove</button>
           </td>
@@ -4390,24 +4409,86 @@
     function openAddAccountModal() { document.getElementById("addAccountModal").classList.remove("hidden"); }
     function closeAddAccountModal() { document.getElementById("addAccountModal").classList.add("hidden"); }
 
+    function toggleCustomNicheInput() {
+      const select = document.getElementById("modalAccNicheSelect");
+      const customInput = document.getElementById("modalAccCustomNiche");
+      if (select && customInput) {
+        if (select.value === "custom") {
+          customInput.classList.remove("hidden");
+          customInput.focus();
+        } else {
+          customInput.classList.add("hidden");
+        }
+      }
+    }
+
+    async function testModalAccountToken() {
+      const token = document.getElementById("modalAccToken").value.trim();
+      const fb = document.getElementById("modalTokenFeedback");
+      if (!token) {
+        alert("Please paste an Access Token first.");
+        return;
+      }
+      fb.className = "text-[10px] mt-1 text-[#78716C] block";
+      fb.innerText = "Validating token with Meta Graph API...";
+      try {
+        const res = await fetch("/api/meta/test-connection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token: token })
+        });
+        const data = await res.json();
+        if (data.valid) {
+          fb.className = "text-[10px] mt-1 text-emerald-700 font-bold block";
+          fb.innerText = `✅ Active Token Verified! (ID: ${data.id || 'Active'}, ${data.name || 'Verified Account'})`;
+        } else {
+          fb.className = "text-[10px] mt-1 text-rose-700 font-bold block";
+          fb.innerText = `❌ Invalid Token: ${data.error || 'Expired or missing permissions'}`;
+        }
+      } catch (e) {
+        fb.className = "text-[10px] mt-1 text-rose-700 font-bold block";
+        fb.innerText = "❌ Network error testing token.";
+      }
+    }
+
     async function submitNewAccount() {
       const id = document.getElementById("modalAccId").value.trim();
       const handle = document.getElementById("modalAccHandle").value.trim();
       const display_name = document.getElementById("modalAccName").value.trim();
-      const niche = document.getElementById("modalAccNiche").value.trim();
+      const nicheSelect = document.getElementById("modalAccNicheSelect");
+      const customNicheInput = document.getElementById("modalAccCustomNiche");
+
+      let niche_id = nicheSelect ? nicheSelect.value : "ai_tech";
+      let niche = nicheSelect && nicheSelect.options[nicheSelect.selectedIndex] ? nicheSelect.options[nicheSelect.selectedIndex].text : "Informative AI & Tech";
+
+      if (niche_id === "custom") {
+        niche = (customNicheInput && customNicheInput.value.trim()) || "Custom Niche";
+        niche_id = niche.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || "custom";
+      }
+
       const ig_user_id = document.getElementById("modalAccIgId").value.trim();
       const access_token = document.getElementById("modalAccToken").value.trim();
       const profile_pic_url = document.getElementById("modalAccLogo").value.trim() || undefined;
 
-      if (!id || !handle || !display_name) return alert("ID, Handle, and Name required");
+      if (!id || !handle || !display_name) return alert("Account ID Slug, Handle, and Display Name are required.");
 
-      await fetch("/api/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, handle, display_name, niche, ig_user_id, access_token, profile_pic_url })
-      });
-      closeAddAccountModal();
-      loadDashboard();
+      try {
+        const res = await fetch("/api/accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, handle, display_name, niche, niche_id, ig_user_id, access_token, profile_pic_url })
+        });
+        const data = await res.json();
+        closeAddAccountModal();
+        if (data.has_token) {
+          alert(`✅ Account ${handle} successfully connected with LIVE Meta Graph API credentials for niche [${niche}]!`);
+        } else {
+          alert(`ℹ️ Account ${handle} saved for niche [${niche}]. Add Meta Graph credentials anytime to activate live publishing.`);
+        }
+        loadDashboard();
+      } catch (err) {
+        alert("Error saving account: " + err);
+      }
     }
 
     async function deleteAccount(id) {

@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Callable
 from pathlib import Path
 import requests
 
@@ -15,7 +15,14 @@ class MetaReelsPublisher:
         self.version = settings.META_GRAPH_VERSION
         self.base_url = f"https://graph.facebook.com/{self.version}"
 
-    def publish_reel(self, video_public_url: str, caption: str, share_to_feed: bool = True, dry_run: bool = False) -> Dict[str, Any]:
+    def publish_reel(
+        self,
+        video_public_url: str,
+        caption: str,
+        share_to_feed: bool = True,
+        dry_run: bool = False,
+        on_progress: Optional[Callable[[str], None]] = None
+    ) -> Dict[str, Any]:
         """
         Publishes a Reel to Instagram via the official Meta Graph API:
         1. Initialize Media Container (media_type=REELS)
@@ -24,6 +31,8 @@ class MetaReelsPublisher:
         """
         if dry_run or not self.ig_user_id or not self.access_token:
             logger.info("[DRY RUN] Simulating Instagram Reel publication.")
+            if on_progress:
+                on_progress("simulated_publish")
             return {
                 "success": True,
                 "mode": "dry_run",
@@ -32,13 +41,21 @@ class MetaReelsPublisher:
             }
 
         try:
+            if on_progress:
+                on_progress("init_container")
             container_id = self._create_container(video_public_url, caption, share_to_feed)
             logger.info(f"Created Reel container ID: {container_id}")
-            self._wait_until_ready(container_id)
+            if on_progress:
+                on_progress("waiting_container")
+            self._wait_until_ready(container_id, on_progress=on_progress)
             logger.info(f"Container {container_id} is ready for publishing.")
+            if on_progress:
+                on_progress("publishing_container")
             media_id = self._publish_container(container_id)
             logger.info(f"Successfully published Reel! Live Instagram Post ID: {media_id}")
             permalink = self._get_media_permalink(media_id) or f"https://www.instagram.com/reel/{media_id}/"
+            if on_progress:
+                on_progress("permalink_ready")
 
             return {
                 "success": True,
@@ -58,7 +75,8 @@ class MetaReelsPublisher:
         local_video_path: str,
         caption: str,
         share_to_feed: bool = True,
-        dry_run: bool = False
+        dry_run: bool = False,
+        on_progress: Optional[Callable[[str], None]] = None
     ) -> Dict[str, Any]:
         """
         Publishes a local video file directly to Instagram Reels using the Meta Resumable Upload API.
@@ -66,6 +84,8 @@ class MetaReelsPublisher:
         """
         if dry_run or not self.ig_user_id or not self.access_token:
             logger.info("[DRY RUN] Simulating local Instagram Reel publication.")
+            if on_progress:
+                on_progress("simulated_publish")
             return {
                 "success": True,
                 "mode": "dry_run",
@@ -81,6 +101,8 @@ class MetaReelsPublisher:
 
         try:
             # 1. Initialize resumable upload container
+            if on_progress:
+                on_progress("init_container")
             init_url = f"{self.base_url}/{self.ig_user_id}/media"
             init_payload = {
                 "media_type": "REELS",
@@ -100,6 +122,8 @@ class MetaReelsPublisher:
             logger.info(f"Initialized Resumable Reel container: {container_id}")
 
             # 2. Upload video binary bytes to upload_uri
+            if on_progress:
+                on_progress(f"uploading_bytes_{round(file_size / (1024 * 1024), 1)}mb")
             upload_headers = {
                 "Authorization": f"OAuth {self.access_token}",
                 "offset": "0",
@@ -115,15 +139,21 @@ class MetaReelsPublisher:
             logger.info(f"Successfully uploaded {file_size} bytes to Meta. Waiting for container to process...")
 
             # 3. Wait until ready
-            self._wait_until_ready(container_id)
+            if on_progress:
+                on_progress("waiting_container")
+            self._wait_until_ready(container_id, on_progress=on_progress)
             logger.info(f"Container {container_id} is ready for publishing.")
 
             # 4. Publish container
+            if on_progress:
+                on_progress("publishing_container")
             media_id = self._publish_container(container_id)
             logger.info(f"🎉 Successfully published Reel live! Instagram Post ID: {media_id}")
 
             permalink = self._get_media_permalink(media_id) or f"https://www.instagram.com/reel/{media_id}/"
             logger.info(f"🔗 Real Instagram Reel Permalink: {permalink}")
+            if on_progress:
+                on_progress("published_ready")
 
             return {
                 "success": True,
@@ -173,7 +203,7 @@ class MetaReelsPublisher:
             raise RuntimeError(f"Failed to initialize container: {data}")
         return data["id"]
 
-    def _wait_until_ready(self, container_id: str, max_retries: int = 30, delay_seconds: int = 5) -> None:
+    def _wait_until_ready(self, container_id: str, max_retries: int = 30, delay_seconds: int = 5, on_progress: Optional[Callable[[str], None]] = None) -> None:
         url = f"{self.base_url}/{container_id}"
         params = {
             "fields": "status_code,status",
@@ -184,6 +214,8 @@ class MetaReelsPublisher:
             data = res.json()
             status = data.get("status_code", "").upper()
             logger.info(f"Status check {attempt + 1}/{max_retries}: {status}")
+            if on_progress:
+                on_progress(f"meta_status_{status.lower() or 'checking'}_{attempt + 1}")
             if status == "FINISHED":
                 return
             elif status in ["ERROR", "EXPIRED"]:

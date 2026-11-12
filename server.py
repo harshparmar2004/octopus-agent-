@@ -92,6 +92,7 @@ class AccountRequest(BaseModel):
     handle: str
     display_name: str
     niche: str
+    niche_id: Optional[str] = None
     ig_user_id: Optional[str] = ""
     access_token: Optional[str] = ""
     avatar_initials: Optional[str] = "OC"
@@ -295,12 +296,27 @@ def list_accounts(niche: Optional[str] = None, search: Optional[str] = None):
     if search:
         s = search.lower()
         accounts = [a for a in accounts if s in a["handle"].lower() or s in a["display_name"].lower()]
+    
+    # Enrich with live Meta Graph status
+    for a in accounts:
+        has_token = bool(
+            a.get("access_token") and len(str(a["access_token"]).strip()) > 20 and
+            a.get("ig_user_id") and len(str(a["ig_user_id"]).strip()) > 3
+        )
+        a["has_token"] = has_token
+        a["is_live"] = has_token and a.get("is_active", 1) == 1
     return accounts
 
 @app.post("/api/accounts")
 def create_account(acc: AccountRequest):
-    add_or_update_account(acc.dict())
-    return {"status": "success", "message": f"Saved account {acc.handle}"}
+    data = acc.dict()
+    add_or_update_account(data)
+    has_token = bool(acc.access_token and len(acc.access_token.strip()) > 20 and acc.ig_user_id and len(acc.ig_user_id.strip()) > 3)
+    return {
+        "status": "success",
+        "message": f"Saved account {acc.handle} with {'live Meta Graph credentials' if has_token else 'draft status'}.",
+        "has_token": has_token
+    }
 
 @app.post("/api/accounts/bulk-add")
 def bulk_create_accounts(req: BulkAccountsRequest):

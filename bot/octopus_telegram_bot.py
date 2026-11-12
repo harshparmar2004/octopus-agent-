@@ -721,7 +721,7 @@ class OctopusTelegramBot:
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
-        # STEP 4: Publishing to Instagram
+        # STEP 4: Publishing to Instagram (Parallel Multi-Account Fanout)
         # =========================================================================
         has_account_tokens = any(
             acc.get("access_token") and len(str(acc["access_token"]).strip()) > 20 and acc.get("ig_user_id")
@@ -729,14 +729,57 @@ class OctopusTelegramBot:
         )
         should_dry_run = dry_run if dry_run is not None else (not has_account_tokens)
 
+        # Build individual anti-shadowban captions with account-specific CTAs
+        per_account_captions: Dict[str, str] = {}
+        for a_idx, acc in enumerate(target_accs):
+            h_clean = acc.get("handle", "")
+            if not h_clean.startswith("@"):
+                h_clean = f"@{h_clean}"
+            if is_raw:
+                if source_desc and len(source_desc.strip()) > 5:
+                    clean_cap = source_desc.split("#")[0].strip()
+                    per_account_captions[acc["id"]] = f"{clean_cap}\n\n👉 Follow {h_clean} for daily dance & party vibes! ✨💃\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
+                else:
+                    per_account_captions[acc["id"]] = f"Obsessed with this energy! ✨💃\n\nTag someone who needs to see this! 👇\n\n👉 Follow {h_clean} for daily dance & party vibes!\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
+            else:
+                per_account_captions[acc["id"]] = self.fanout.build_cross_network_caption(
+                    base_caption=caption,
+                    target_account=acc,
+                    all_accounts=target_accs
+                )
+
         from storage.db import record_broadcast_log
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import threading
+
         published_items = []
         publish_results = []
         success_count = 0
+        total_accounts_count = len(target_accs)
+        completed_count = 0
+        lock = threading.Lock()
+        last_edit_time = 0.0
 
-        for acc in target_accs:
+        def notify_throttled(force: bool = False):
+            nonlocal last_edit_time
+            now = time.time()
+            if force or (now - last_edit_time > 1.5) or (completed_count == total_accounts_count):
+                last_edit_time = now
+                pct = int((completed_count / max(1, total_accounts_count)) * 100)
+                fanout_tag = " (Parallel Fanout 🚀)" if total_accounts_count > 1 else ""
+                s4_live = f"⏳ 4. Publishing to Instagram: [{completed_count}/{total_accounts_count}] ({pct}%){fanout_tag}"
+                update_progress(s1, s2, s3, s4_live)
+
+        def _publish_worker(acc_idx: int, acc: Dict[str, Any]):
+            nonlocal success_count, completed_count
+            # Micro-stagger between workers to avoid burst rate limits on Meta App ID
+            if total_accounts_count > 1 and acc_idx > 0:
+                time.sleep(min(0.8 * acc_idx, 5.0))
+
             r_path = rendered_paths.get(acc["id"], dl["filepath"])
             r_filename = Path(r_path).name
+            acc_caption = per_account_captions.get(acc["id"], caption)
+
             log_id = record_broadcast_log({
                 "reel_id": task_id,
                 "account_id": acc["id"],
@@ -748,40 +791,60 @@ class OctopusTelegramBot:
                 "error_message": None,
                 "published_at": None
             })
+
             pub_res = self.fanout.publish_single_account(
                 log_id=log_id,
                 account=acc,
                 rendered_filename=r_filename,
-                caption=caption,
+                caption=acc_caption,
                 dry_run=should_dry_run
             )
-            publish_results.append(pub_res)
-            if pub_res.get("success"):
-                success_count += 1
-                post_url = pub_res.get("post_url", f"https://instagram.com/p/{uuid.uuid4().hex[:11]}")
-                published_items.append({
-                    "handle": acc.get("handle", acc["id"]),
-                    "display_name": acc.get("display_name", acc["id"]),
-                    "url": post_url,
-                    "status": "PUBLISHED"
-                })
-            else:
-                published_items.append({
-                    "handle": acc.get("handle", acc["id"]),
-                    "display_name": acc.get("display_name", acc["id"]),
-                    "url": None,
-                    "status": "FAILED",
-                    "error": pub_res.get("error", "Failed")
-                })
+
+            with lock:
+                publish_results.append(pub_res)
+                completed_count += 1
+                if pub_res.get("success"):
+                    success_count += 1
+                    post_url = pub_res.get("post_url", f"https://instagram.com/p/{uuid.uuid4().hex[:11]}")
+                    published_items.append({
+                        "handle": acc.get("handle", acc["id"]),
+                        "display_name": acc.get("display_name", acc["id"]),
+                        "url": post_url,
+                        "status": "PUBLISHED"
+                    })
+                else:
+                    published_items.append({
+                        "handle": acc.get("handle", acc["id"]),
+                        "display_name": acc.get("display_name", acc["id"]),
+                        "url": None,
+                        "status": "FAILED",
+                        "error": pub_res.get("error", "Failed")
+                    })
+                notify_throttled()
+            return pub_res
+
+        # Execute parallel fanout across accounts with ThreadPoolExecutor
+        worker_threads = min(10, total_accounts_count or 1)
+        with ThreadPoolExecutor(max_workers=worker_threads) as executor:
+            futs = [executor.submit(_publish_worker, idx, acc) for idx, acc in enumerate(target_accs)]
+            for fut in as_completed(futs):
+                try:
+                    fut.result()
+                except Exception as ex:
+                    logger.error(f"Parallel fanout worker error: {ex}")
 
         if success_count > 0:
-            s4 = "✅ 4. Published to Instagram successfully!"
+            fanout_tag = " (Parallel Fanout 🚀)" if total_accounts_count > 1 else ""
+            s4 = f"✅ 4. Published to {success_count}/{total_accounts_count} Accounts successfully!{fanout_tag}"
             valid_links = [item["url"] for item in published_items if item.get("url")]
-            links_md = "\n".join([f"👉 {url}" for url in valid_links[:5]])
+            links_md = "\n".join([f"👉 {url}" for url in valid_links[:10]])
+            if len(valid_links) > 10:
+                links_md += f"\n... and {len(valid_links) - 10} more live accounts!"
             footer = (
-                f"🔗 *Published Reel Link:*\n"
+                f"🔗 *Published Reel Links:*\n"
                 f"{links_md}\n\n"
-                f"👤 *Account:* {target_desc}\n"
+                f"👥 *Accounts Dispatched:* {success_count}/{total_accounts_count} Live\n"
+                f"🛡️ *Anti-Shadowban Shield:* Active (Unique bitstreams & CTAs)\n"
                 f"📊 *Status:* Live on Instagram Reels"
             )
             update_progress(s1, s2, s3, s4, footer=footer)

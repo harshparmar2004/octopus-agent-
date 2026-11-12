@@ -3,7 +3,7 @@ import time
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import settings, ChannelProfile
@@ -130,7 +130,8 @@ class OctopusFanoutEngine:
         rendered_filename: str,
         caption: str,
         dry_run: bool = True,
-        extra_telemetry: Optional[Dict[str, Any]] = None
+        extra_telemetry: Optional[Dict[str, Any]] = None,
+        on_account_progress: Optional[Callable[[str], None]] = None
     ) -> Dict[str, Any]:
         """Publishes one anti-shadowbanned reel variation to one specific Instagram account with staggered scheduling."""
         local_candidates = [
@@ -153,14 +154,16 @@ class OctopusFanoutEngine:
             result = publisher.publish_local_reel(
                 local_video_path=str(local_file),
                 caption=caption,
-                dry_run=dry_run
+                dry_run=dry_run,
+                on_progress=on_account_progress
             )
         else:
             public_url = f"{settings.PUBLIC_BASE_URL}/output/{rendered_filename}"
             result = publisher.publish_reel(
                 video_public_url=public_url,
                 caption=caption,
-                dry_run=dry_run
+                dry_run=dry_run,
+                on_progress=on_account_progress
             )
         
         extra = extra_telemetry or {}
