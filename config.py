@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -12,10 +12,13 @@ class ChannelProfile:
     handle: str
     display_name: str
     niche: str
-    logo_filename: str
-    subreddits: List[str]
-    default_hashtags: List[str]
-    cta_link: str
+    logo_filename: str = "logo_ai.png"
+    subreddits: List[str] = field(default_factory=list)
+    default_hashtags: List[str] = field(default_factory=list)
+    cta_link: str = ""
+    brand_color: str = "#f97316"
+    avatar_initials: str = "OC"
+    profile_pic_url: Optional[str] = None
 
 CHANNELS: Dict[str, ChannelProfile] = {
     "quantum": ChannelProfile(

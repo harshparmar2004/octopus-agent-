@@ -1,8 +1,9 @@
+import uuid
 import logging
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 from config import settings, ChannelProfile
 from renderers.card_renderer import CardRenderer
@@ -262,3 +263,127 @@ class VideoCompositor:
                         p.unlink()
                     except Exception:
                         pass
+
+    def reskin_reel(
+        self,
+        raw_video_path: str,
+        headline: str,
+        highlight_word: Optional[str] = None,
+        niche_id: str = "ai_tech",
+        account_id: Optional[str] = None,
+        credit_handle: Optional[str] = None,
+        output_filename: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Re-skins an incoming reel with our brand theme (custom font, neon highlight colors,
+        channel logo badge, and niche-specific visual layout).
+        Extracts a preview frame and returns web URLs for both video and poster frame.
+        """
+        template = get_template_for_niche(niche_id)
+        
+        # 1. Resolve Channel Profile
+        channel_data = None
+        if account_id:
+            try:
+                from storage.db import get_account_by_id
+                channel_data = get_account_by_id(account_id)
+            except Exception as e:
+                logger.warning(f"Could not load account {account_id}: {e}")
+
+        if channel_data:
+            channel = ChannelProfile(
+                handle=channel_data.get("handle") or f"@{account_id}",
+                display_name=channel_data.get("display_name") or account_id.title(),
+                brand_color=channel_data.get("brand_color") or template.highlight_color,
+                avatar_initials=channel_data.get("avatar_initials") or "OC",
+                profile_pic_url=channel_data.get("profile_pic_url"),
+                niche=channel_data.get("niche") or niche_id
+            )
+        else:
+            # Default brand profiles per niche
+            if niche_id in ("clubbing", "clubbing_branded", "parties", "girls_party"):
+                channel = ChannelProfile(
+                    handle="@cute.aarohi007",
+                    display_name="Cute Aarohi",
+                    brand_color="#FF007F",
+                    avatar_initials="AR",
+                    niche="clubbing"
+                )
+            elif niche_id in ("memes", "meme_native"):
+                channel = ChannelProfile(
+                    handle="@octopus_memes",
+                    display_name="Octopus Memes",
+                    brand_color="#FFFFFF",
+                    avatar_initials="OM",
+                    niche="memes"
+                )
+            elif niche_id in ("concerts", "concert_tag"):
+                channel = ChannelProfile(
+                    handle="@live_vibes",
+                    display_name="Live Concerts",
+                    brand_color="#FFFFFF",
+                    avatar_initials="LC",
+                    niche="concerts"
+                )
+            else:
+                channel = ChannelProfile(
+                    handle="@ai_tech_pulse",
+                    display_name="AI Tech Pulse",
+                    brand_color="#DDF51A",
+                    avatar_initials="AI",
+                    niche="informative"
+                )
+
+        # 2. Prepare output filename
+        out_name = output_filename or f"reskinned_{niche_id}_{uuid.uuid4().hex[:8]}.mp4"
+        
+        # 3. Build reel
+        res_path = self.build_reel(
+            raw_video_path=raw_video_path,
+            hook_text=headline,
+            channel=channel,
+            output_filename=out_name,
+            credit_handle=credit_handle,
+            highlight_word=highlight_word,
+            template=template
+        )
+
+        if not res_path or not Path(res_path).exists():
+            return {
+                "success": False,
+                "error": "Video composition failed during rendering."
+            }
+
+        # 4. Extract preview poster frame
+        preview_filename = f"{Path(out_name).stem}_preview.png"
+        preview_path = self.output_dir / preview_filename
+        try:
+            cmd = [
+                "ffmpeg", "-y",
+                "-ss", "00:00:01",
+                "-i", str(res_path),
+                "-vframes", "1",
+                "-q:v", "2",
+                str(preview_path)
+            ]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=15)
+        except Exception as e:
+            logger.warning(f"Failed to extract preview frame: {e}")
+
+        has_preview = preview_path.exists()
+
+        return {
+            "success": True,
+            "rendered_video_path": str(res_path),
+            "rendered_video_url": f"/output/{out_name}",
+            "preview_frame_path": str(preview_path) if has_preview else None,
+            "preview_frame_url": f"/output/{preview_filename}" if has_preview else None,
+            "template_id": template.id,
+            "template_name": template.name,
+            "render_profile": template.render_profile,
+            "channel_handle": channel.handle,
+            "headline": headline,
+            "highlight_word": highlight_word or template.sample_highlight,
+            "niche_id": niche_id
+        }
+

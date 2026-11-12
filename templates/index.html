@@ -149,6 +149,18 @@
           </div>
         </button>
 
+        <!-- 4b. AI Vision Re-Skinner -->
+        <button onclick="switchTab('vision_reskinner')" id="tabBtn_vision_reskinner" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            <span>AI Vision Re-Skinner</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Gemini</span>
+        </button>
+
         <!-- 5. Sources -->
         <button onclick="switchTab('sources')" id="tabBtn_sources" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
           <div class="flex items-center gap-3">
@@ -1768,6 +1780,235 @@
         </div>
       </section>
 
+      <!-- ==================== TAB: AI VISION REEL READER & RE-SKINNER ==================== -->
+      <section id="view_vision_reskinner" class="space-y-6 hidden">
+        <!-- Top Banner -->
+        <div class="cloud-card rounded-lg p-5 border-l-4 border-purple-600 space-y-2">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-md bg-purple-50 border border-purple-200 flex items-center justify-center text-xl shadow-xs">
+                👁️
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-[#1C1917]">AI Vision Reel Reader & Brand Re-Skinner Studio</h3>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200">Gemini Multimodal</span>
+                </div>
+                <p class="text-xs text-[#78716C] mt-0.5">Drop any reel link. AI vision reads whatever is written on the video, understands context, and extracts hook lines. Copy or edit the line, and the system re-writes that exact hook in our brand theme with our fonts, neon accents, and logo!</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-[#78716C] font-semibold">Gemini API Key:</span>
+              <input id="visionCustomApiKey" type="password" placeholder="AIzaSy... (optional if in .env)" 
+                class="bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1 text-xs text-[#1C1917] w-48 focus:outline-none focus:border-purple-600">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Studio Layout: Left Input & Controls | Right Live Branded Preview -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          <!-- Left Column (7 cols): Vision Reader & Hook Editor -->
+          <div class="lg:col-span-7 space-y-4">
+            
+            <!-- Step 1: Input URL & Trigger Scan -->
+            <div class="cloud-card rounded-lg p-5 space-y-3 border border-[#E6E0D6]">
+              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
+                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">1</span>
+                  <span>Input Reel Link or Video Path</span>
+                </h4>
+                <span class="text-[10px] text-[#78716C]">Instagram Reel, Reddit, Shorts, or MP4</span>
+              </div>
+
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-[#A8A29E]">🔗</span>
+                  <input id="visionInputUrl" type="text" placeholder="https://www.instagram.com/reel/Dffuae7ub5N/ or storage/reel_Dffuae7ub5N.mp4" 
+                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md pl-8 pr-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs transition">
+                </div>
+                <button onclick="scanReelWithVision()" id="btnVisionScan" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-md shadow-xs flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer">
+                  <span>🔍</span>
+                  <span id="btnVisionScanText">Scan & Read Reel</span>
+                </button>
+              </div>
+
+              <!-- Quick Sample Buttons -->
+              <div class="flex items-center gap-2 pt-1 text-[11px] text-[#78716C]">
+                <span class="font-semibold">Test Sample:</span>
+                <button type="button" onclick="loadVisionSample('storage/reel_Dffuae7ub5N.mp4')" class="px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-purple-50 text-purple-700 border border-[#E6E0D6] font-mono text-[10px]">reel_Dffuae7ub5N.mp4</button>
+                <button type="button" onclick="loadVisionSample('https://www.instagram.com/reel/Dffuae7ub5N/')" class="px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-purple-50 text-purple-700 border border-[#E6E0D6] font-mono text-[10px]">Instagram Live Link</button>
+              </div>
+            </div>
+
+            <!-- Step 2: Extracted Video Frames Inspection Strip -->
+            <div id="visionFramesCard" class="cloud-card rounded-lg p-5 space-y-3 hidden border border-[#E6E0D6]">
+              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
+                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">2</span>
+                  <span>AI Multimodal Vision Inspection (Extracted Keyframes)</span>
+                </h4>
+                <span id="visionEngineBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">Gemini 1.5 Flash</span>
+              </div>
+
+              <!-- Thumbnails Grid -->
+              <div id="visionThumbnailsRow" class="grid grid-cols-3 gap-3">
+                <!-- Dynamically populated keyframe images -->
+              </div>
+
+              <!-- Detected Context & Exact OCR Text -->
+              <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-3 space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">On-Screen Text Detected by AI</span>
+                  <button type="button" onclick="copyVisionText()" class="text-[11px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer">
+                    <span>📋</span>
+                    <span id="copyBtnText">Copy Extracted Text</span>
+                  </button>
+                </div>
+                <div id="visionExactTextDisplay" class="text-xs font-mono font-medium text-[#1C1917] bg-white p-2.5 rounded border border-[#E8DCD1] select-all">
+                  No text scanned yet.
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-[#78716C] pt-1">
+                  <span class="font-bold text-[#1C1917]">Visual Context:</span>
+                  <span id="visionContextDisplay" class="italic">Awaiting scan...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Brand Re-Skinning Configuration & Hook Customization -->
+            <div id="visionReskinConfigCard" class="cloud-card rounded-lg p-5 space-y-3.5 hidden border border-[#E6E0D6]">
+              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
+                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">3</span>
+                  <span>Brand Re-Skinning & Typography Studio</span>
+                </h4>
+                <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Brand Theme Ready</span>
+              </div>
+
+              <!-- Editable Headline Input -->
+              <div class="space-y-1">
+                <div class="flex justify-between items-center text-[11px]">
+                  <label class="font-bold text-[#1C1917]">Branded Headline / Hook Line (On-Screen Card):</label>
+                  <button type="button" onclick="pasteExtractedToHeadline()" class="text-purple-600 font-semibold hover:underline">Paste Extracted</button>
+                </div>
+                <textarea id="visionHeadlineInput" rows="2" 
+                  class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-2 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs transition"
+                  placeholder="Enter hook headline to render on video..."></textarea>
+              </div>
+
+              <!-- Highlight Word & Niche Controls in 2 Cols -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Highlight Word Input -->
+                <div class="space-y-1">
+                  <label class="block text-[11px] font-bold text-[#1C1917] flex items-center justify-between">
+                    <span>Glowing Neon Highlight Word(s):</span>
+                    <span id="visionHighlightPill" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">#DDF51A Neon</span>
+                  </label>
+                  <input id="visionHighlightInput" type="text" placeholder="Word to highlight with neon glow" 
+                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-amber-700 focus:outline-none focus:border-purple-600">
+                </div>
+
+                <!-- Niche Selector -->
+                <div class="space-y-1">
+                  <label class="block text-[11px] font-bold text-[#1C1917]">Target Niche & Layout Template:</label>
+                  <select id="visionNicheSelect" onchange="onVisionNicheChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600">
+                    <option value="ai_tech" selected>💡 Informative AI Tech (Top Card + Mid Video)</option>
+                    <option value="clubbing">🎉 Clubbing & Parties (Neon Pink Box HUD)</option>
+                    <option value="memes">🔥 Memes (Native Top White Caption Bar)</option>
+                    <option value="concerts">🎸 Concerts & Live (Full-Bleed + Lower-Third)</option>
+                    <option value="ai_content">🤖 AI Showcase (100% Clean Raw Video)</option>
+                    <option value="girls_dance">💃 Dance & Choreography (Full-Bleed Raw)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Destination Account Selector -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div class="space-y-1">
+                  <label class="block text-[11px] font-bold text-[#1C1917]">Destination Account / Channel Logo:</label>
+                  <select id="visionAccountSelect" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600">
+                    <!-- Populated dynamically via JS -->
+                  </select>
+                </div>
+
+                <div class="space-y-1">
+                  <label class="block text-[11px] font-bold text-[#1C1917]">Credit / Source Tag (Optional):</label>
+                  <input id="visionCreditInput" type="text" placeholder="@creator or source tag" 
+                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600">
+                </div>
+              </div>
+
+              <!-- Brand Theme Badges -->
+              <div class="bg-white border border-[#E8DCD1] rounded-md p-2.5 flex items-center justify-between text-[11px]">
+                <div class="flex items-center gap-3">
+                  <span class="text-[#78716C] font-semibold">Theme Specs:</span>
+                  <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#1C1917]">
+                    <span class="w-2 h-2 rounded-full bg-[#DDF51A] border border-black/20" id="themeColorDot"></span>
+                    <span id="themeColorText">#DDF51A Neon Yellow</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 font-mono text-[10px] text-[#78716C]">
+                    <span>🔤 Segoe UI Bold</span>
+                  </span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <input type="checkbox" id="visionAutoPublishCheck" class="rounded text-purple-600">
+                  <label for="visionAutoPublishCheck" class="font-bold text-[#1C1917] cursor-pointer">Auto-broadcast to Instagram</label>
+                </div>
+              </div>
+
+              <!-- Trigger Re-Skin Button -->
+              <div class="pt-2">
+                <button onclick="runVisionReskin()" id="btnVisionReskin" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-sm py-2.5 px-4 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                  <span>🎨</span>
+                  <span id="btnVisionReskinText">Re-Skin with Our Brand Theme</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (5 cols): Live Branded Output Stage & Player -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="cloud-card rounded-lg p-5 space-y-3.5 border border-[#E6E0D6]">
+              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
+                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
+                  <span>🎬</span>
+                  <span>Branded Reel Live Preview</span>
+                </h4>
+                <span id="reskinStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FAF8F5] text-[#78716C] border border-[#E6E0D6]">Awaiting Render</span>
+              </div>
+
+              <!-- Video Player or Placeholder -->
+              <div class="relative bg-black rounded-lg overflow-hidden aspect-[9/16] flex items-center justify-center border border-[#E6E0D6]">
+                <video id="visionResultVideo" controls class="w-full h-full object-contain hidden" playsinline></video>
+                <div id="visionPlayerPlaceholder" class="text-center p-6 space-y-2">
+                  <div class="text-4xl text-purple-400">⚡</div>
+                  <p class="text-xs font-bold text-white">No Branded Video Generated Yet</p>
+                  <p class="text-[11px] text-zinc-400 max-w-xs">Scan any reel on the left and tap "Re-Skin with Our Brand Theme" to render high-contrast typography, neon highlights, and your logo.</p>
+                </div>
+              </div>
+
+              <!-- Output Metadata & Action Buttons -->
+              <div id="visionOutputActions" class="space-y-2.5 hidden pt-2 border-t border-[#E6E0D6]">
+                <div class="text-[11px] space-y-1">
+                  <div class="flex justify-between"><span class="text-[#78716C]">Template Used:</span><span id="reskinOutTemplate" class="font-bold text-[#1C1917]">-</span></div>
+                  <div class="flex justify-between"><span class="text-[#78716C]">Channel Badge:</span><span id="reskinOutHandle" class="font-mono font-bold text-purple-700">-</span></div>
+                </div>
+
+                <div class="flex gap-2 pt-1">
+                  <a id="visionDownloadLink" href="#" download class="flex-1 bg-white hover:bg-[#FAF8F5] border border-[#E6E0D6] text-[#1C1917] font-bold text-xs py-2 px-3 rounded-md text-center flex items-center justify-center gap-1 shadow-2xs transition">
+                    <span>💾</span> Download MP4
+                  </a>
+                  <button type="button" onclick="broadcastVisionReelNow()" id="btnVisionBroadcast" class="flex-1 orange-gradient-btn text-white font-bold text-xs py-2 px-3 rounded-md flex items-center justify-center gap-1 shadow-2xs">
+                    <span>🚀</span> Publish to Meta
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <!-- ==================== TAB 4: TARGET SOURCES & SCRAPER ==================== -->
       <section id="view_sources" class="space-y-6 hidden">
         <div class="cloud-card rounded-lg p-5 space-y-4">
@@ -2668,11 +2909,12 @@
       reels: { title: "Reels", sub: "Rendered 9:16 Vertical Video Vault" },
       broadcasts: { title: "Activity", sub: "Live Per-Account Publishing History" },
       settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" },
-      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" }
+      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" },
+      vision_reskinner: { title: "AI Vision Reel Reader & Brand Re-Skinner", sub: "Gemini Vision reads reels, extracts hooks & headlines, and re-skins with your brand theme" }
     };
 
     function switchTab(tabKey) {
-      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "sources", "reels", "broadcasts", "settings", "scheduler"];
+      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "vision_reskinner", "sources", "reels", "broadcasts", "settings", "scheduler"];
       tabs.forEach(t => {
         const sec = document.getElementById(`view_${t}`);
         const btn = document.getElementById(`tabBtn_${t}`);
@@ -2714,6 +2956,10 @@
 
       if (tabKey === 'scheduler') {
         loadSchedulerView();
+      }
+
+      if (tabKey === 'vision_reskinner') {
+        loadVisionAccounts();
       }
     }
 
@@ -6367,6 +6613,295 @@ Duration: ${data.harvest.duration_seconds}s`);
       }
     }
 
-  </script>
+  
+    // ==================== AI VISION REEL READER & RE-SKINNER JS ====================
+    let currentVisionAnalysis = null;
+    let currentReskinResult = null;
+
+    async function loadVisionAccounts() {
+      try {
+        const res = await fetch('/api/accounts');
+        const data = await res.json();
+        const accounts = data.accounts || [];
+        const sel = document.getElementById('visionAccountSelect');
+        if (!sel) return;
+        sel.innerHTML = '';
+        
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '✨ Auto-Detect Best Account for Niche';
+        sel.appendChild(defaultOption);
+
+        accounts.forEach(acc => {
+          const opt = document.createElement('option');
+          opt.value = acc.id;
+          opt.textContent = `${acc.handle || acc.id} (${acc.display_name || acc.id}) - ${acc.niche || 'general'}`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Error loading vision accounts:', e);
+      }
+    }
+
+    function loadVisionSample(pathOrUrl) {
+      const inp = document.getElementById('visionInputUrl');
+      if (inp) {
+        inp.value = pathOrUrl;
+        scanReelWithVision();
+      }
+    }
+
+    async function scanReelWithVision() {
+      const urlInp = document.getElementById('visionInputUrl');
+      const apiKeyInp = document.getElementById('visionCustomApiKey');
+      const btn = document.getElementById('btnVisionScan');
+      const btnText = document.getElementById('btnVisionScanText');
+      
+      const source = urlInp ? urlInp.value.trim() : '';
+      if (!source) {
+        alert('Please enter a reel link or video path first!');
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.innerHTML = '<span class="inline-block animate-spin mr-1">🌀</span> Scanning with Vision AI...';
+
+      try {
+        const payload = {
+          video_path: source.startsWith('http') ? null : source,
+          url: source.startsWith('http') ? source : null,
+          gemini_api_key: apiKeyInp && apiKeyInp.value.trim() ? apiKeyInp.value.trim() : null
+        };
+
+        const res = await fetch('/api/vision/read-reel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+          throw new Error(data.detail || data.error || 'Vision scan failed');
+        }
+
+        const a = data.analysis;
+        currentVisionAnalysis = a;
+
+        // Reveal panels
+        document.getElementById('visionFramesCard').classList.remove('hidden');
+        document.getElementById('visionReskinConfigCard').classList.remove('hidden');
+
+        // Populate engine badge
+        const badge = document.getElementById('visionEngineBadge');
+        if (badge) {
+          badge.textContent = a.engine === 'gemini_vision' ? '✨ Gemini Multimodal Vision' : '⚙️ Local OCR / Stroke Engine';
+        }
+
+        // Populate Thumbnails
+        const thumbsRow = document.getElementById('visionThumbnailsRow');
+        if (thumbsRow && a.frame_thumbnails) {
+          thumbsRow.innerHTML = '';
+          a.frame_thumbnails.forEach((thumbUrl, idx) => {
+            const div = document.createElement('div');
+            div.className = 'rounded-md overflow-hidden bg-black aspect-[9/16] relative border border-[#E8DCD1] group shadow-2xs';
+            div.innerHTML = `
+              <img src="${thumbUrl}" alt="Keyframe ${idx+1}" class="w-full h-full object-cover">
+              <span class="absolute bottom-1 right-1 bg-black/70 text-white font-mono text-[9px] px-1.5 py-0.5 rounded">Frame ${idx+1}</span>
+            `;
+            thumbsRow.appendChild(div);
+          });
+        }
+
+        // Populate Exact Text & Context
+        const exactTextEl = document.getElementById('visionExactTextDisplay');
+        if (exactTextEl) exactTextEl.textContent = a.exact_text || '(No baked-in text detected on video frames)';
+
+        const ctxEl = document.getElementById('visionContextDisplay');
+        if (ctxEl) ctxEl.textContent = a.context || 'Social media video clip';
+
+        // Populate Hook inputs
+        const hlInp = document.getElementById('visionHeadlineInput');
+        if (hlInp) hlInp.value = a.headline || a.exact_text || '';
+
+        const wordInp = document.getElementById('visionHighlightInput');
+        if (wordInp) wordInp.value = a.highlight_word || '';
+
+        // Select Niche
+        const nicheSel = document.getElementById('visionNicheSelect');
+        if (nicheSel && a.detected_niche) {
+          nicheSel.value = a.detected_niche;
+          onVisionNicheChange();
+        }
+
+        // Scroll smoothly to config card
+        document.getElementById('visionFramesCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      } catch (err) {
+        alert('Vision Scan Error: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerHTML = 'Scan & Read Reel';
+      }
+    }
+
+    function copyVisionText() {
+      const text = document.getElementById('visionHeadlineInput')?.value || 
+                   document.getElementById('visionExactTextDisplay')?.textContent || '';
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copyBtnText');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied to Clipboard!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      }
+    }
+
+    function pasteExtractedToHeadline() {
+      const exact = document.getElementById('visionExactTextDisplay')?.textContent || '';
+      const inp = document.getElementById('visionHeadlineInput');
+      if (inp && exact && !exact.startsWith('(')) {
+        inp.value = exact;
+      }
+    }
+
+    function onVisionNicheChange() {
+      const sel = document.getElementById('visionNicheSelect');
+      const niche = sel ? sel.value : 'ai_tech';
+      const dot = document.getElementById('themeColorDot');
+      const txt = document.getElementById('themeColorText');
+      const pill = document.getElementById('visionHighlightPill');
+
+      if (niche === 'clubbing') {
+        if (dot) dot.style.backgroundColor = '#FF007F';
+        if (txt) txt.textContent = '#FF007F Neon Hot Pink';
+        if (pill) { pill.className = 'text-[9px] font-bold px-1.5 py-0.2 rounded bg-pink-100 text-pink-800 border border-pink-300'; pill.textContent = '#FF007F Neon Pink'; }
+      } else if (niche === 'memes') {
+        if (dot) dot.style.backgroundColor = '#FFFFFF';
+        if (txt) txt.textContent = '#000000 Native Meme Bar';
+        if (pill) { pill.className = 'text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-800 border border-zinc-300'; pill.textContent = 'Top Caption Bar'; }
+      } else {
+        if (dot) dot.style.backgroundColor = '#DDF51A';
+        if (txt) txt.textContent = '#DDF51A Neon Yellow';
+        if (pill) { pill.className = 'text-[9px] font-bold px-1.5 py-0.2 rounded bg-yellow-100 text-yellow-800 border border-yellow-300'; pill.textContent = '#DDF51A Neon'; }
+      }
+    }
+
+    async function runVisionReskin() {
+      const urlInp = document.getElementById('visionInputUrl');
+      const headInp = document.getElementById('visionHeadlineInput');
+      const hlInp = document.getElementById('visionHighlightInput');
+      const nicheSel = document.getElementById('visionNicheSelect');
+      const accSel = document.getElementById('visionAccountSelect');
+      const creditInp = document.getElementById('visionCreditInput');
+      const autoPubCheck = document.getElementById('visionAutoPublishCheck');
+
+      const btn = document.getElementById('btnVisionReskin');
+      const btnText = document.getElementById('btnVisionReskinText');
+
+      const source = (currentVisionAnalysis && currentVisionAnalysis.video_path) || (urlInp ? urlInp.value.trim() : '');
+      const headline = headInp ? headInp.value.trim() : '';
+
+      if (!source || !headline) {
+        alert('Please ensure both source video and headline hook line are provided.');
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.innerHTML = '<span class="inline-block animate-spin mr-1">🌀</span> Rendering Branded Reel (FFmpeg)...';
+
+      try {
+        const payload = {
+          video_path_or_url: source,
+          headline: headline,
+          highlight_word: hlInp ? hlInp.value.trim() : null,
+          niche_id: nicheSel ? nicheSel.value : 'ai_tech',
+          account_id: accSel && accSel.value ? accSel.value : null,
+          credit_handle: creditInp ? creditInp.value.trim() : null,
+          auto_publish: autoPubCheck ? autoPubCheck.checked : false,
+          dry_run: false
+        };
+
+        const res = await fetch('/api/vision/reskin-reel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+          throw new Error(data.detail || data.error || 'Re-skinning failed.');
+        }
+
+        currentReskinResult = data.reskin;
+
+        // Update Player
+        const video = document.getElementById('visionResultVideo');
+        const placeholder = document.getElementById('visionPlayerPlaceholder');
+        const actions = document.getElementById('visionOutputActions');
+        const badge = document.getElementById('reskinStatusBadge');
+
+        if (video && currentReskinResult.rendered_video_url) {
+          video.src = currentReskinResult.rendered_video_url;
+          video.classList.remove('hidden');
+          if (placeholder) placeholder.classList.add('hidden');
+          video.load();
+          video.play().catch(() => {});
+        }
+
+        if (badge) {
+          badge.textContent = '✅ Branded 1080x1920 MP4';
+          badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200';
+        }
+
+        if (actions) actions.classList.remove('hidden');
+        const dl = document.getElementById('visionDownloadLink');
+        if (dl && currentReskinResult.rendered_video_url) {
+          dl.href = currentReskinResult.rendered_video_url;
+        }
+
+        const tmplLabel = document.getElementById('reskinOutTemplate');
+        if (tmplLabel) tmplLabel.textContent = currentReskinResult.template_name || currentReskinResult.template_id;
+
+        const handleLabel = document.getElementById('reskinOutHandle');
+        if (handleLabel) handleLabel.textContent = currentReskinResult.channel_handle || '@brand';
+
+      } catch (err) {
+        alert('Re-Skinning Error: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerHTML = '🎨 Re-Skin with Our Brand Theme';
+      }
+    }
+
+    async function broadcastVisionReelNow() {
+      if (!currentReskinResult || !currentReskinResult.rendered_video_url) {
+        alert('No rendered video to broadcast yet!');
+        return;
+      }
+      const accSel = document.getElementById('visionAccountSelect');
+      const accId = accSel && accSel.value ? accSel.value : 'info_01';
+      
+      const btn = document.getElementById('btnVisionBroadcast');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_ids: [accId],
+            dry_run: false
+          })
+        });
+        alert('🚀 Video broadcast initiated to destination account!');
+      } catch (e) {
+        alert('Broadcast error: ' + e.message);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+</script>
 </body>
 </html>

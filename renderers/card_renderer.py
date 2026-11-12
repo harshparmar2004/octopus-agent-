@@ -140,15 +140,17 @@ class CardRenderer:
         wrapped_lines = textwrap.wrap(hook_text, width=40)
         start_y = 360
         line_height = 56
+        hl_set = set(hw.strip(".,!?:;\"'").lower() for hw in highlight_word.split()) if highlight_word else set()
         for i, line in enumerate(wrapped_lines):
-            if highlight_word and highlight_word.lower() in line.lower():
+            if hl_set and any(hw in line.lower() for hw in hl_set):
                 words = line.split(" ")
                 cur_x = badge_x
                 for w in words:
                     clean_w = w.strip(".,!?:;\"'")
-                    color = highlight_color if clean_w.lower() == highlight_word.lower() else "#FFFFFF"
+                    is_hl = clean_w.lower() in hl_set
+                    color = highlight_color if is_hl else "#FFFFFF"
                     try:
-                        w_font = ImageFont.truetype(self.font_bold_path, 42) if clean_w.lower() == highlight_word.lower() else hook_font
+                        w_font = ImageFont.truetype(self.font_bold_path, 42) if is_hl else hook_font
                     except Exception:
                         w_font = hook_font
                     draw.text((cur_x, start_y + (i * line_height)), w + " ", font=w_font, fill=color)

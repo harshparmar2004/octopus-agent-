@@ -18,6 +18,8 @@ from storage.db import (
     insert_or_update_reel
 )
 from publisher.octopus_fanout import OctopusFanoutEngine
+from processors.vision_extractor import VisionExtractor
+from renderers.video_compositor import VideoCompositor
 
 logger = logging.getLogger("OctopusTelegramBot")
 
@@ -274,37 +276,83 @@ class OctopusTelegramBot:
         niches = get_all_niches()
         if not niches:
             niches = [
-                {"id": "information", "name": "Information & Infotainment", "avatar_icon": "💡"},
-                {"id": "quantum", "name": "Quantum Physics & Mechanics", "avatar_icon": "⚛️"},
-                {"id": "ai", "name": "Generative AI & Machine Learning", "avatar_icon": "🤖"},
-                {"id": "robotics", "name": "Humanoid Robotics & Embodied AI", "avatar_icon": "🦾"},
-                {"id": "space", "name": "Astrophysics & Space Exploration", "avatar_icon": "🚀"},
-                {"id": "biotech", "name": "Synthetic Biology & Longevity", "avatar_icon": "🧬"}
+                {"id": "ai_tech", "name": "Informative AI Tech", "avatar_icon": "💡"},
+                {"id": "clubbing", "name": "Clubbing & Party Neon", "avatar_icon": "🎉"},
+                {"id": "memes", "name": "Daily Memes", "avatar_icon": "🔥"},
+                {"id": "concerts", "name": "Concerts & Live", "avatar_icon": "🎸"},
+                {"id": "ai_content", "name": "AI Showcase", "avatar_icon": "🤖"},
+                {"id": "girls_dance", "name": "Dance & Choreography", "avatar_icon": "💃"}
             ]
+
+        # Multimodal Vision Analysis on Inbound Reel
+        analysis = None
+        try:
+            analysis = VisionExtractor.analyze_reel(url)
+        except Exception as ve:
+            logger.warning(f"Telegram Vision analysis error: {ve}")
+
+        headline = analysis.get("headline", "") if analysis else ""
+        highlight_word = analysis.get("highlight_word", "") if analysis else ""
+        context = analysis.get("context", "") if analysis else ""
+        detected_niche = analysis.get("detected_niche", "ai_tech") if analysis else "ai_tech"
 
         session = {
             "session_id": session_id,
             "chat_id": cid,
             "url": url,
             "step": "awaiting_niche",
-            "niche_id": None,
-            "niche_name": None,
+            "niche_id": detected_niche,
+            "niche_name": detected_niche.title(),
             "target": None,
+            "headline": headline,
+            "highlight_word": highlight_word,
+            "context": context,
+            "vision_analysis": analysis,
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         self.sessions[session_id] = session
         if cid:
             self.chat_active_session[cid] = session_id
 
-        keyboard = []
-        for n in niches:
+        # Quick Re-Skin & Niche Broadcast Options
+        keyboard = [
+            [
+                {"text": "🎨 Re-Skin (Informative Tech: Top Card)", "callback_data": f"tg_reskin:{session_id}:ai_tech"}
+            ],
+            [
+                {"text": "⚡ Re-Skin (Clubbing: Neon Box HUD)", "callback_data": f"tg_reskin:{session_id}:clubbing"}
+            ],
+            [
+                {"text": "🔥 Re-Skin (Memes: Native Bar)", "callback_data": f"tg_reskin:{session_id}:memes"}
+            ]
+        ]
+
+        niche_rows = []
+        for n in niches[:4]:
             icon = n.get("avatar_icon", "📁")
             name = n.get("name", n["id"].title())
-            btn_text = f"{icon} {name}"
-            keyboard.append([{"text": btn_text, "callback_data": f"tg_niche:{session_id}:{n['id']}"}])
+            niche_rows.append({"text": f"{icon} {name}", "callback_data": f"tg_niche:{session_id}:{n['id']}"})
+        if niche_rows:
+            keyboard.append(niche_rows[:2])
+            if len(niche_rows) > 2:
+                keyboard.append(niche_rows[2:])
+
         keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
 
-        prompt_text = f"🐙 *Octopus Agent: Reel Link Received*\n🔗 `{url}`\n\n*Which niche do you want to publish on?*\nSelect the target niche cluster below:"
+        vision_block = ""
+        if headline:
+            vision_block = (
+                f"\n\n📝 *Detected Headline on Reel:*\n`\"{headline}\"`\n"
+                f"💡 *Highlight:* `{highlight_word}`\n"
+                f"🧠 *Context:* _{context}_\n"
+                f"🏷️ *Suggested Niche:* *{detected_niche}*\n"
+            )
+
+        prompt_text = (
+            f"🐙 *Octopus Agent: Reel Inspected*{vision_block}\n"
+            f"🔗 `{url}`\n\n"
+            f"*Choose an action below to re-skin with our brand or fan out:*"
+        )
 
         if self.is_configured() and cid:
             self.send_text_message(prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
@@ -313,6 +361,10 @@ class OctopusTelegramBot:
             "session_id": session_id,
             "step": "awaiting_niche",
             "url": url,
+            "headline": headline,
+            "highlight_word": highlight_word,
+            "context": context,
+            "detected_niche": detected_niche,
             "prompt_text": prompt_text,
             "niches": niches
         }
@@ -565,6 +617,53 @@ class OctopusTelegramBot:
                 kwargs={"session_id": session_id, "niche_id": niche_id, "target": target, "chat_id": chat_id},
                 daemon=True
             ).start()
+
+        elif data.startswith("tg_reskin:"):
+            parts = data.split(":")
+            session_id = parts[1]
+            niche_id = parts[2]
+            session = self.sessions.get(session_id) or {}
+            reel_url = session.get("url", "")
+            headline = session.get("headline") or "Viral breakthrough changing how this works"
+            highlight_word = session.get("highlight_word")
+
+            self.send_text_message(
+                f"🎨 *Re-Skinning Reel into [{niche_id.upper()}] Brand Theme...*\n\n"
+                f"📝 *Headline:* `{headline}`\n"
+                f"💡 *Highlight:* `{highlight_word}`\n\n"
+                f"Rendering video with our fonts, neon accents, and channel logo in background...",
+                target_chat_id=chat_id
+            )
+
+            def _do_reskin_job():
+                try:
+                    comp = VideoCompositor()
+                    res = comp.reskin_reel(
+                        raw_video_path=reel_url,
+                        headline=headline,
+                        highlight_word=highlight_word,
+                        niche_id=niche_id
+                    )
+                    if res.get("success"):
+                        v_url = res.get("rendered_video_url")
+                        t_name = res.get("template_name")
+                        h_tag = res.get("channel_handle")
+                        p_url = res.get("preview_frame_url", "")
+                        self.send_text_message(
+                            f"✅ *Re-Skinning Complete!*\n\n"
+                            f"🎬 *Rendered Video:* `{v_url}`\n"
+                            f"🎨 *Template:* *{t_name}*\n"
+                            f"🏷️ *Brand Handle:* *{h_tag}*\n\n"
+                            f"Your reel is ready with clean branded typography and centered video layout!",
+                            target_chat_id=chat_id
+                        )
+                    else:
+                        self.send_text_message(f"❌ Re-skin failed: {res.get('error')}", target_chat_id=chat_id)
+                except Exception as e:
+                    logger.error(f"Error during async Telegram reskin: {e}")
+                    self.send_text_message(f"❌ Error during re-skin: {e}", target_chat_id=chat_id)
+
+            threading.Thread(target=_do_reskin_job, daemon=True).start()
 
         elif data.startswith("tg_cancel:"):
             session_id = data.split(":")[1]

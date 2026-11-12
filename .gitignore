@@ -18,6 +18,7 @@ env/
 # Video renders & temporary media (preserve folder structure via .gitkeep)
 output/*.mp4
 output/*.png
+output/vision_frames/
 storage/*.mp4
 storage/test_sample.mp4
 storage/llm_config.json

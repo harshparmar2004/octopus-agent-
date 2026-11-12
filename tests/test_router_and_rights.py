@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from storage.db import init_octopus_db
 from storage.network_db import init_network_tables, ledger_get, set_account_profile
@@ -11,7 +12,7 @@ def setup_db():
 
 def test_01_content_router_exclusive_lock():
     """Verifies that once a reel is routed to an account, it cannot be routed to a second account."""
-    src = "reel_exclusive_test_001"
+    src = f"reel_exclusive_test_{uuid.uuid4().hex[:8]}"
     
     # First routing attempt succeeds
     acc1 = ContentRouter.route_reel_to_best_account(
@@ -36,7 +37,7 @@ def test_01_content_router_exclusive_lock():
 
 def test_02_girls_dance_permission_gate():
     """Verifies that girls_dance reels cannot publish without explicit creator permission."""
-    src = "reel_dance_test_002"
+    src = f"reel_dance_test_{uuid.uuid4().hex[:8]}"
     
     # Initial status requires permission
     res = RightsLedger.evaluate_reel_rights(

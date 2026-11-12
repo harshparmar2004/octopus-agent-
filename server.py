@@ -17,6 +17,7 @@ from scrapers.instagram_harvester import InstagramHarvester
 from scrapers.content_harvester import ContentHarvester
 from processors.ai_enricher import AIEnricher
 from processors.llm_manager import LLMManager
+from processors.vision_extractor import VisionExtractor
 from renderers.video_compositor import VideoCompositor
 from renderers.niche_templates import (
     list_all_templates,
@@ -1048,6 +1049,87 @@ def skip_slot_endpoint(slot_run_id: int, req: Optional[CandidateActionRequest] =
     reason = req.reason if req and req.reason else "Skipped via API"
     run = get_peak_scheduler().skip_slot(slot_run_id, reason=reason)
     return {"status": "success", "slot_run": run}
+
+# ==================== AI VISION REEL READER & RE-SKINNER ====================
+class VisionReadRequest(BaseModel):
+    url: Optional[str] = None
+    video_path: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+
+class VisionReskinRequest(BaseModel):
+    video_path_or_url: str
+    headline: str
+    highlight_word: Optional[str] = None
+    niche_id: str = "ai_tech"
+    account_id: Optional[str] = None
+    credit_handle: Optional[str] = None
+    auto_publish: bool = False
+    dry_run: bool = True
+
+@app.post("/api/vision/read-reel")
+def api_vision_read_reel(req: VisionReadRequest):
+    source = req.video_path or req.url
+    if not source:
+        raise HTTPException(status_code=400, detail="Either 'url' or 'video_path' must be provided.")
+    try:
+        analysis = VisionExtractor.analyze_reel(source_url_or_path=source, api_key=req.gemini_api_key)
+        if not analysis.get("success"):
+            raise HTTPException(status_code=500, detail=analysis.get("error", "Vision analysis failed."))
+        return {"status": "success", "analysis": analysis}
+    except Exception as e:
+        logger.error(f"Error in /api/vision/read-reel: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/vision/reskin-reel")
+def api_vision_reskin_reel(req: VisionReskinRequest):
+    compositor = VideoCompositor()
+    source = req.video_path_or_url.strip()
+    
+    if source.startswith("http://") or source.startswith("https://"):
+        from scrapers.content_harvester import ContentHarvester
+        downloaded = ContentHarvester().download_video(source)
+        if not downloaded or not Path(downloaded).exists():
+            raise HTTPException(status_code=400, detail=f"Failed to download video from {source}")
+        source = downloaded
+    
+    if not Path(source).exists():
+        raise HTTPException(status_code=404, detail=f"Source video file not found: {source}")
+
+    result = compositor.reskin_reel(
+        raw_video_path=source,
+        headline=req.headline,
+        highlight_word=req.highlight_word,
+        niche_id=req.niche_id,
+        account_id=req.account_id,
+        credit_handle=req.credit_handle
+    )
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("error", "Video composition failed."))
+
+    publish_result = None
+    if req.auto_publish and req.account_id:
+        try:
+            account = get_account_by_id(req.account_id)
+            if account:
+                publisher = MetaReelsPublisher(
+                    ig_user_id=account.get("ig_user_id") or settings.IG_USER_ID,
+                    access_token=account.get("access_token") or settings.META_ACCESS_TOKEN
+                )
+                publish_result = publisher.publish_reel(
+                    video_url=result["rendered_video_url"],
+                    caption=f"{req.headline}\n\nFollow {account.get('handle', '@channel')} for more!",
+                    dry_run=req.dry_run
+                )
+        except Exception as pe:
+            logger.warning(f"Auto-publish failed: {pe}")
+            publish_result = {"status": "error", "error": str(pe)}
+
+    return {
+        "status": "success",
+        "reskin": result,
+        "publish": publish_result
+    }
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard_ui():
