@@ -203,25 +203,30 @@ class MetaReelsPublisher:
             raise RuntimeError(f"Failed to initialize container: {data}")
         return data["id"]
 
-    def _wait_until_ready(self, container_id: str, max_retries: int = 30, delay_seconds: int = 5, on_progress: Optional[Callable[[str], None]] = None) -> None:
+    def _wait_until_ready(self, container_id: str, max_retries: int = 60, delay_seconds: int = 5, on_progress: Optional[Callable[[str], None]] = None) -> None:
         url = f"{self.base_url}/{container_id}"
         params = {
             "fields": "status_code,status",
             "access_token": self.access_token
         }
         for attempt in range(max_retries):
-            res = requests.get(url, params=params, timeout=15)
-            data = res.json()
-            status = data.get("status_code", "").upper()
-            logger.info(f"Status check {attempt + 1}/{max_retries}: {status}")
-            if on_progress:
-                on_progress(f"meta_status_{status.lower() or 'checking'}_{attempt + 1}")
-            if status == "FINISHED":
-                return
-            elif status in ["ERROR", "EXPIRED"]:
-                raise RuntimeError(f"Container processing failed: {data}")
-            time.sleep(delay_seconds)
-        raise TimeoutError(f"Container {container_id} timed out while processing.")
+            try:
+                res = requests.get(url, params=params, timeout=15)
+                data = res.json()
+                status = data.get("status_code", "").upper()
+                logger.info(f"Status check {attempt + 1}/{max_retries}: {status} (container {container_id})")
+                if on_progress:
+                    on_progress(f"meta_status_{status.lower() or 'checking'}_{attempt + 1}")
+                if status == "FINISHED":
+                    return
+                elif status in ["ERROR", "EXPIRED"]:
+                    raise RuntimeError(f"Container processing failed: {data}")
+            except requests.RequestException as req_err:
+                logger.warning(f"Status check network glitch on attempt {attempt + 1}: {req_err}")
+
+            sleep_time = delay_seconds if attempt < 12 else 8
+            time.sleep(sleep_time)
+        raise TimeoutError(f"Container {container_id} timed out while processing after {max_retries} attempts.")
 
     def _publish_container(self, container_id: str) -> str:
         url = f"{self.base_url}/{self.ig_user_id}/media_publish"
