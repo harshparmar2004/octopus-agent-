@@ -3563,6 +3563,9 @@
       closeCreateNicheModal();
       currentNicheId = id;
       await loadNiches();
+      if (typeof populateNicheDropdown === 'function') {
+        await populateNicheDropdown();
+      }
     }
 
     function openBulkAddAccountsModal() {
@@ -4406,7 +4409,38 @@
       modal.classList.add("hidden");
     }
 
-    function openAddAccountModal() { document.getElementById("addAccountModal").classList.remove("hidden"); }
+    async function populateNicheDropdown() {
+      const select = document.getElementById("modalAccNicheSelect");
+      if (!select) return;
+      try {
+        const res = await fetch("/api/niches");
+        if (res.ok) {
+          globalNiches = await res.json();
+        }
+        const currentVal = select.value;
+        const validNiches = (globalNiches || []).filter(n => 
+          !(n.id.startsWith("niche_") && /^\d+$/.test(n.id.slice(6))) &&
+          !n.id.startsWith("test_") && n.id !== "api_test_niche"
+        );
+        select.innerHTML = validNiches.map(n => 
+          `<option value="${n.id}">${n.avatar_icon || '📁'} ${n.name} (${n.id})</option>`
+        ).join("") + `<option value="custom">➕ Custom / Other Niche</option>`;
+
+        if (currentVal && [...select.options].some(o => o.value === currentVal)) {
+          select.value = currentVal;
+        } else if (typeof currentNicheId !== 'undefined' && currentNicheId && [...select.options].some(o => o.value === currentNicheId)) {
+          select.value = currentNicheId;
+        }
+        toggleCustomNicheInput();
+      } catch (e) {
+        console.error("Error populating niche dropdown:", e);
+      }
+    }
+
+    async function openAddAccountModal() {
+      await populateNicheDropdown();
+      document.getElementById("addAccountModal").classList.remove("hidden");
+    }
     function closeAddAccountModal() { document.getElementById("addAccountModal").classList.add("hidden"); }
 
     function toggleCustomNicheInput() {

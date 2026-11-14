@@ -385,16 +385,36 @@ class OctopusTelegramBot:
             unit = "Account" if cnt == 1 else "Accounts"
             return {"text": f"{label} ({cnt} {unit})", "callback_data": f"tg_niche:{session_id}:{nid}"}
 
-        # 6 Primary Niches with Real Live Connected Account Counts
-        keyboard = [
-            [_niche_btn("girls_dance", "💃 Dance & Choreography")],
-            [_niche_btn("ai_tech", "💡 Informative AI Tech")],
-            [_niche_btn("clubbing", "🎉 Clubbing & Party")],
-            [_niche_btn("memes", "🔥 Daily Memes")],
-            [_niche_btn("concerts", "🎸 Concerts & Live")],
-            [_niche_btn("ai_content", "🤖 AI Showcase")],
-            [{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}]
+        # Filter out legacy automated test pods if any (e.g. niche_01..niche_20)
+        valid_niches = [
+            n for n in niches
+            if not (str(n.get("id", "")).startswith("niche_") and str(n.get("id", ""))[6:].isdigit())
+            and not str(n.get("id", "")).startswith("test_")
+            and str(n.get("id", "")) != "api_test_niche"
         ]
+        if not valid_niches:
+            valid_niches = niches
+
+        # Sort: niches with connected Meta Graph accounts appear FIRST, then alphabetically
+        def _sort_key(n):
+            try:
+                cl = get_niche_cluster(n["id"], allow_placeholders=False)
+                has_accs = len(cl.get("accounts", [])) > 0
+            except Exception:
+                has_accs = False
+            return (0 if has_accs else 1, n.get("name", ""))
+
+        valid_niches.sort(key=_sort_key)
+
+        # Dynamic Niches keyboard with Real Live Connected Account Counts
+        keyboard = []
+        for n in valid_niches:
+            nid = n["id"]
+            name = n.get("name", nid.replace("_", " ").title())
+            icon = n.get("avatar_icon") or "📁"
+            keyboard.append([_niche_btn(nid, f"{icon} {name}")])
+
+        keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
 
         prompt_text = (
             f"🐙 *Octopus Agent: {platform_emoji} {platform_name} Detected*\n"
@@ -430,42 +450,48 @@ class OctopusTelegramBot:
         session["niche_id"] = niche_id
         session["step"] = "awaiting_pages"
 
-        cluster = get_niche_cluster(niche_id)
+        cluster = get_niche_cluster(niche_id, allow_placeholders=False)
         niche_info = cluster.get("niche") or {"name": niche_id.title(), "avatar_icon": "📁"}
         session["niche_name"] = niche_info.get("name", niche_id.title())
 
         accounts = cluster.get("accounts", [])
-        if not accounts:
-            all_accs = get_all_accounts(active_only=True)
-            accounts = [a for a in all_accs if a.get("niche_id") == niche_id or niche_id in a.get("niche", "").lower()]
-            if not accounts:
-                accounts = all_accs[:10]
-
         total_pages = len(accounts)
         session["accounts"] = accounts
 
-        keyboard = [
-            [
-                {
-                    "text": f"🐙 Publish to ALL ({total_pages}) Pages in {session['niche_name']}",
-                    "callback_data": f"tg_pages:{session_id}:{niche_id}:all"
-                }
+        if total_pages == 0:
+            keyboard = [
+                [{"text": "🔙 Choose Another Niche", "callback_data": f"tg_retry_niche:{session_id}"}],
+                [{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}]
             ]
-        ]
+            prompt_text = (
+                f"🎯 *Selected Niche:* *{session['niche_name']}*\n"
+                f"⚠️ *Connected Destination Pages: 0 accounts*\n\n"
+                f"There are no Instagram accounts configured with Meta Graph API credentials for this niche yet.\n\n"
+                f"👉 Please open the Dashboard (`http://localhost:8000`) and connect an Instagram Business account with a valid Access Token and User ID first."
+            )
+        else:
+            keyboard = [
+                [
+                    {
+                        "text": f"🐙 Publish to ALL ({total_pages}) Pages in {session['niche_name']}",
+                        "callback_data": f"tg_pages:{session_id}:{niche_id}:all"
+                    }
+                ]
+            ]
 
-        row = []
-        for acc in accounts[:8]:
-            handle = acc.get("handle", acc.get("id"))
-            row.append({"text": handle, "callback_data": f"tg_pages:{session_id}:{niche_id}:{acc['id']}"})
-            if len(row) == 2:
+            row = []
+            for acc in accounts[:8]:
+                handle = acc.get("handle", acc.get("id"))
+                row.append({"text": handle, "callback_data": f"tg_pages:{session_id}:{niche_id}:{acc['id']}"})
+                if len(row) == 2:
+                    keyboard.append(row)
+                    row = []
+            if row:
                 keyboard.append(row)
-                row = []
-        if row:
-            keyboard.append(row)
 
-        keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
+            keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
 
-        prompt_text = f"🎯 *Selected Niche:* *{session['niche_name']}*\n👥 Connected Destination Pages: *{total_pages} accounts*\n\n*On which page(s) do you want to publish?*\nChoose below to fan out:"
+            prompt_text = f"🎯 *Selected Niche:* *{session['niche_name']}*\n👥 Connected Destination Pages: *{total_pages} accounts*\n\n*On which page(s) do you want to publish?*\nChoose below to fan out:"
 
         cid = session.get("chat_id") or chat_id or self.chat_id
         if self.is_configured() and cid:
@@ -1117,6 +1143,12 @@ class OctopusTelegramBot:
             if session_id in self.sessions:
                 del self.sessions[session_id]
             self.send_text_message("❌ Inbound reel broadcast cancelled.", target_chat_id=chat_id)
+
+        elif data.startswith("tg_retry_niche:") or data.startswith("tg_inbound_retry:"):
+            session_id = data.split(":")[1]
+            session = self.sessions.get(session_id)
+            if session and session.get("url"):
+                self.handle_inbound_url(url=session["url"], chat_id=chat_id)
 
         elif data.startswith("broadcast_all:"):
             reel_id = data.split(":")[1]
