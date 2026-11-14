@@ -141,155 +141,8 @@ def init_octopus_db():
         pass
 
 
-    # Seed default initial accounts if empty
-    cursor.execute("SELECT COUNT(*) FROM accounts")
-    if cursor.fetchone()[0] == 0:
-        default_accounts = [
-            ("quantum", "@octopus.quantum", "OctopusQuantum", "Quantum Physics & Computing", "", "", "OQ", "#00b4d8", 1),
-            ("robotics", "@octopus.robotics", "OctopusRobotics", "Humanoid Robotics & Embodied AI", "", "", "OR", "#e63946", 1),
-            ("ai", "@octopus.ai", "OctopusAI", "Generative AI & Machine Learning", "", "", "OA", "#7209b7", 1),
-            ("space", "@octopus.space", "OctopusSpace", "Astrophysics & Space Exploration", "", "", "OS", "#f72585", 1),
-            ("biotech", "@octopus.biotech", "OctopusBioTech", "Synthetic Biology & Longevity", "", "", "OB", "#4cc9f0", 1),
-        ]
-        cursor.executemany("""
-            INSERT INTO accounts (id, handle, display_name, niche, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, default_accounts)
-
-    # Seed default niches if empty
-    cursor.execute("SELECT COUNT(*) FROM niches")
-    if cursor.fetchone()[0] == 0:
-        default_niches = [
-            ("information", "Information & Infotainment", "Viral educational facts, curious knowledge & deep phenomena", "#ea580c", "💡", "#information #facts #curiosity #knowledge #didyouknow", "Follow @{handle} for daily mind-blowing information!"),
-            ("quantum", "Quantum Physics & Computing", "Subatomic physics, quantum computing & superposition", "#00b4d8", "⚛️", "#quantum #physics #science #tech", "Follow @{handle} for cutting-edge quantum discoveries!"),
-            ("ai", "Generative AI & Machine Learning", "Artificial intelligence, LLMs, neural networks & automation", "#7209b7", "🤖", "#ai #machinelearning #artificialintelligence #tech", "Follow @{handle} for daily AI breakthroughs!"),
-            ("robotics", "Humanoid Robotics & Embodied AI", "Bipedal robots, automation, actuators & mechatronics", "#e63946", "🦾", "#robotics #engineering #humanoid #future", "Follow @{handle} for next-gen robotics!"),
-            ("space", "Astrophysics & Space Exploration", "NASA, SpaceX, cosmology, galaxies & deep space missions", "#f72585", "🚀", "#space #astrophysics #cosmos #universe", "Follow @{handle} for daily cosmos exploration!"),
-            ("biotech", "Synthetic Biology & Longevity", "Gene editing, CRISPR, longevity medicine & cellular biology", "#4cc9f0", "🧬", "#biotech #crispr #longevity #biology", "Follow @{handle} for future biology insights!"),
-        ]
-        cursor.executemany("""
-            INSERT INTO niches (id, name, description, brand_color, avatar_icon, default_hashtags, cta_text)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, default_niches)
-
-    # Seed initial accounts if empty (including 10 Information pages + 5 Tech pages)
-    cursor.execute("SELECT COUNT(*) FROM accounts")
-    if cursor.fetchone()[0] <= 5:
-        # Make sure the 10 Information pages are present
-        info_accounts = [
-            ("info_01", "@info.daily", "InfoDaily", "Information", "information", "", "", "ID", "#ea580c", 1),
-            ("info_02", "@curious.minds", "CuriousMinds", "Information", "information", "", "", "CM", "#f97316", 1),
-            ("info_03", "@daily.knowledge", "DailyKnowledge", "Information", "information", "", "", "DK", "#fb923c", 1),
-            ("info_04", "@deep.facts", "DeepFacts", "Information", "information", "", "", "DF", "#fdba74", 1),
-            ("info_05", "@mind.uncovered", "MindUncovered", "Information", "information", "", "", "MU", "#c2410c", 1),
-            ("info_06", "@quick.intel", "QuickIntel", "Information", "information", "", "", "QI", "#9a3412", 1),
-            ("info_07", "@world.infotainment", "WorldInfotainment", "Information", "information", "", "", "WI", "#ea580c", 1),
-            ("info_08", "@insight.pulse", "InsightPulse", "Information", "information", "", "", "IP", "#f97316", 1),
-            ("info_09", "@curiosity.stream", "CuriosityStream", "Information", "information", "", "", "CS", "#fb923c", 1),
-            ("info_10", "@facts.nexus", "FactsNexus", "Information", "information", "", "", "FN", "#c2410c", 1),
-        ]
-        for acc in info_accounts:
-            cursor.execute("""
-                INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, acc)
-
-    # Ensure existing accounts have niche_id populated
-    cursor.execute("UPDATE accounts SET niche_id = 'quantum' WHERE id = 'quantum' OR niche LIKE '%quantum%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'robotics' WHERE id = 'robotics' OR niche LIKE '%robotics%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'ai' WHERE id = 'ai' OR niche LIKE '%ai%' OR niche LIKE '%machine%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'space' WHERE id = 'space' OR niche LIKE '%space%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'biotech' WHERE id = 'biotech' OR niche LIKE '%biotech%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'information' WHERE id LIKE 'info_%'")
-    cursor.execute("UPDATE accounts SET niche_id = 'girls_dance', niche = 'Girls'' Dance & Parties' WHERE id = 'cute_aarohi_007' OR handle LIKE '%cute.aarohi%'")
-
-    # Seed extended niches (Parties, Organizing, Fashion) with their templates
-    extended_niches = [
-        ("parties", "Parties, EDM & Nightlife", "EDM festivals, DJ drops, club culture & event recaps", "#FF007F", "🎉", "#nightlife #edmlifestyle #partyvibes #techno #festivalvibes #clubbing", "Follow @{handle} for weekend party drops!", "nightlife_party"),
-        ("organizing", "Home Organizing & ASMR", "Decluttering, Sunday resets, pantry setups & clean home hacks", "#84A98C", "🧺", "#organizationhacks #sundayreset #cleantok #minimalisthome", "Follow @{handle} for weekly reset inspiration!", "organizing_home"),
-        ("fashion", "Fashion & Beauty Lifestyle", "Capsule wardrobes, clean girl aesthetic outfits & chic lookbooks", "#D4AF37", "✨", "#outfitinspo #capsulewardrobe #cleangirlstyle #aestheticfits", "Follow @{handle} for daily chic rotation inspo!", "fashion_editorial"),
-    ]
-    for n in extended_niches:
-        cursor.execute("""
-            INSERT OR IGNORE INTO niches (id, name, description, brand_color, avatar_icon, default_hashtags, cta_text, template_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, n)
-        cursor.execute("UPDATE niches SET template_id = ? WHERE id = ?", (n[7], n[0]))
-
-    # Seed accounts for Parties, Organizing, and Fashion pods
-    party_accounts = [
-        ("party_01", "@miami.nights", "MiamiNights", "Parties & Nightlife", "parties", "", "", "MN", "#FF007F", 1),
-        ("party_02", "@edm.pulse", "EDMPulse", "Parties & Nightlife", "parties", "", "", "EP", "#00F0FF", 1),
-        ("party_03", "@afterhours.club", "AfterhoursClub", "Parties & Nightlife", "parties", "", "", "AC", "#f43f5e", 1),
-        ("party_04", "@festival.vibes", "FestivalVibes", "Parties & Nightlife", "parties", "", "", "FV", "#a855f7", 1),
-        ("party_05", "@club.tulum", "ClubTulum", "Parties & Nightlife", "parties", "", "", "CT", "#ec4899", 1),
-        ("party_06", "@neon.energy", "NeonEnergy", "Parties & Nightlife", "parties", "", "", "NE", "#3b82f6", 1),
-        ("party_07", "@techno.pulse", "TechnoPulse", "Parties & Nightlife", "parties", "", "", "TP", "#6366f1", 1),
-        ("party_08", "@bass.heavy", "BassHeavy", "Parties & Nightlife", "parties", "", "", "BH", "#8b5cf6", 1),
-        ("party_09", "@rave.society", "RaveSociety", "Parties & Nightlife", "parties", "", "", "RS", "#d946ef", 1),
-        ("party_10", "@drop.vault", "DropVault", "Parties & Nightlife", "parties", "", "", "DV", "#FF007F", 1),
-    ]
-    for acc in party_accounts:
-        cursor.execute("""
-            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, acc)
-
-    organizing_accounts = [
-        ("org_01", "@organize.daily", "OrganizeDaily", "Home Organizing & ASMR", "organizing", "", "", "OD", "#84A98C", 1),
-        ("org_02", "@reset.routine", "ResetRoutine", "Home Organizing & ASMR", "organizing", "", "", "RR", "#52796F", 1),
-        ("org_03", "@clean.spaces", "CleanSpaces", "Home Organizing & ASMR", "organizing", "", "", "CS", "#354F52", 1),
-        ("org_04", "@pantry.perfection", "PantryPerfection", "Home Organizing & ASMR", "organizing", "", "", "PP", "#2F3E46", 1),
-        ("org_05", "@neat.living", "NeatLiving", "Home Organizing & ASMR", "organizing", "", "", "NL", "#84A98C", 1),
-        ("org_06", "@declutter.flow", "DeclutterFlow", "Home Organizing & ASMR", "organizing", "", "", "DF", "#52796F", 1),
-        ("org_07", "@asmr.organize", "ASMROrganize", "Home Organizing & ASMR", "organizing", "", "", "AO", "#C86237", 1),
-        ("org_08", "@aesthetic.home", "AestheticHome", "Home Organizing & ASMR", "organizing", "", "", "AH", "#D5BDAF", 1),
-        ("org_09", "@tidy.haven", "TidyHaven", "Home Organizing & ASMR", "organizing", "", "", "TH", "#84A98C", 1),
-        ("org_10", "@order.simplified", "OrderSimplified", "Home Organizing & ASMR", "organizing", "", "", "OS", "#52796F", 1),
-    ]
-    for acc in organizing_accounts:
-        cursor.execute("""
-            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, acc)
-
-    fashion_accounts = [
-        ("fash_01", "@chic.rotation", "ChicRotation", "Fashion & Beauty Lifestyle", "fashion", "", "", "CR", "#D4AF37", 1),
-        ("fash_02", "@minimal.fits", "MinimalFits", "Fashion & Beauty Lifestyle", "fashion", "", "", "MF", "#C5A059", 1),
-        ("fash_03", "@style.notes", "StyleNotes", "Fashion & Beauty Lifestyle", "fashion", "", "", "SN", "#E5C158", 1),
-        ("fash_04", "@aesthetic.wardrobe", "AestheticWardrobe", "Fashion & Beauty Lifestyle", "fashion", "", "", "AW", "#A38035", 1),
-        ("fash_05", "@capsule.styling", "CapsuleStyling", "Fashion & Beauty Lifestyle", "fashion", "", "", "CS", "#D4AF37", 1),
-        ("fash_06", "@quiet.luxury", "QuietLuxury", "Fashion & Beauty Lifestyle", "fashion", "", "", "QL", "#8C6D23", 1),
-        ("fash_07", "@french.vibe", "FrenchVibe", "Fashion & Beauty Lifestyle", "fashion", "", "", "FV", "#D4AF37", 1),
-        ("fash_08", "@daily.lookbook", "DailyLookbook", "Fashion & Beauty Lifestyle", "fashion", "", "", "DL", "#C5A059", 1),
-        ("fash_09", "@couture.pulse", "CouturePulse", "Fashion & Beauty Lifestyle", "fashion", "", "", "CP", "#E5C158", 1),
-        ("fash_10", "@clean.girl.fits", "CleanGirlFits", "Fashion & Beauty Lifestyle", "fashion", "", "", "CG", "#D4AF37", 1),
-    ]
-    for acc in fashion_accounts:
-        cursor.execute("""
-            INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, acc)
-
-
-    # Seed 7 benchmark sources for the Information Niche if missing
-    info_sources = [
-        ("instagram_handle", "dailyfacts", "information", "information", "info_01", 1),
-        ("instagram_handle", "uncover.ai", "information", "information", "info_02", 1),
-        ("instagram_handle", "interestingengineering", "information", "information", "info_03", 1),
-        ("instagram_handle", "physicsfun", "information", "information", "info_04", 1),
-        ("instagram_handle", "mindblowingfacts", "information", "information", "info_05", 1),
-        ("instagram_handle", "science.daily", "information", "information", "info_06", 1),
-        ("reddit_sub", "facts", "information", "information", "info_07", 1),
-    ]
-    for s in info_sources:
-        cursor.execute("""
-            INSERT OR IGNORE INTO monitored_sources (source_type, source_value, category, niche_id, target_account_id, auto_publish)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, s)
-
-    # Ensure existing sources have niche_id populated
-    cursor.execute("UPDATE monitored_sources SET niche_id = category WHERE niche_id IS NULL OR niche_id = ''")
+    # Ensure cute_aarohi_007 has niche_id populated
+    cursor.execute("UPDATE accounts SET niche_id = 'girls_dance', niche = \"Girls' Dance & Parties\" WHERE id = 'cute_aarohi_007' OR handle LIKE '%cute.aarohi%'")
 
     conn.commit()
     conn.close()
@@ -301,32 +154,6 @@ def init_octopus_db():
     # Network tables (content ledger, rights, account profiles, insights) + 6 core niches
     from storage.network_db import init_network_tables
     init_network_tables()
-
-    # Seed 6 Core Network Niches' Accounts if missing or below target count
-    conn = get_connection()
-    c = conn.cursor()
-    core_niche_seeds = [
-        ("ai_tech", "ai_tech", "@aitech.daily", "AI Tech Daily", "Informative AI & Tech", "AT", "#DDF51A", 20),
-        ("clubbing", "clubbing", "@clubbing.pulse", "Clubbing Nights", "Clubbing Parties", "CP", "#FF007F", 20),
-        ("memes", "memes", "@daily.memes", "Daily Memes", "Memes", "DM", "#111111", 10),
-        ("concerts", "concerts", "@concert.live", "Concert Moments", "Concerts & Live Music", "CL", "#FFD23F", 10),
-        ("ai_content", "ai_content", "@ai.showcase", "AI Showcase", "AI Content & Showcase", "AS", "#7C5CFF", 15),
-        ("girls_dance", "girls_dance", "@dance.vibes", "Dance Vibes", "Girls' Dance & Parties", "DV", "#FF4FA3", 15),
-    ]
-    for nid, prefix, h_prefix, d_prefix, n_name, initials, color, target_count in core_niche_seeds:
-        c.execute("SELECT COUNT(*) FROM accounts WHERE niche_id = ?", (nid,))
-        curr = c.fetchone()[0]
-        if curr < target_count:
-            for i in range(curr + 1, target_count + 1):
-                acc_id = f"{prefix}_{i:02d}"
-                handle = f"{h_prefix}{i:02d}"
-                disp_name = f"{d_prefix} {i:02d}"
-                c.execute("""
-                    INSERT OR IGNORE INTO accounts (id, handle, display_name, niche, niche_id, ig_user_id, access_token, avatar_initials, brand_color, is_active)
-                    VALUES (?, ?, ?, ?, ?, '', '', ?, ?, 1)
-                """, (acc_id, handle, disp_name, n_name, nid, initials, color))
-    conn.commit()
-    conn.close()
 
 # Accounts operations
 def get_all_accounts(active_only: bool = True) -> List[Dict]:
@@ -692,8 +519,8 @@ def delete_niche(niche_id: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM niches WHERE id = ?", (niche_id,))
-    cursor.execute("UPDATE accounts SET niche_id = 'information' WHERE niche_id = ?", (niche_id,))
-    cursor.execute("UPDATE monitored_sources SET niche_id = 'information' WHERE niche_id = ?", (niche_id,))
+    cursor.execute("UPDATE accounts SET niche_id = NULL WHERE niche_id = ?", (niche_id,))
+    cursor.execute("UPDATE monitored_sources SET niche_id = NULL WHERE niche_id = ?", (niche_id,))
     conn.commit()
     conn.close()
 
@@ -706,7 +533,7 @@ def get_niche_cluster(niche_id: str, allow_placeholders: bool = False) -> Dict[s
             "name": niche_id.capitalize(),
             "description": f"Automated cluster for {niche_id}",
             "brand_color": "#ea580c",
-            "avatar_icon": "💡",
+            "avatar_icon": "📁",
             "default_hashtags": f"#{niche_id}",
             "cta_text": f"Follow for more {niche_id} content!"
         }
@@ -714,26 +541,12 @@ def get_niche_cluster(niche_id: str, allow_placeholders: bool = False) -> Dict[s
     conn = get_connection()
     cursor = conn.cursor()
 
-    NICHE_ALIASES = {
-        "ai_tech": ["ai_tech", "information", "ai", "tech"],
-        "information": ["information", "ai_tech", "ai", "tech"],
-        "clubbing": ["clubbing", "parties", "party"],
-        "parties": ["parties", "clubbing", "party"],
-        "girls_dance": ["girls_dance", "girls_party", "girls", "dance"],
-        "girls_party": ["girls_party", "girls_dance", "girls", "dance"],
-        "ai_content": ["ai_content", "ai"],
-        "memes": ["memes", "meme"],
-        "concerts": ["concerts", "concert"],
-    }
-    aliases = NICHE_ALIASES.get(niche_id, [niche_id])
-    placeholders = ",".join(["?"] * len(aliases))
-    
-    # 1. Connected destination accounts for this niche
-    cursor.execute(f"""
+    # 1. Connected destination accounts for this niche (strict isolation)
+    cursor.execute("""
         SELECT * FROM accounts 
-        WHERE (niche_id IN ({placeholders}) OR niche LIKE ?) AND is_active = 1
+        WHERE (niche_id = :nid OR (niche_id IS NULL AND niche = :nid)) AND is_active = 1
         ORDER BY id
-    """, (*aliases, f"%{niche_id}%"))
+    """, {"nid": niche_id})
     all_accounts = [dict(r) for r in cursor.fetchall()]
 
     # Filter strictly to accounts configured with real Meta Graph credentials (access_token + ig_user_id)
@@ -744,23 +557,23 @@ def get_niche_cluster(niche_id: str, allow_placeholders: bool = False) -> Dict[s
     accounts = all_accounts if allow_placeholders else auth_accounts
     
     # 2. Bound competitor source handles for this niche
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT * FROM monitored_sources 
-        WHERE (niche_id IN ({placeholders}) OR category IN ({placeholders})) AND is_active = 1
+        WHERE (niche_id = :nid OR (niche_id IS NULL AND category = :nid)) AND is_active = 1
         ORDER BY id
-    """, (*aliases, *aliases))
+    """, {"nid": niche_id})
     sources = [dict(r) for r in cursor.fetchall()]
     
     # 3. Recent broadcasts for this niche
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT b.*, a.handle, a.display_name, a.avatar_initials, a.brand_color, a.profile_pic_url, a.niche, r.hook_text, r.original_title, r.source_url
         FROM broadcast_logs b
         JOIN accounts a ON b.account_id = a.id
         JOIN reels_tracker r ON b.reel_id = r.id
-        WHERE a.niche_id IN ({placeholders}) OR a.niche LIKE ?
+        WHERE a.niche_id = :nid OR (a.niche_id IS NULL AND a.niche = :nid)
         ORDER BY b.created_at DESC
         LIMIT 15
-    """, (*aliases, f"%{niche_id}%"))
+    """, {"nid": niche_id})
     recent_broadcasts = [dict(r) for r in cursor.fetchall()]
     
     conn.close()

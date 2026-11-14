@@ -37,14 +37,14 @@ class TestTelegramInboundShareSuite:
             assert "inline_keyboard" in reply_markup
             assert len(reply_markup["inline_keyboard"]) >= 5
 
-    def test_03_niche_click_triggers_instant_pipeline_execution(self):
+    def test_03_niche_click_prompts_page_selection_and_page_click_executes(self):
         bot = OctopusTelegramBot(bot_token="fake_token", chat_id="12345678")
         # Step 1: Ingest URL
         inbound = bot.handle_inbound_url("https://www.instagram.com/reel/C7x9_science", chat_id=12345678)
         session_id = inbound["session_id"]
         
-        # Step 2: Simulate callback query from tapping niche with connected account (girls_dance)
-        cb_payload = {
+        # Step 2: User taps niche (girls_dance) -> Bot prompts for destination page
+        cb_niche = {
             "id": "cb_123",
             "data": f"tg_niche:{session_id}:girls_dance",
             "message": {"chat": {"id": 12345678}}
@@ -53,13 +53,32 @@ class TestTelegramInboundShareSuite:
         with patch("requests.post"):
             with patch.object(bot, "send_text_message") as mock_send_text:
                 with patch.object(bot, "handle_execution") as mock_exec:
-                    bot._handle_callback_query(cb_payload, async_exec=False)
-                    # Verify immediate pipeline acknowledgment was sent to user
+                    bot._handle_callback_query(cb_niche, async_exec=False)
+                    # Must prompt user to choose destination page
                     assert mock_send_text.called
-                    messages_sent = [call[0][0] for call in mock_send_text.call_args_list]
-                    assert any("Inbound Reel Ingested into" in m for m in messages_sent)
+                    call_text = mock_send_text.call_args[0][0]
+                    assert "On which page(s) do you want to publish?" in call_text
+                    reply_markup = mock_send_text.call_args[1]["reply_markup"]
+                    flat_buttons = [b for row in reply_markup["inline_keyboard"] for b in row]
+                    assert any("tg_pages:" in b["callback_data"] for b in flat_buttons)
+                    # handle_execution must NOT be called yet!
+                    assert not mock_exec.called
+
+        # Step 3: User taps destination page (e.g. ALL pages) -> Bot executes pipeline
+        cb_page = {
+            "id": "cb_124",
+            "data": f"tg_pages:{session_id}:girls_dance:all",
+            "message": {"chat": {"id": 12345678}}
+        }
+        with patch("requests.post"):
+            with patch.object(bot, "send_text_message") as mock_send_text2:
+                with patch.object(bot, "handle_execution") as mock_exec2:
+                    bot._handle_callback_query(cb_page, async_exec=False)
+                    assert mock_send_text2.called
+                    messages_sent = [call[0][0] for call in mock_send_text2.call_args_list]
+                    assert any("Publishing to" in m for m in messages_sent)
                     assert any("AI Pipeline running automated processing" in m for m in messages_sent)
-                    assert mock_exec.called
+                    assert mock_exec2.called
 
     def test_04_niche_click_with_zero_accounts_halts_with_alert(self):
         bot = OctopusTelegramBot(bot_token="fake_token", chat_id="12345678")
@@ -79,6 +98,6 @@ class TestTelegramInboundShareSuite:
                     bot._handle_callback_query(cb_payload, async_exec=False)
                     assert mock_send_text.called
                     messages_sent = [call[0][0] for call in mock_send_text.call_args_list]
-                    assert any("No Accounts Connected" in m for m in messages_sent)
+                    assert any("0 accounts" in m for m in messages_sent)
                     # Pipeline execution MUST NOT be triggered
                     assert not mock_exec.called

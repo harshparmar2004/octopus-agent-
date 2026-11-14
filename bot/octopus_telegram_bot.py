@@ -489,7 +489,10 @@ class OctopusTelegramBot:
             if row:
                 keyboard.append(row)
 
-            keyboard.append([{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}])
+            keyboard.append([
+                {"text": "🔙 Choose Another Niche", "callback_data": f"tg_retry_niche:{session_id}"},
+                {"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}
+            ])
 
             prompt_text = f"🎯 *Selected Niche:* *{session['niche_name']}*\n👥 Connected Destination Pages: *{total_pages} accounts*\n\n*On which page(s) do you want to publish?*\nChoose below to fan out:"
 
@@ -959,12 +962,19 @@ class OctopusTelegramBot:
         except Exception:
             pass
 
-        if data.startswith("tg_niche:") or data.startswith("tg_fanout:"):
+        if data.startswith("tg_niche:"):
             parts = data.split(":")
             session_id = parts[1]
             niche_id = parts[2]
+            self.handle_niche_selection(session_id=session_id, niche_id=niche_id, chat_id=chat_id)
+
+        elif data.startswith("tg_pages:") or data.startswith("tg_fanout:"):
+            parts = data.split(":")
+            session_id = parts[1]
+            niche_id = parts[2]
+            target = parts[3] if len(parts) > 3 else "all"
             
-            cluster = get_niche_cluster(niche_id)
+            cluster = get_niche_cluster(niche_id, allow_placeholders=False)
             n_info = cluster.get("niche") or {}
             n_name = n_info.get("name") or niche_id.title()
             accounts = cluster.get("accounts", [])
@@ -978,10 +988,14 @@ class OctopusTelegramBot:
                 return
 
             total_pages = len(accounts)
-            if total_pages == 1:
-                target_desc = f"@{accounts[0]['handle']}"
+            if target == "all":
+                if total_pages == 1:
+                    target_desc = f"@{accounts[0]['handle']}"
+                else:
+                    target_desc = f"ALL ({total_pages}) Pages"
             else:
-                target_desc = f"ALL ({total_pages}) Pages"
+                target_acc = next((a for a in accounts if a["id"] == target), None)
+                target_desc = f"@{target_acc['handle']}" if target_acc else f"Account {target}"
 
             session = self.sessions.get(session_id)
             if session:
@@ -992,7 +1006,7 @@ class OctopusTelegramBot:
             video_type_label = "Raw format - no template" if is_raw else f"9:16 layout ({n_name} branding)"
 
             initial_status = (
-                f"⚡ *Octopus AI Pipeline: Inbound Reel Ingested into [{n_name}]*\n"
+                f"⚡ *Octopus AI Pipeline: Publishing to [{n_name}]*\n"
                 f"👥 Destination: *{target_desc}*\n\n"
                 f"🤖 *AI Pipeline running automated processing:*\n"
                 f"⏳ 1. Downloading 1080p source stream...\n"
@@ -1009,7 +1023,7 @@ class OctopusTelegramBot:
                     kwargs={
                         "session_id": session_id,
                         "niche_id": niche_id,
-                        "target": "all",
+                        "target": target,
                         "chat_id": chat_id,
                         "notify_init": False,
                         "status_msg_id": status_msg_id
@@ -1020,22 +1034,11 @@ class OctopusTelegramBot:
                 self.handle_execution(
                     session_id=session_id,
                     niche_id=niche_id,
-                    target="all",
+                    target=target,
                     chat_id=chat_id,
                     notify_init=False,
                     status_msg_id=status_msg_id
                 )
-
-        elif data.startswith("tg_pages:"):
-            parts = data.split(":")
-            session_id = parts[1]
-            niche_id = parts[2]
-            target = parts[3]
-            threading.Thread(
-                target=self.handle_execution,
-                kwargs={"session_id": session_id, "niche_id": niche_id, "target": target, "chat_id": chat_id},
-                daemon=True
-            ).start()
 
         elif data.startswith("tg_scale_20:"):
             parts = data.split(":")
