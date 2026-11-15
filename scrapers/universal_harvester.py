@@ -174,19 +174,20 @@ class UniversalContentHarvester:
             "canonical_url": canonical_url
         }
 
-    def harvest(self, url: str, custom_id: str) -> Optional[Dict[str, Any]]:
+    def harvest(self, url: str, custom_id: Optional[str] = None, task_id: Optional[str] = None, **kwargs) -> Optional[Dict[str, Any]]:
         info = self.classify_url(url)
         canonical = info["canonical_url"]
         platform = info["platform"]
-        out_template = str(self.download_dir / f"{custom_id}_raw.%(ext)s")
+        resolved_id = custom_id or task_id or info.get("content_id") or f"harvest_{int(time.time())}"
+        out_template = str(self.download_dir / f"{resolved_id}_raw.%(ext)s")
 
         logger.info(f"UniversalHarvester ingesting [{info['platform_name']}] from {canonical[:80]}")
 
         # 1. Local Cache Check
         for ext in [".mp4", "_raw.mp4"]:
-            cached = self.download_dir / f"{custom_id}{ext}"
+            cached = self.download_dir / f"{resolved_id}{ext}"
             if cached.exists() and cached.stat().st_size > 50000:
-                logger.info(f"Local cache hit for {custom_id}: {cached}")
+                logger.info(f"Local cache hit for {resolved_id}: {cached}")
                 return {
                     "filepath": str(cached),
                     "title": f"Cached {info['platform_name']}",
@@ -201,7 +202,7 @@ class UniversalContentHarvester:
         # 2. Direct MP4 Stream Check
         if platform == "direct" or (canonical.startswith("http") and (".mp4" in canonical or "mixkit.co" in canonical or "fbcdn.net" in canonical)):
             try:
-                out_path = self.download_dir / f"{custom_id}_raw.mp4"
+                out_path = self.download_dir / f"{resolved_id}_raw.mp4"
                 logger.info(f"Downloading direct video stream: {canonical[:60]}... to {out_path.name}")
                 with requests.get(canonical, headers=self.headers, stream=True, timeout=30) as r:
                     r.raise_for_status()
@@ -227,7 +228,7 @@ class UniversalContentHarvester:
         if platform == "instagram":
             try:
                 from scrapers.instagram_harvester import InstagramHarvester
-                ig_res = InstagramHarvester(download_dir=self.download_dir).download_reel(canonical, custom_id)
+                ig_res = InstagramHarvester(download_dir=self.download_dir).download_reel(canonical, resolved_id)
                 if ig_res and ig_res.get("filepath") and Path(ig_res["filepath"]).exists():
                     ig_res["platform"] = info["platform_name"]
                     ig_res["platform_emoji"] = info["platform_emoji"]

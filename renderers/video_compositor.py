@@ -279,16 +279,26 @@ class VideoCompositor:
                         "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
                     )
                 else:
-                    # Non-vertical video: blurred ambient fill + centered video below header
-                    filter_complex = (
-                        f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                        f"[0:v]split=2[v_bg][v_fg];"
-                        f"[v_bg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},boxblur=24:2,eq=brightness=-0.08[blur_bg];"
-                        f"[v_fg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
-                        f"[blur_bg][sharp_vid]overlay=(W-w)/2:(H-h)/2[fitted_vid];"
-                        f"[bg][fitted_vid]overlay=0:{vy_offset}:shortest=1[with_vid];"
-                        "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
-                    )
+                    # Non-vertical video:
+                    # For top_card_cult, informative reels (Cult Information, Pubity) use clean pure black canvas
+                    if layout == "top_card_cult":
+                        filter_complex = (
+                            f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                            f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                            f"[bg][sharp_vid]overlay=(W-w)/2:(H-h)/2:shortest=1[with_vid];"
+                            "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                        )
+                    else:
+                        # Other layouts: blurred ambient fill + centered video below header
+                        filter_complex = (
+                            f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                            f"[0:v]split=2[v_bg][v_fg];"
+                            f"[v_bg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},boxblur=24:2,eq=brightness=-0.08[blur_bg];"
+                            f"[v_fg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                            f"[blur_bg][sharp_vid]overlay=(W-w)/2:(H-h)/2[fitted_vid];"
+                            f"[bg][fitted_vid]overlay=0:{vy_offset}:shortest=1[with_vid];"
+                            "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                        )
 
                 cmd = [
                     "ffmpeg", "-y",
