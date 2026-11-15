@@ -41,7 +41,8 @@ class OctopusFanoutEngine:
         hook_text: str,
         account: Dict[str, Any],
         task_id: str,
-        account_index: int = 0
+        account_index: int = 0,
+        highlight_word: Optional[str] = None
     ) -> Optional[str]:
         """
         Creates an anti-shadowban custom 9:16 reel tailored specifically for this account:
@@ -83,7 +84,8 @@ class OctopusFanoutEngine:
             channel=channel_profile,
             output_filename=output_filename,
             account_index=account_index,
-            apply_anti_shadowban=True
+            apply_anti_shadowban=True,
+            highlight_word=highlight_word
         )
         return rendered_path
 
@@ -230,7 +232,8 @@ class OctopusFanoutEngine:
                     hook_text=reel.get("hook_text", ""),
                     account=account,
                     task_id=f"{reel_id}_{account['id']}",
-                    account_index=idx
+                    account_index=idx,
+                    highlight_word=reel.get("highlight_word")
                 )
             else:
                 rendered_path = master_rendered or f"output/{reel_id}_{account['id']}.mp4"
@@ -384,7 +387,8 @@ class OctopusFanoutEngine:
         custom_headline: Optional[str] = None,
         cta_template: Optional[str] = None,
         ai_caption_mode: str = "smart_adapt",
-        hook_style: str = "curiosity"
+        hook_style: str = "curiosity",
+        highlight_word: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         The 1-to-All Niche Automation Engine:
@@ -517,6 +521,7 @@ class OctopusFanoutEngine:
             "source_url": reel_meta.get("permalink", ""),
             "original_title": dl.get("title"),
             "hook_text": final_hook,
+            "highlight_word": highlight_word or enriched.get("highlight_word"),
             "caption": base_caption,
             "raw_video_path": dl["filepath"],
             "status": "READY_FOR_FANOUT"

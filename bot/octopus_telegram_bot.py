@@ -665,6 +665,7 @@ class OctopusTelegramBot:
             primary_handle = f"@{primary_handle}"
 
         source_desc = dl.get("description", "") or dl.get("title", "")
+        highlight_word = session.get("highlight_word")
         if is_raw:
             if source_desc and len(source_desc.strip()) > 5:
                 clean_cap = source_desc.split("#")[0].strip()
@@ -673,6 +674,20 @@ class OctopusTelegramBot:
                 caption = f"Obsessed with this energy! ✨💃\n\nTag someone who needs to see this! 👇\n\n👉 Follow {primary_handle} for daily dance & party vibes!\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
             hook = session.get("headline") or dl.get("title") or "Daily dance inspiration"
         else:
+            if not session.get("headline") or not session.get("highlight_word"):
+                try:
+                    from processors.vision_extractor import VideoVisionInspector
+                    v_res = VideoVisionInspector.analyze_reel(dl["filepath"], api_key=getattr(settings, "GEMINI_API_KEY", None))
+                    if v_res.get("success"):
+                        if not session.get("headline") and v_res.get("headline"):
+                            session["headline"] = v_res.get("headline")
+                        if not session.get("highlight_word") and v_res.get("highlight_word"):
+                            session["highlight_word"] = v_res.get("highlight_word")
+                            highlight_word = v_res.get("highlight_word")
+                except Exception as v_err:
+                    logger.warning(f"Vision extractor in Telegram execution failed: {v_err}")
+
+            highlight_word = session.get("highlight_word")
             try:
                 from processors.ai_enricher import AIEnricher
                 enricher = AIEnricher()
@@ -692,6 +707,9 @@ class OctopusTelegramBot:
                     formula="curiosity"
                 )
                 hook = session.get("headline") or enriched.get("hook_text") or dl.get("title", "")
+                if not highlight_word and enriched.get("highlight_word"):
+                    highlight_word = enriched.get("highlight_word")
+                    session["highlight_word"] = highlight_word
                 caption = enriched.get("full_caption") or source_desc or hook
             except Exception as e:
                 logger.warning(f"Enricher error: {e}")
@@ -710,6 +728,7 @@ class OctopusTelegramBot:
             "source_url": source_url,
             "original_title": dl.get("title"),
             "hook_text": hook,
+            "highlight_word": highlight_word,
             "caption": caption,
             "raw_video_path": dl["filepath"],
             "status": "PROCESSING"
@@ -732,7 +751,8 @@ class OctopusTelegramBot:
                     hook_text=hook,
                     account=acc,
                     task_id=task_id,
-                    account_index=idx
+                    account_index=idx,
+                    highlight_word=highlight_word
                 )
                 rendered_paths[acc["id"]] = r_path or str(dl["filepath"])
 

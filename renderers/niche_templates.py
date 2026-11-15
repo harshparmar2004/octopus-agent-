@@ -35,12 +35,12 @@ class NicheTemplate(BaseModel):
 # 1. Informative & Deep Tech (Cult Aesthetic)
 TEMPLATE_INFORMATIVE = NicheTemplate(
     id="informative_cult",
-    name="Cult Aesthetic (Informative, Science & Deep Tech)",
+    name="Cult Information (Informative, Science & Deep Tech)",
     category="informative",
     overlay_layout="top_card_cult",
     primary_color="#FFFFFF",
-    highlight_color="#DDF51A",        # High-contrast Neon Yellow
-    card_background="rgba(10, 10, 10, 0.85)",
+    highlight_color="#C1F02A",        # High-contrast Cult Neon Lime
+    card_background="rgba(0, 0, 0, 1.0)",
     font_family="sans_bold",
     badge_icon="💡",
     hook_formula="curiosity_paradox",
@@ -424,15 +424,15 @@ TEMPLATE_CLUBBING_BRANDED = NicheTemplate(
     render_profile="full_template",
 )
 
-# N6. Informative AI Tech (20 pages) — Light Template (Top Logo + Hook + Center Video)
+# N6. Cult Information (20 pages) — Centered Cult Template (Top Badge + Centered Hook + Video)
 TEMPLATE_INFORMATIVE = NicheTemplate(
     id="informative_cult",
-    name="Informative AI Tech (Light Template: Logo, Hook, Center Video)",
+    name="Cult Information (Centered Badge, Dual-Tone Hook, 9:16 Video)",
     category="ai_tech",
     overlay_layout="top_card_cult",
     primary_color="#FFFFFF",
-    highlight_color="#DDF51A",        # High-contrast Neon Yellow
-    card_background="rgba(10, 10, 10, 0.85)",
+    highlight_color="#C1F02A",        # High-contrast Cult Neon Lime
+    card_background="rgba(0, 0, 0, 1.0)",
     font_family="sans_bold",
     badge_icon="💡",
     hook_formula="curiosity_paradox",

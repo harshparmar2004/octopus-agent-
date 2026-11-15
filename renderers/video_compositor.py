@@ -221,7 +221,7 @@ class VideoCompositor:
                 ] + common_tail + [str(output_path)]
 
             else:
-                # Editorial informative top card
+                # Editorial informative top card (Cult Information)
                 self.card_renderer.render_header_overlay(
                     hook_text=hook_text,
                     channel=channel,
@@ -230,12 +230,31 @@ class VideoCompositor:
                     highlight_word=highlight_word,
                     template=template
                 )
-                filter_complex = (
-                    "[0:v]scale=1080:1180:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2[scaled];"
-                    "color=c=black:s=1080x1920[bg];"
-                    "[bg][scaled]overlay=(W-w)/2:680+(1180-h)/2:shortest=1[with_vid];"
-                    "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
-                )
+                vid_w, vid_h = _probe_dims(str(input_path))
+                v_ar = vid_w / max(1, vid_h)
+                vh_target = 1480
+                vy_offset = 440
+
+                if NATIVE_VERTICAL_AR[0] <= v_ar <= NATIVE_VERTICAL_AR[1]:
+                    # Vertical 9:16 video covers the available area cleanly
+                    filter_complex = (
+                        f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                        f"[0:v]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},setsar=1[vid];"
+                        f"[bg][vid]overlay=0:{vy_offset}:shortest=1[with_vid];"
+                        "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
+                else:
+                    # Non-vertical video: blurred ambient fill + centered video below header
+                    filter_complex = (
+                        f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                        f"[0:v]split=2[v_bg][v_fg];"
+                        f"[v_bg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},boxblur=24:2,eq=brightness=-0.08[blur_bg];"
+                        f"[v_fg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                        f"[blur_bg][sharp_vid]overlay=(W-w)/2:(H-h)/2[fitted_vid];"
+                        f"[bg][fitted_vid]overlay=0:{vy_offset}:shortest=1[with_vid];"
+                        "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                    )
+
                 cmd = [
                     "ffmpeg", "-y",
                     "-i", str(input_path),
@@ -363,11 +382,11 @@ class VideoCompositor:
                 )
             else:
                 channel = ChannelProfile(
-                    handle="@ai_tech_pulse",
-                    display_name="AI Tech Pulse",
-                    brand_color="#DDF51A",
-                    avatar_initials="AI",
-                    niche="informative"
+                    handle="@cult_information",
+                    display_name="Cult Information",
+                    brand_color="#C1F02A",
+                    avatar_initials="CI",
+                    niche="ai_tech"
                 )
 
         # 2. Prepare output filename

@@ -23,8 +23,8 @@ CORE_NICHES = [
      "#dance #dancereels #girlsnightout #partyvibes", "Follow @{handle} for daily vibes", "girls_raw"),
     ("clubbing", "Clubbing Parties", "Club nights, DJs and nightlife moments", "#FF007F", "🪩",
      "#clubbing #nightlife #clublife #djset", "Follow @{handle} for weekend club drops", "clubbing_branded"),
-    ("ai_tech", "Informative AI & Tech", "AI and tech news and explainers", "#DDF51A", "💡",
-     "#ai #tech #technews #artificialintelligence", "Follow @{handle} for daily AI & tech breakdowns", "informative_cult"),
+    ("ai_tech", "Cult Information", "Curiosities, science, and breakthrough tech", "#C1F02A", "💡",
+     "#cultinformation #ai #tech #breakthrough #curiosity", "Follow @{handle} for daily curiosity & breakthroughs", "informative_cult"),
 ]
 
 # Default cadence per niche: (daily_cap, min_gap_minutes)

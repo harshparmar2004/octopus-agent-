@@ -16,6 +16,10 @@ class CardRenderer:
         if not os.path.exists(self.font_bold_path):
             self.font_bold_path = "C:/Windows/Fonts/arialbd.ttf"
             
+        self.font_black_path = "C:/Windows/Fonts/ariblk.ttf"
+        if not os.path.exists(self.font_black_path):
+            self.font_black_path = self.font_bold_path
+
         self.font_regular_path = "C:/Windows/Fonts/segoeui.ttf"
         if not os.path.exists(self.font_regular_path):
             self.font_regular_path = "C:/Windows/Fonts/arial.ttf"
@@ -25,15 +29,26 @@ class CardRenderer:
             self.font_serif_path = "C:/Windows/Fonts/timesbd.ttf"
 
     def _find_logo_path(self, channel: ChannelProfile) -> Optional[Path]:
-        """Looks for specific or master logo in assets directory."""
+        """Looks for specific or master logo in assets and assets/logos directory."""
         candidates = []
         if getattr(channel, "logo_filename", None):
             candidates.append(self.assets_dir / channel.logo_filename)
+            candidates.append(self.assets_dir / "logos" / channel.logo_filename)
         
         # Check by handle or display name
         h_clean = channel.handle.lstrip("@").replace("octopus.", "").replace(".", "_")
         candidates.append(self.assets_dir / f"logo_{h_clean}.png")
-        candidates.append(self.assets_dir / f"logo_{channel.display_name.lower()}.png")
+        candidates.append(self.assets_dir / "logos" / f"logo_{h_clean}.png")
+        candidates.append(self.assets_dir / f"logo_{channel.display_name.lower().replace(' ', '_')}.png")
+        candidates.append(self.assets_dir / "logos" / f"logo_{channel.display_name.lower().replace(' ', '_')}.png")
+        
+        # Cult Information branding
+        niche_val = getattr(channel, "niche", "").lower()
+        if "cult" in h_clean or "cult" in niche_val or "info" in niche_val or "ai_tech" in niche_val:
+            candidates.append(self.assets_dir / "logos" / "logo_cult_badge.png")
+            candidates.append(self.assets_dir / "logo_cult_badge.png")
+            candidates.append(self.assets_dir / "logos" / "logo_cult_information.png")
+
         candidates.append(self.assets_dir / "logo.png")
         
         for cand in candidates:
@@ -106,67 +121,161 @@ class CardRenderer:
         initials = channel.display_name[:2].upper()
         draw.text((badge_x + 22, badge_y + 20), initials, font=avatar_font, fill=brand_color)
 
-    # 1. TOP CARD CULT (Informative / Tech)
+    # 1. TOP CARD CULT (Cult Information / Tech)
     def _render_top_card_cult(self, hook_text, channel, output_path, credit_handle, highlight_word, template):
         canvas = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
         draw = ImageDraw.Draw(canvas)
 
-        badge_y = 210
-        badge_x = 90
-        avatar_size = 88
-        brand_color = getattr(channel, "brand_color", "#00b4d8") or "#00b4d8"
-        highlight_color = getattr(template, "highlight_color", "#DDF51A") or "#DDF51A"
-
-        self._render_avatar_badge(draw, canvas, channel, badge_x, badge_y, avatar_size, brand_color)
-
-        text_x = badge_x + avatar_size + 24
-        try:
-            name_font = ImageFont.truetype(self.font_bold_path, 32)
-            handle_font = ImageFont.truetype(self.font_regular_path, 24)
-            credit_font = ImageFont.truetype(self.font_regular_path, 22)
-            hook_font = ImageFont.truetype(self.font_regular_path, 42)
-        except Exception:
-            name_font = handle_font = credit_font = hook_font = ImageFont.load_default()
-
-        draw.text((text_x, badge_y + 8), channel.display_name, font=name_font, fill="#FFFFFF")
-        name_bbox = draw.textbbox((text_x, badge_y + 8), channel.display_name, font=name_font)
-        badge_pos_x = name_bbox[2] + 12
-        badge_pos_y = badge_y + 16
-        draw.ellipse([badge_pos_x, badge_pos_y, badge_pos_x + 20, badge_pos_y + 20], fill="#00b4d8")
-        draw.line([badge_pos_x + 5, badge_pos_y + 10, badge_pos_x + 9, badge_pos_y + 14], fill="#FFFFFF", width=2)
-        draw.line([badge_pos_x + 9, badge_pos_y + 14, badge_pos_x + 15, badge_pos_y + 6], fill="#FFFFFF", width=2)
-        draw.text((text_x, badge_y + 48), channel.handle, font=handle_font, fill="#94a3b8")
-
-        wrapped_lines = textwrap.wrap(hook_text, width=40)
-        start_y = 360
-        line_height = 56
-        hl_set = set(hw.strip(".,!?:;\"'").lower() for hw in highlight_word.split()) if highlight_word else set()
-        for i, line in enumerate(wrapped_lines):
-            if hl_set and any(hw in line.lower() for hw in hl_set):
-                words = line.split(" ")
-                cur_x = badge_x
-                for w in words:
-                    clean_w = w.strip(".,!?:;\"'")
-                    is_hl = clean_w.lower() in hl_set
-                    color = highlight_color if is_hl else "#FFFFFF"
-                    try:
-                        w_font = ImageFont.truetype(self.font_bold_path, 42) if is_hl else hook_font
-                    except Exception:
-                        w_font = hook_font
-                    draw.text((cur_x, start_y + (i * line_height)), w + " ", font=w_font, fill=color)
-                    w_bbox = draw.textbbox((cur_x, start_y + (i * line_height)), w + " ", font=w_font)
-                    cur_x = w_bbox[2]
+        highlight_color = getattr(template, "highlight_color", "#C1F02A") or "#C1F02A"
+        if isinstance(highlight_color, str) and highlight_color.startswith("#"):
+            hc_hex = highlight_color.lstrip("#")
+            if len(hc_hex) == 6:
+                neon_color = tuple(int(hc_hex[i:i+2], 16) for i in (0, 2, 4)) + (255,)
             else:
-                draw.text((badge_x, start_y + (i * line_height)), line, font=hook_font, fill="#FFFFFF")
+                neon_color = (193, 240, 42, 255)
+        else:
+            neon_color = (193, 240, 42, 255)
 
+        white_color = (255, 255, 255, 255)
+
+        # 1. Fonts
+        try:
+            headline_font = ImageFont.truetype(self.font_black_path, 44)
+        except Exception:
+            try:
+                headline_font = ImageFont.truetype(self.font_bold_path, 44)
+            except Exception:
+                headline_font = ImageFont.load_default()
+
+        try:
+            handle_font = ImageFont.truetype(self.font_bold_path, 36)
+        except Exception:
+            handle_font = ImageFont.load_default()
+
+        try:
+            credit_font = ImageFont.truetype(self.font_regular_path, 22)
+        except Exception:
+            credit_font = ImageFont.load_default()
+
+        # 2. Text Wrapping for Headline
+        wrapped_lines = textwrap.wrap(hook_text, width=36)
+        if not wrapped_lines:
+            wrapped_lines = [hook_text]
+        line_height = 66
+        headline_total_h = len(wrapped_lines) * line_height
+
+        # Dynamic Black Header Background covering top area
+        header_h = max(440, 220 + headline_total_h + 30)
+        draw.rectangle([0, 0, 1080, header_h], fill=(0, 0, 0, 255))
+
+        # 3. Centered Header Row: [Circular Badge] + @handle + [Verified Badge]
+        badge_size = 76
+        logo_path = self._find_logo_path(channel)
+        if not logo_path or not logo_path.exists():
+            logo_path = self.assets_dir / "logos" / "logo_cult_badge.png"
+
+        badge_img = None
+        if logo_path and logo_path.exists():
+            try:
+                raw_badge = Image.open(logo_path).convert("RGBA")
+                badge_img = raw_badge.resize((badge_size, badge_size), Image.Resampling.LANCZOS)
+            except Exception:
+                badge_img = None
+
+        raw_handle = getattr(channel, "handle", "@cult_information") or "@cult_information"
+        handle_text = raw_handle if raw_handle.startswith("@") else f"@{raw_handle}"
+        
+        h_bbox = draw.textbbox((0, 0), handle_text, font=handle_font)
+        handle_w = h_bbox[2] - h_bbox[0]
+        handle_h = h_bbox[3] - h_bbox[1]
+
+        verified_size = 28
+        gap1 = 18
+        gap2 = 14
+
+        total_row_w = badge_size + gap1 + handle_w + gap2 + verified_size
+        start_x = (1080 - total_row_w) // 2
+        row_y = 95
+
+        # Render Badge
+        if badge_img:
+            canvas.paste(badge_img, (start_x, row_y), badge_img)
+        else:
+            draw.ellipse([start_x, row_y, start_x + badge_size, row_y + badge_size], fill=(0, 0, 0, 255), outline=neon_color, width=4)
+            draw.text((start_x + 16, row_y + 20), "CULT", font=handle_font, fill=neon_color)
+
+        # Render Handle Text
+        handle_x = start_x + badge_size + gap1
+        handle_y = row_y + (badge_size - handle_h) // 2 - 4
+        draw.text((handle_x, handle_y), handle_text, font=handle_font, fill=white_color)
+
+        # Render Blue Verified Badge
+        vx = handle_x + handle_w + gap2
+        vy = row_y + (badge_size - verified_size) // 2
+        draw.ellipse([vx, vy, vx + verified_size, vy + verified_size], fill=(0, 149, 246, 255))
+        draw.line([vx + 7, vy + 14, vx + 12, vy + 19], fill=(255, 255, 255, 255), width=3)
+        draw.line([vx + 12, vy + 19, vx + 21, vy + 9], fill=(255, 255, 255, 255), width=3)
+
+        # 4. Helper for dual-tone phrase and word highlight matching
+        def parse_line_highlights(line: str, highlight_input: Optional[str]):
+            import re
+            if not highlight_input:
+                return [(line, False)]
+            raw_phrases = [p.strip() for p in re.split(r'[,;|\n]', str(highlight_input)) if p.strip()]
+            if not raw_phrases:
+                raw_phrases = [w.strip() for w in str(highlight_input).split() if w.strip()]
+            if not raw_phrases:
+                return [(line, False)]
+
+            raw_phrases = sorted(raw_phrases, key=lambda x: len(x), reverse=True)
+            pattern = '(' + '|'.join(re.escape(p) for p in raw_phrases) + ')'
+            parts = re.split(pattern, line, flags=re.IGNORECASE)
+            hl_set = set(p.lower().strip(".,!?:;\"'") for p in raw_phrases)
+            
+            result = []
+            for part in parts:
+                if not part:
+                    continue
+                clean_part = part.lower().strip(".,!?:;\"'")
+                is_hl = clean_part in hl_set or any(w in hl_set for w in clean_part.split())
+                result.append((part, is_hl))
+            return result
+
+        # 5. Render Centered Headline Lines
+        y_text = 215
+        for line in wrapped_lines:
+            line_parts = parse_line_highlights(line, highlight_word)
+            
+            # Measure total width of line
+            line_w = 0
+            item_widths = []
+            for text_part, is_hl in line_parts:
+                bbox = draw.textbbox((0, 0), text_part, font=headline_font)
+                w = bbox[2] - bbox[0]
+                item_widths.append(w)
+                line_w += w
+
+            cur_x = (1080 - line_w) // 2
+            for (text_part, is_hl), w in zip(line_parts, item_widths):
+                c = neon_color if is_hl else white_color
+                # Drop shadow for depth and contrast
+                draw.text((cur_x + 2, y_text + 2), text_part, font=headline_font, fill=(0, 0, 0, 180))
+                draw.text((cur_x, y_text), text_part, font=headline_font, fill=c)
+                cur_x += w
+
+            y_text += line_height
+
+        # 6. Source Attribution Pill (if present)
         if credit_handle:
             clean_credit = credit_handle.strip().lstrip("@")
             credit_text = f"Source: @{clean_credit}"
-            credit_y = start_y + (len(wrapped_lines) * line_height) + 20
-            c_bbox = draw.textbbox((badge_x + 14, credit_y + 6), credit_text, font=credit_font)
-            pill_bbox = [badge_x, credit_y, c_bbox[2] + 16, c_bbox[3] + 8]
-            draw.rounded_rectangle(pill_bbox, radius=12, fill=(15, 23, 42, 200), outline=(56, 189, 248, 120), width=1)
-            draw.text((badge_x + 14, credit_y + 6), credit_text, font=credit_font, fill="#38bdf8")
+            credit_y = y_text + 12
+            c_bbox = draw.textbbox((0, 0), credit_text, font=credit_font)
+            cw = c_bbox[2] - c_bbox[0]
+            cx = (1080 - cw) // 2
+            pill_bbox = [cx - 16, credit_y - 4, cx + cw + 16, credit_y + 28]
+            draw.rounded_rectangle(pill_bbox, radius=12, fill=(15, 23, 42, 200), outline=(193, 240, 42, 140), width=1)
+            draw.text((cx, credit_y), credit_text, font=credit_font, fill=neon_color)
 
         canvas.save(output_path, "PNG")
         return output_path

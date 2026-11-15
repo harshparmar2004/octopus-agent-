@@ -119,8 +119,8 @@ class VisionExtractor:
             "1. 'exact_text': Transcribe the EXACT on-screen headline written/baked into the video. "
             "If multiple lines exist, prioritize the punchy hook line directly above the video.\n"
             "2. 'headline': The catchy, eye-grabbing hook headline (8 to 16 words) to write on our re-skinned reel.\n"
-            "3. 'highlight_word': The 1 to 3 most impactful or bold words in that headline (e.g. 'expensive AI chips') "
-            "that should glow in high-contrast neon yellow (#DDF51A) or hot pink (#FF007F).\n"
+            "3. 'highlight_word': The 1 to 3 most impactful or viral keywords/phrases in that headline (e.g. 'AI Table Tennis Robot, Human Pro' or 'expensive AI chips') "
+            "that should glow in high-contrast neon lime (#C1F02A) or hot pink (#FF007F). Comma-separate multiple phrases.\n"
             "4. 'context': A concise 1-2 sentence description of what happens in the video.\n"
             "5. 'detected_niche': Pick strictly ONE from: 'ai_tech', 'memes', 'clubbing', 'concerts', 'ai_content', 'girls_dance'.\n"
             "6. 'suggested_caption': A high-retention caption formatted for Instagram.\n"
@@ -292,9 +292,14 @@ class VisionExtractor:
         source_title = ""
         if src.startswith("http://") or src.startswith("https://"):
             logger.info(f"Downloading remote video from URL: {src}")
-            from scrapers.content_harvester import ContentHarvester
-            harvester = ContentHarvester()
-            downloaded = harvester.download_video(src)
+            try:
+                from scrapers.universal_harvester import UniversalContentHarvester
+                u_harv = UniversalContentHarvester()
+                downloaded = u_harv.harvest(src)
+            except Exception:
+                from scrapers.content_harvester import ContentHarvester
+                downloaded = ContentHarvester().download_video(src)
+
             if not downloaded:
                 return {
                     "success": False,

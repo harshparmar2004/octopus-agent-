@@ -54,7 +54,7 @@ def init_octopus_db():
     """)
     
     # Safe column additions if table was created previously without them
-    for col in ["rendered_video_path", "rendered_filename"]:
+    for col in ["rendered_video_path", "rendered_filename", "highlight_word"]:
         try:
             cursor.execute(f"ALTER TABLE reels_tracker ADD COLUMN {col} TEXT")
         except sqlite3.OperationalError:
@@ -257,6 +257,7 @@ def insert_or_update_reel(reel_data: Dict[str, Any]):
             "source_url": reel_data.get("source_url", ""),
             "original_title": reel_data.get("original_title"),
             "hook_text": reel_data.get("hook_text"),
+            "highlight_word": reel_data.get("highlight_word"),
             "caption": reel_data.get("caption"),
             "raw_video_path": reel_data.get("raw_video_path"),
             "rendered_video_path": reel_data.get("rendered_video_path"),
@@ -266,17 +267,17 @@ def insert_or_update_reel(reel_data: Dict[str, Any]):
         }
         cursor.execute("""
             INSERT INTO reels_tracker (
-                id, source_url, original_title, hook_text, caption,
+                id, source_url, original_title, hook_text, highlight_word, caption,
                 raw_video_path, rendered_video_path, rendered_filename, status, error_message
             ) VALUES (
-                :id, :source_url, :original_title, :hook_text, :caption,
+                :id, :source_url, :original_title, :hook_text, :highlight_word, :caption,
                 :raw_video_path, :rendered_video_path, :rendered_filename, :status, :error_message
             )
         """, full_data)
     else:
         # Dynamic partial update
         update_keys = [k for k in reel_data.keys() if k != "id" and k in [
-            "source_url", "original_title", "hook_text", "caption",
+            "source_url", "original_title", "hook_text", "highlight_word", "caption",
             "raw_video_path", "rendered_video_path", "rendered_filename", "status", "error_message"
         ]]
         if update_keys:
