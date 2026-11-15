@@ -56,6 +56,93 @@ class CardRenderer:
                 return cand
         return None
 
+    @staticmethod
+    def compute_dynamic_highlights(hook_text: str, highlight_input: Optional[str] = None) -> str:
+        """
+        Dynamically calculates theme neon highlight phrases based on word count:
+        - Short headlines (<= 8 words): higher highlight density (~40%-55%)
+        - Medium headlines (9-14 words): balanced highlight (~30%-40%)
+        - Long headlines (>= 15 words): distributed highlight (~25%-35%, 5-8 words across lines)
+        Preserves dual-tone white base + neon accent without ever highlighting 100%.
+        """
+        import re
+        raw_words = hook_text.split()
+        total_words = len(raw_words)
+        if total_words == 0:
+            return ""
+
+        stop_words = {
+            'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'with', 'by',
+            'from', 'this', 'that', 'these', 'those', 'just', 'is', 'are', 'was', 'were', 'be',
+            'been', 'has', 'have', 'had', 'do', 'does', 'did', 'can', 'could', 'will', 'would',
+            'shall', 'should', 'may', 'might', 'must', 'so', 'as', 'but', 'if', 'it', 'its',
+            'my', 'your', 'his', 'her', 'their', 'our', 'what', 'which', 'who', 'whom', 'into',
+            'onto', 'about', 'than', 'more', 'less', 'within', 'over'
+        }
+
+        # If explicit highlight phrases are given, check if coverage is balanced
+        if highlight_input:
+            provided_phrases = [p.strip() for p in re.split(r'[,;|\n]', str(highlight_input)) if p.strip()]
+            if provided_phrases:
+                hl_words_count = sum(len(p.split()) for p in provided_phrases)
+                ratio = hl_words_count / max(1, total_words)
+                if 0.20 <= ratio <= 0.60:
+                    return ', '.join(provided_phrases)
+
+        if total_words <= 8:
+            target_hl_count = max(2, int(round(total_words * 0.45)))
+        elif total_words <= 14:
+            target_hl_count = max(3, int(round(total_words * 0.35)))
+        else:
+            target_hl_count = max(5, int(round(total_words * 0.30)))
+
+        scores = []
+        for i, w in enumerate(raw_words):
+            clean = re.sub(r'[^a-zA-Z0-9$%.-]', '', w).lower()
+            if clean in stop_words:
+                base_score = -5.0
+            else:
+                base_score = 2.0
+                if any(c.isdigit() for c in w) or any(c in w for c in ['$', '%']):
+                    base_score += 4.0
+                if w.isupper() and len(w) > 1:
+                    base_score += 4.0
+                elif w[0].isupper():
+                    base_score += 2.0
+                if any(k in clean for k in ['ai', 'robot', 'game', 'shooter', 'fable', 'claude', 'tech', 'human', 'pro', 'secret', 'breakthrough', 'history', 'capabilities']):
+                    base_score += 3.0
+            scores.append((i, base_score, w))
+
+        phrase_candidates = []
+        for length in [4, 3, 2]:
+            for i in range(len(raw_words) - length + 1):
+                chunk = raw_words[i:i+length]
+                chunk_scores = [scores[i+j][1] for j in range(length)]
+                if chunk_scores[0] > 0 and chunk_scores[-1] > 0:
+                    avg_score = sum(chunk_scores)
+                    phrase_candidates.append((avg_score, i, length, ' '.join(chunk)))
+
+        phrase_candidates.sort(key=lambda x: x[0], reverse=True)
+
+        selected_phrases = []
+        covered_indices = set()
+        total_selected_words = 0
+
+        for score, idx, length, text in phrase_candidates:
+            indices = set(range(idx, idx + length))
+            if not indices.intersection(covered_indices):
+                if not any(abs(idx - ci) <= 1 for ci in covered_indices) or not selected_phrases:
+                    selected_phrases.append(text)
+                    covered_indices.update(indices)
+                    total_selected_words += length
+                if total_selected_words >= target_hl_count:
+                    break
+
+        if not selected_phrases and highlight_input:
+            return str(highlight_input)
+
+        return ', '.join(selected_phrases)
+
     def render_header_overlay(
         self,
         hook_text: str,
@@ -64,7 +151,9 @@ class CardRenderer:
         credit_handle: Optional[str] = None,
         highlight_word: Optional[str] = None,
         template: Optional[NicheTemplate] = None,
-        template_id: Optional[str] = None
+        template_id: Optional[str] = None,
+        aspect_ratio: Optional[float] = None,
+        show_credit: bool = False
     ) -> Path:
         """
         Renders a 1080x1920 transparent PNG overlay according to the specified NicheTemplate.
@@ -92,7 +181,7 @@ class CardRenderer:
         elif layout == "editorial_lower_third":
             return self._render_editorial_lower_third(hook_text, channel, output_path, credit_handle, highlight_word, template)
         else:
-            return self._render_top_card_cult(hook_text, channel, output_path, credit_handle, highlight_word, template)
+            return self._render_top_card_cult(hook_text, channel, output_path, credit_handle, highlight_word, template, aspect_ratio=aspect_ratio, show_credit=show_credit)
 
     def _render_avatar_badge(self, draw, canvas, channel, badge_x, badge_y, avatar_size, brand_color):
         logo_path = self._find_logo_path(channel)
@@ -122,7 +211,17 @@ class CardRenderer:
         draw.text((badge_x + 22, badge_y + 20), initials, font=avatar_font, fill=brand_color)
 
     # 1. TOP CARD CULT (Cult Information / Tech)
-    def _render_top_card_cult(self, hook_text, channel, output_path, credit_handle, highlight_word, template):
+    def _render_top_card_cult(
+        self,
+        hook_text: str,
+        channel: ChannelProfile,
+        output_path: Path,
+        credit_handle: Optional[str] = None,
+        highlight_word: Optional[str] = None,
+        template: Optional[NicheTemplate] = None,
+        aspect_ratio: Optional[float] = None,
+        show_credit: bool = False
+    ) -> Path:
         canvas = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
         draw = ImageDraw.Draw(canvas)
 
@@ -164,11 +263,25 @@ class CardRenderer:
         line_height = 66
         headline_total_h = len(wrapped_lines) * line_height
 
+        # 3. Dynamic Aspect-Ratio Based Vertical Positioning:
+        # - 16:9 / Cropped (Widescreen >= 1.25): Shift header downwards to eliminate empty top void
+        # - 1:1 (Square 0.85 to 1.25): Shift header upwards to comfortably fit 1080x1080 video
+        # - 9:16 (Vertical <= 0.70): Standard top safe positioning
+        if aspect_ratio is not None and aspect_ratio >= 1.25:
+            row_y = 190
+            y_text = 305
+        elif aspect_ratio is not None and 0.85 <= aspect_ratio < 1.25:
+            row_y = 100
+            y_text = 195
+        else:
+            row_y = 140
+            y_text = 245
+
         # Dynamic Black Header Background covering top area
-        header_h = max(440, 220 + headline_total_h + 30)
+        header_h = max(440, y_text + headline_total_h + 30)
         draw.rectangle([0, 0, 1080, header_h], fill=(0, 0, 0, 255))
 
-        # 3. Centered Header Row: [Circular Badge] + @handle + [Verified Badge]
+        # 4. Centered Header Row: [Circular Badge] + @handle + [Verified Badge]
         badge_size = 76
         logo_path = self._find_logo_path(channel)
         if not logo_path or not logo_path.exists():
@@ -195,7 +308,6 @@ class CardRenderer:
 
         total_row_w = badge_size + gap1 + handle_w + gap2 + verified_size
         start_x = (1080 - total_row_w) // 2
-        row_y = 95
 
         # Render Badge
         if badge_img:
@@ -216,7 +328,9 @@ class CardRenderer:
         draw.line([vx + 7, vy + 14, vx + 12, vy + 19], fill=(255, 255, 255, 255), width=3)
         draw.line([vx + 12, vy + 19, vx + 21, vy + 9], fill=(255, 255, 255, 255), width=3)
 
-        # 4. Helper for dual-tone phrase and word highlight matching
+        # 5. Dynamic Theme Neon Highlights
+        effective_highlight = self.compute_dynamic_highlights(hook_text, highlight_word)
+
         def parse_line_highlights(line: str, highlight_input: Optional[str]):
             import re
             if not highlight_input:
@@ -241,10 +355,10 @@ class CardRenderer:
                 result.append((part, is_hl))
             return result
 
-        # 5. Render Centered Headline Lines
-        y_text = 215
+        # 6. Render Centered Headline Lines
+        y_cursor = y_text
         for line in wrapped_lines:
-            line_parts = parse_line_highlights(line, highlight_word)
+            line_parts = parse_line_highlights(line, effective_highlight)
             
             # Measure total width of line
             line_w = 0
@@ -259,17 +373,17 @@ class CardRenderer:
             for (text_part, is_hl), w in zip(line_parts, item_widths):
                 c = neon_color if is_hl else white_color
                 # Drop shadow for depth and contrast
-                draw.text((cur_x + 2, y_text + 2), text_part, font=headline_font, fill=(0, 0, 0, 180))
-                draw.text((cur_x, y_text), text_part, font=headline_font, fill=c)
+                draw.text((cur_x + 2, y_cursor + 2), text_part, font=headline_font, fill=(0, 0, 0, 180))
+                draw.text((cur_x, y_cursor), text_part, font=headline_font, fill=c)
                 cur_x += w
 
-            y_text += line_height
+            y_cursor += line_height
 
-        # 6. Source Attribution Pill (if present)
-        if credit_handle:
+        # 7. Source Attribution Pill (optional, disabled by default per user request)
+        if show_credit and credit_handle:
             clean_credit = credit_handle.strip().lstrip("@")
             credit_text = f"Source: @{clean_credit}"
-            credit_y = y_text + 12
+            credit_y = y_cursor + 12
             c_bbox = draw.textbbox((0, 0), credit_text, font=credit_font)
             cw = c_bbox[2] - c_bbox[0]
             cx = (1080 - cw) // 2

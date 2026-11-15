@@ -256,6 +256,11 @@ class VideoCompositor:
                 ] + common_tail + [str(output_path)]
 
             else:
+                vid_w, vid_h = _probe_dims(str(input_path))
+                v_ar = vid_w / max(1, vid_h)
+                vh_target = 1480
+                vy_offset = 440
+
                 # Editorial informative top card (Cult Information)
                 self.card_renderer.render_header_overlay(
                     hook_text=hook_text,
@@ -263,12 +268,10 @@ class VideoCompositor:
                     output_path=overlay_png,
                     credit_handle=credit_handle,
                     highlight_word=highlight_word,
-                    template=template
+                    template=template,
+                    aspect_ratio=v_ar,
+                    show_credit=False
                 )
-                vid_w, vid_h = _probe_dims(str(input_path))
-                v_ar = vid_w / max(1, vid_h)
-                vh_target = 1480
-                vy_offset = 440
 
                 if NATIVE_VERTICAL_AR[0] <= v_ar <= NATIVE_VERTICAL_AR[1]:
                     # Vertical 9:16 video covers the available area cleanly
@@ -282,12 +285,22 @@ class VideoCompositor:
                     # Non-vertical video:
                     # For top_card_cult, informative reels (Cult Information, Pubity) use clean pure black canvas
                     if layout == "top_card_cult":
-                        filter_complex = (
-                            f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                            f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
-                            f"[bg][sharp_vid]overlay=(W-w)/2:(H-h)/2:shortest=1[with_vid];"
-                            "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
-                        )
+                        if 0.85 <= v_ar <= 1.25:
+                            # 1:1 Square video: Shift video upward to y=500 so it leaves comfortable bottom margin
+                            filter_complex = (
+                                f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                                f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                                f"[bg][sharp_vid]overlay=(W-w)/2:500:shortest=1[with_vid];"
+                                "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                            )
+                        else:
+                            # 16:9 Landscape / cropped: center video at (H-h)/2, balancing downward header
+                            filter_complex = (
+                                f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
+                                f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                                f"[bg][sharp_vid]overlay=(W-w)/2:(H-h)/2:shortest=1[with_vid];"
+                                "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
+                            )
                     else:
                         # Other layouts: blurred ambient fill + centered video below header
                         filter_complex = (

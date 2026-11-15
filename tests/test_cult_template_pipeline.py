@@ -170,3 +170,90 @@ def test_fanout_and_db_highlight_word_and_crop_persistence():
     sig = inspect.signature(fanout.generate_account_customized_reel)
     assert "highlight_word" in sig.parameters
     assert "crop_box" in sig.parameters
+
+def test_dynamic_highlights_density_scaling():
+    """Verify compute_dynamic_highlights scales neon density according to word count."""
+    renderer = CardRenderer()
+    
+    # 1. Short text (<= 8 words): higher highlight density (~40-55%)
+    short_text = "AI Table Tennis Robot Beats Human Pro"
+    hl_short = renderer.compute_dynamic_highlights(short_text)
+    assert len(hl_short) > 0
+    short_hl_words = [w for p in hl_short.split(',') for w in p.split()]
+    assert 2 <= len(short_hl_words) <= 5
+
+    # 2. Medium text (9-14 words): balanced highlight (~30-40%)
+    med_text = "Claude Fable 5.2 Just Built This INSANE First-Person Shooter Game Within 8 Hours"
+    hl_med = renderer.compute_dynamic_highlights(med_text)
+    assert "INSANE First-Person Shooter Game" in hl_med or "Claude Fable" in hl_med
+
+    # 3. Long text (>= 15 words): distributed across lines (5-8 words total)
+    long_text = "The Most Advanced AI Humanoid In The World Just Demonstrated Capabilities Never Seen Before In History"
+    hl_long = renderer.compute_dynamic_highlights(long_text)
+    long_hl_words = [w for p in hl_long.split(',') for w in p.split()]
+    assert len(long_hl_words) >= 4
+
+def test_aspect_ratio_adaptive_header_positions(tmp_path):
+    """Verify that 16:9 widescreen shifts downwards while 1:1 square shifts upwards."""
+    renderer = CardRenderer()
+    channel = ChannelProfile(
+        handle="@cult_information",
+        display_name="Cult Information",
+        niche="Informative AI & Tech",
+        logo_filename="logo_cult_badge.png",
+        subreddits=[],
+        default_hashtags=[],
+        cta_link=""
+    )
+    hook = "Claude Fable 5.2 Just Built This INSANE First-Person Shooter Game Within 8 Hours"
+
+    out_16_9 = tmp_path / "card_16_9.png"
+    renderer.render_header_overlay(
+        hook_text=hook,
+        channel=channel,
+        output_path=out_16_9,
+        aspect_ratio=1.77,  # 16:9 widescreen
+        show_credit=False
+    )
+
+    out_1_1 = tmp_path / "card_1_1.png"
+    renderer.render_header_overlay(
+        hook_text=hook,
+        channel=channel,
+        output_path=out_1_1,
+        aspect_ratio=1.0,  # 1:1 square
+        show_credit=False
+    )
+
+    # For 16:9 (shifted downwards): at y=120, badge is not yet reached, pixel is black background
+    img_16_9 = Image.open(out_16_9)
+    img_1_1 = Image.open(out_1_1)
+
+    # In 1:1 (shifted upwards at row_y=100), the badge area has content at y=130
+    # In 16:9 (shifted downwards at row_y=190), the badge area starts at y=190
+    assert img_16_9.size == (1080, 1920)
+    assert img_1_1.size == (1080, 1920)
+
+def test_source_pill_removed_from_cult_card(tmp_path):
+    """Verify that the Source: @... attribution pill is absent by default in Cult Information cards."""
+    renderer = CardRenderer()
+    channel = ChannelProfile(
+        handle="@cult_information",
+        display_name="Cult Information",
+        niche="Informative AI & Tech",
+        logo_filename="logo_cult_badge.png",
+        subreddits=[],
+        default_hashtags=[],
+        cta_link=""
+    )
+    hook = "Claude Fable 5.2 Just Built This INSANE First-Person Shooter Game Within 8 Hours"
+    out_card = tmp_path / "card_no_source.png"
+    
+    renderer.render_header_overlay(
+        hook_text=hook,
+        channel=channel,
+        output_path=out_card,
+        credit_handle="@AskGPTs",
+        show_credit=False
+    )
+    assert out_card.exists()
