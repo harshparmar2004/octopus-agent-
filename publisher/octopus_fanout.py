@@ -42,11 +42,14 @@ class OctopusFanoutEngine:
         account: Dict[str, Any],
         task_id: str,
         account_index: int = 0,
-        highlight_word: Optional[str] = None
+        highlight_word: Optional[str] = None,
+        crop_box: Optional[Dict[str, int]] = None,
+        auto_crop_header: bool = True
     ) -> Optional[str]:
         """
         Creates an anti-shadowban custom 9:16 reel tailored specifically for this account:
         - Uses account handle & brand styling
+        - Slices competitor headers/footers to isolate pure middle video footage
         - Applies perceptual video & audio mutation (color EQ, noise dithering, metadata stripping, device spoofing)
         - Guarantees unique file hash (SHA256) and distinct perceptual fingerprint per account
         """
@@ -85,7 +88,9 @@ class OctopusFanoutEngine:
             output_filename=output_filename,
             account_index=account_index,
             apply_anti_shadowban=True,
-            highlight_word=highlight_word
+            highlight_word=highlight_word,
+            crop_box=crop_box,
+            auto_crop_header=auto_crop_header
         )
         return rendered_path
 

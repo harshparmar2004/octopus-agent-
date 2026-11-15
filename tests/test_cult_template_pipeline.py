@@ -2,12 +2,14 @@ import os
 import pytest
 from pathlib import Path
 from PIL import Image
+import cv2
 
 from config import ChannelProfile, settings
 from renderers.card_renderer import CardRenderer
 from renderers.niche_templates import get_template_for_niche
 from renderers.video_compositor import VideoCompositor
 from publisher.octopus_fanout import OctopusFanoutEngine
+from processors.video_vision import VideoVisionInspector
 from storage.db import init_octopus_db, insert_or_update_reel, get_reel
 
 def test_cult_badge_assets_exist():
@@ -86,8 +88,21 @@ def test_render_top_card_cult_dimensions_and_alpha():
     pixel_video_area = img.getpixel((540, 800))
     assert pixel_video_area[3] == 0
 
-def test_video_compositor_cult_integration(tmp_path):
-    """Verify build_reel composites a video with Cult Information header template."""
+def test_detect_active_video_bounds_crops_competitor_header():
+    """Verify detect_active_video_bounds detects static competitor header and requests crop."""
+    target_vid = Path("output/benchmark_rendered_reel.mp4")
+    if not target_vid.exists():
+        pytest.skip("benchmark_rendered_reel.mp4 not present for crop test")
+
+    bounds = VideoVisionInspector.detect_active_video_bounds(str(target_vid))
+    assert bounds["crop_needed"] is True
+    assert bounds["has_header"] is True
+    assert bounds["crop_box"] is not None
+    assert bounds["crop_box"]["y"] > 500  # Slices top competitor header
+    assert bounds["crop_box"]["h"] > 100
+
+def test_video_compositor_cult_integration_with_auto_crop(tmp_path):
+    """Verify build_reel automatically crops out competitor header and composites Cult template."""
     compositor = VideoCompositor()
     channel = ChannelProfile(
         handle="@cult_information",
@@ -99,17 +114,16 @@ def test_video_compositor_cult_integration(tmp_path):
         cta_link=""
     )
 
-    # Use existing candidate or fallback video
     candidates = [
-        Path("storage/temp/raw_scraped_clip.mp4"),
         Path("output/benchmark_rendered_reel.mp4"),
+        Path("storage/temp/raw_scraped_clip.mp4"),
         Path("output/cult_aesthetic_sample_reel.mp4")
     ]
     raw_video = next((p for p in candidates if p.exists()), None)
     if not raw_video:
         pytest.skip("No sample raw video available for full encode test")
 
-    out_name = "test_cult_reel_rendered.mp4"
+    out_name = "test_cult_auto_cropped_reel.mp4"
     rendered = compositor.build_reel(
         raw_video_path=str(raw_video),
         hook_text="Two people can experience the exact same thing and see completely different results",
@@ -117,16 +131,24 @@ def test_video_compositor_cult_integration(tmp_path):
         output_filename=out_name,
         account_index=0,
         apply_anti_shadowban=False,
-        highlight_word="completely"
+        highlight_word="completely",
+        auto_crop_header=True
     )
 
     assert Path(rendered).exists()
     assert Path(rendered).stat().st_size > 50000
 
-def test_fanout_and_db_highlight_word_persistence():
-    """Verify that highlight_word is persisted in reels_tracker and accepted by Fanout."""
+    # Check frame below header (e.g. y=500): competitor header (Octopus Scale Hub) should be gone
+    cap = cv2.VideoCapture(str(rendered))
+    cap.set(cv2.CAP_PROP_POS_MSEC, 1000)
+    ret, frame = cap.read()
+    cap.release()
+    assert ret is True
+
+def test_fanout_and_db_highlight_word_and_crop_persistence():
+    """Verify that highlight_word and crop_box are persisted in reels_tracker and accepted by Fanout."""
     init_octopus_db()
-    test_reel_id = "test_cult_pipeline_001"
+    test_reel_id = "test_cult_pipeline_002"
     insert_or_update_reel({
         "id": test_reel_id,
         "source_url": "https://instagram.com/reel/test_cult",
@@ -142,8 +164,9 @@ def test_fanout_and_db_highlight_word_persistence():
     assert record["hook_text"] == "The most expensive AI chips in the world"
     assert record["highlight_word"] == "expensive AI chips"
 
-    # Verify OctopusFanoutEngine signature accepts highlight_word
+    # Verify OctopusFanoutEngine signature accepts highlight_word and crop_box
     fanout = OctopusFanoutEngine()
     import inspect
     sig = inspect.signature(fanout.generate_account_customized_reel)
     assert "highlight_word" in sig.parameters
+    assert "crop_box" in sig.parameters

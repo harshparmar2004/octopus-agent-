@@ -184,13 +184,14 @@ class VideoVisionInspector:
         diffs = [cv2.absdiff(frames[i], frames[i+1]) for i in range(len(frames) - 1)]
         avg_diff = np.mean(diffs, axis=0)
 
+        # 1. Y-axis active vertical slice analysis
         row_motion = np.mean(avg_diff, axis=1)
         max_motion = float(np.max(row_motion)) if np.max(row_motion) > 0 else 1.0
 
         avg_gray = np.mean(frames, axis=0)
         row_bright = np.mean(avg_gray, axis=1)
 
-        active_rows = np.where((row_motion > max_motion * 0.12) & (row_bright > 12.0))[0]
+        active_rows = np.where((row_motion > max_motion * 0.10) & (row_bright > 10.0))[0]
 
         if len(active_rows) == 0:
             return {
@@ -208,19 +209,42 @@ class VideoVisionInspector:
         y_min = (max(0, y_min) // 2) * 2
         y_max = (min(vid_h, y_max) // 2) * 2
 
-        has_header = (y_min / vid_h) > 0.08
-        has_footer = ((vid_h - y_max) / vid_h) > 0.08
-        crop_needed = has_header or has_footer
+        has_header = (y_min / vid_h) > 0.05
+        has_footer = ((vid_h - y_max) / vid_h) > 0.05
 
-        crop_h = max(100, y_max - y_min)
+        # 2. X-axis active horizontal slice analysis (detects black pillarboxes / side margins)
+        col_motion = np.mean(avg_diff, axis=0)
+        max_col_motion = float(np.max(col_motion)) if np.max(col_motion) > 0 else 1.0
+        col_bright = np.mean(avg_gray, axis=0)
+        active_cols = np.where((col_motion > max_col_motion * 0.10) & (col_bright > 10.0))[0]
+
+        crop_x = 0
         crop_w = vid_w
+        has_left_pillar = False
+        has_right_pillar = False
+        if len(active_cols) > 0:
+            scale_x = vid_w / 360.0
+            x_min = int(active_cols[0] * scale_x)
+            x_max = int(active_cols[-1] * scale_x)
+            x_min = (max(0, x_min) // 2) * 2
+            x_max = (min(vid_w, x_max) // 2) * 2
+            has_left_pillar = (x_min / vid_w) > 0.04
+            has_right_pillar = ((vid_w - x_max) / vid_w) > 0.04
+            if has_left_pillar or has_right_pillar:
+                crop_x = x_min
+                crop_w = max(100, x_max - x_min)
+
+        crop_needed = has_header or has_footer or has_left_pillar or has_right_pillar
+        crop_h = max(100, y_max - y_min)
 
         return {
             "has_header": has_header,
             "has_footer": has_footer,
+            "has_left_pillar": has_left_pillar,
+            "has_right_pillar": has_right_pillar,
             "crop_needed": crop_needed,
             "crop_box": {
-                "x": 0,
+                "x": crop_x,
                 "y": y_min,
                 "w": crop_w,
                 "h": crop_h

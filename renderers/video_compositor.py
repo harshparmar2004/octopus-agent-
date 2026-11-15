@@ -98,12 +98,14 @@ class VideoCompositor:
         account_index: int = 0,
         apply_anti_shadowban: bool = False,  # Deprecated: ignored (no media mutation / metadata spoofing)
         template: Optional[NicheTemplate] = None,
-        template_id: Optional[str] = None
+        template_id: Optional[str] = None,
+        auto_crop_header: bool = True,
+        crop_box: Optional[Dict[str, int]] = None
     ) -> Optional[str]:
         """
         Composites a raw video into a 1080x1920 Reel according to the niche's render profile:
         - 'full_template' + layout 'full_screen_neon_hud' : aspect-adaptive neon frame (clubbing brand)
-        - 'full_template' (other layouts)                  : editorial top card (informative tech)
+        - 'full_template' (other layouts)                  : editorial top card (Cult Information)
         - 'light_brand'                                     : full-bleed + corner handle + optional short hook
         - 'concert_tag'                                     : full-bleed + lower-third artist/city/venue + filmer credit
         - 'raw_watermark'                                   : full-bleed raw video + micro watermark
@@ -113,6 +115,39 @@ class VideoCompositor:
         if not input_path.exists():
             logger.error(f"Input video not found: {raw_video_path}")
             return None
+
+        # 0. Active middle video extraction (slices competitor headers, footers & static overlays)
+        temp_crop_file: Optional[Path] = None
+        if auto_crop_header:
+            effective_crop = crop_box
+            if not effective_crop:
+                try:
+                    from processors.video_vision import VideoVisionInspector
+                    bounds = VideoVisionInspector.detect_active_video_bounds(str(input_path))
+                    if bounds.get("crop_needed") and bounds.get("crop_box"):
+                        effective_crop = bounds["crop_box"]
+                except Exception as be:
+                    logger.warning(f"Auto-crop bounds detection skipped: {be}")
+
+            if effective_crop:
+                cx = effective_crop.get("x", 0)
+                cy = effective_crop.get("y", 0)
+                cw = (effective_crop.get("w", 1080) // 2) * 2
+                ch = (effective_crop.get("h", 1920) // 2) * 2
+
+                temp_crop_file = self.output_dir / f"clean_middle_crop_{uuid.uuid4().hex[:8]}.mp4"
+                crop_cmd = [
+                    "ffmpeg", "-y",
+                    "-i", str(input_path),
+                    "-vf", f"crop={cw}:{ch}:{cx}:{cy}",
+                    "-c:v", "libx264", "-preset", "fast",
+                    "-c:a", "copy",
+                    str(temp_crop_file)
+                ]
+                logger.info(f"Slicing competitor header/footer: crop={cw}:{ch}:{cx}:{cy} -> {temp_crop_file.name}")
+                crop_res = subprocess.run(crop_cmd, capture_output=True, text=True, timeout=45)
+                if crop_res.returncode == 0 and temp_crop_file.exists():
+                    input_path = temp_crop_file
 
         output_path = self.output_dir / output_filename
         stem = f"{input_path.stem}_{account_index}"
@@ -276,8 +311,8 @@ class VideoCompositor:
             logger.error(f"Error during video composition: {e}")
             return None
         finally:
-            for p in [overlay_png, bg_png, fg_png]:
-                if p.exists():
+            for p in [overlay_png, bg_png, fg_png, temp_crop_file]:
+                if p and p.exists():
                     try:
                         p.unlink()
                     except Exception:

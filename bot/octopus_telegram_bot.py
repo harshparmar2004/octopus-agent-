@@ -674,7 +674,7 @@ class OctopusTelegramBot:
                 caption = f"Obsessed with this energy! ✨💃\n\nTag someone who needs to see this! 👇\n\n👉 Follow {primary_handle} for daily dance & party vibes!\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
             hook = session.get("headline") or dl.get("title") or "Daily dance inspiration"
         else:
-            if not session.get("headline") or not session.get("highlight_word"):
+            if not session.get("headline") or not session.get("highlight_word") or not session.get("crop_box"):
                 try:
                     from processors.vision_extractor import VideoVisionInspector
                     v_res = VideoVisionInspector.analyze_reel(dl["filepath"], api_key=getattr(settings, "GEMINI_API_KEY", None))
@@ -684,6 +684,8 @@ class OctopusTelegramBot:
                         if not session.get("highlight_word") and v_res.get("highlight_word"):
                             session["highlight_word"] = v_res.get("highlight_word")
                             highlight_word = v_res.get("highlight_word")
+                        if not session.get("crop_box") and v_res.get("crop_box"):
+                            session["crop_box"] = v_res.get("crop_box")
                 except Exception as v_err:
                     logger.warning(f"Vision extractor in Telegram execution failed: {v_err}")
 
@@ -752,7 +754,8 @@ class OctopusTelegramBot:
                     account=acc,
                     task_id=task_id,
                     account_index=idx,
-                    highlight_word=highlight_word
+                    highlight_word=highlight_word,
+                    crop_box=session.get("crop_box")
                 )
                 rendered_paths[acc["id"]] = r_path or str(dl["filepath"])
 
