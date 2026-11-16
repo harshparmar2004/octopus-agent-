@@ -15,16 +15,30 @@
       color: #1C1917;
       font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
     }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    button, a, input, select, textarea, [onclick], .cursor-pointer {
+      touch-action: manipulation;
+    }
+    button:active, [onclick]:active {
+      transform: scale(0.985);
+      transition: transform 0.04s ease-out;
+    }
     .cloud-card {
       background-color: #FFFFFF;
       border: 1px solid #E6E0D6;
       border-radius: 8px;
       box-shadow: 0 1px 2px 0 rgba(28, 25, 23, 0.04);
+      contain: content;
     }
     .cloud-card-hover:hover {
       border-color: #D4AF98;
       box-shadow: 0 2px 8px 0 rgba(200, 98, 55, 0.08);
+    }
+    .transition-fast {
+      transition: opacity 0.12s ease, transform 0.12s ease, background-color 0.12s ease;
     }
     /* Hide scrollbars completely across the dashboard */
     ::-webkit-scrollbar,
@@ -2332,6 +2346,12 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Sources Pagination Bar -->
+          <div id="sourcesPaginationBar" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-[#78716C] border-t border-[#E8DCD1]">
+            <div id="sourcesPaginationInfo">Showing 1 to 30 of sources</div>
+            <div id="sourcesPaginationControls" class="flex items-center gap-1.5"></div>
+          </div>
         </div>
       </section>
 
@@ -2363,6 +2383,12 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Reels Pagination Bar -->
+          <div id="reelsPaginationBar" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-[#78716C] border-t border-[#E6E0D6]">
+            <div id="reelsPaginationInfo">Showing reels</div>
+            <div id="reelsPaginationControls" class="flex items-center gap-1.5"></div>
+          </div>
         </div>
       </section>
 
@@ -2390,6 +2416,12 @@
                 <!-- Injected Rows -->
               </tbody>
             </table>
+          </div>
+
+          <!-- Broadcasts Pagination Bar -->
+          <div id="broadcastsPaginationBar" class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-[#78716C] border-t border-[#E6E0D6]">
+            <div id="broadcastsPaginationInfo">Showing broadcast records</div>
+            <div id="broadcastsPaginationControls" class="flex items-center gap-1.5"></div>
           </div>
         </div>
       </section>
@@ -3109,15 +3141,36 @@
       vision_reskinner: { title: "AI Vision Reel Reader & Brand Re-Skinner", sub: "Gemini Vision reads reels, extracts hooks & headlines, and re-skins with your brand theme" }
     };
 
+    let currentActiveTab = "overview";
+    let cachedStats = null;
+
+    function applyStatsToDom(stats) {
+      if (!stats) return;
+      cachedStats = stats;
+      if (document.getElementById("stat_accounts")) document.getElementById("stat_accounts").innerText = Number(stats.total_accounts || 0).toLocaleString();
+      if (document.getElementById("stat_sources")) document.getElementById("stat_sources").innerText = Number(stats.monitored_sources || 0).toLocaleString();
+      if (document.getElementById("stat_reels")) document.getElementById("stat_reels").innerText = Number(stats.total_reels || 0).toLocaleString();
+      if (document.getElementById("stat_rate")) document.getElementById("stat_rate").innerText = `${stats.success_rate || 0}%`;
+      if (document.getElementById("badgeAccounts")) document.getElementById("badgeAccounts").innerText = stats.total_accounts || 0;
+      if (document.getElementById("sidebarAccCount")) document.getElementById("sidebarAccCount").innerText = `${stats.active_accounts || 0} of ${stats.total_accounts || 0} pages online`;
+      if (document.getElementById("badgeSources")) document.getElementById("badgeSources").innerText = Number(stats.monitored_sources || 0).toLocaleString();
+      const badgeReels = document.getElementById("badgeReels");
+      if (badgeReels) badgeReels.innerText = Number(stats.total_reels || 0).toLocaleString();
+      if (document.getElementById("matrixTotalBadge")) document.getElementById("matrixTotalBadge").innerText = `${stats.total_accounts || 0} Pages`;
+    }
+
     function switchTab(tabKey) {
+      currentActiveTab = tabKey;
       const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "vision_reskinner", "sources", "reels", "broadcasts", "settings", "scheduler"];
-      tabs.forEach(t => {
+      
+      for (let i = 0; i < tabs.length; i++) {
+        const t = tabs[i];
         const sec = document.getElementById(`view_${t}`);
         const btn = document.getElementById(`tabBtn_${t}`);
         if (sec && btn) {
           if (t === tabKey) {
             sec.classList.remove("hidden");
-            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-active transition";
+            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-active transition-fast";
             const icon = btn.querySelector("svg");
             if (icon) {
               icon.classList.remove("text-[#71717A]");
@@ -3125,7 +3178,7 @@
             }
           } else {
             sec.classList.add("hidden");
-            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition";
+            btn.className = "w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition-fast";
             const icon = btn.querySelector("svg");
             if (icon) {
               icon.classList.remove("text-[#C86237]");
@@ -3133,12 +3186,37 @@
             }
           }
         }
-      });
+      }
 
       const meta = tabTitles[tabKey] || { title: "Octopus Agent", sub: "Network Engine" };
       document.getElementById("stageTitle").innerText = meta.title;
       document.getElementById("stageSubtitle").innerText = meta.sub;
       try { history.replaceState(null, null, `?tab=${tabKey}`); } catch (e) {}
+
+      // Lazy render for heavy tabs when selected
+      if (tabKey === 'sources') {
+        if (!globalSources || globalSources.length === 0) {
+          loadSourcesAsync();
+        } else {
+          renderSourcesTable(null, sourcesCurrentPage);
+        }
+      }
+
+      if (tabKey === 'reels') {
+        if (!cachedReelsList || cachedReelsList.length === 0) {
+          loadReelsAsync();
+        } else {
+          renderReelsLibrary(null, reelsCurrentPage);
+        }
+      }
+
+      if (tabKey === 'broadcasts') {
+        if (!cachedBroadcastLogsList || cachedBroadcastLogsList.length === 0) {
+          loadBroadcastsAsync();
+        } else {
+          renderBroadcastLogs(null, broadcastAuditCurrentPage);
+        }
+      }
 
       if (tabKey === 'pipeline') {
         fetchPipelineState(true);
@@ -3147,7 +3225,7 @@
       }
 
       if (tabKey === 'niche_pods') {
-        selectNiche(currentNicheId);
+        if (!currentCluster) selectNiche(currentNicheId);
       }
 
       if (tabKey === 'scheduler') {
@@ -3163,48 +3241,78 @@
       triggerDaemonCycle();
     }
 
+    let isDashboardLoading = false;
     async function loadDashboard() {
-      // 1. Stats
-      const statRes = await fetch("/api/stats");
-      const stats = await statRes.json();
-      if (document.getElementById("stat_accounts")) document.getElementById("stat_accounts").innerText = Number(stats.total_accounts || 0).toLocaleString();
-      if (document.getElementById("stat_sources")) document.getElementById("stat_sources").innerText = Number(stats.monitored_sources || 0).toLocaleString();
-      if (document.getElementById("stat_reels")) document.getElementById("stat_reels").innerText = Number(stats.total_reels || 0).toLocaleString();
-      if (document.getElementById("stat_rate")) document.getElementById("stat_rate").innerText = `${stats.success_rate}%`;
-      if (document.getElementById("badgeAccounts")) document.getElementById("badgeAccounts").innerText = stats.total_accounts;
-      if (document.getElementById("sidebarAccCount")) document.getElementById("sidebarAccCount").innerText = `${stats.active_accounts} of ${stats.total_accounts} pages online`;
-      if (document.getElementById("badgeSources")) document.getElementById("badgeSources").innerText = stats.monitored_sources;
-      const badgeReels = document.getElementById("badgeReels");
-      if (badgeReels) badgeReels.innerText = stats.total_reels;
-      if (document.getElementById("matrixTotalBadge")) document.getElementById("matrixTotalBadge").innerText = `${stats.total_accounts} Pages`;
-
-      // 2. Accounts
-      const accRes = await fetch("/api/accounts");
-      globalAccounts = await accRes.json();
-      renderAccountsTable(globalAccounts);
-      renderFanoutCheckboxes(globalAccounts);
-
-      // 3. Sources
-      const srcRes = await fetch("/api/sources");
-      globalSources = await srcRes.json();
-      renderSourcesTable(globalSources);
-
-      // 4. Reels
+      if (isDashboardLoading) return;
+      isDashboardLoading = true;
       try {
-        const reelRes = await fetch("/api/reels");
-        const reels = await reelRes.json();
-        renderReelsLibrary(reels);
-        const countBadge = document.getElementById("reelsCountBadge");
-        if (countBadge) countBadge.innerText = `${reels.length} Reels`;
+        // Fast parallel fetch for primary dashboard tabs
+        const [statRes, accRes, logRes, nchRes] = await Promise.all([
+          fetch("/api/stats").then(r => r.json()).catch(() => null),
+          fetch("/api/accounts").then(r => r.json()).catch(() => []),
+          fetch("/api/broadcasts").then(r => r.json()).catch(() => []),
+          fetch("/api/niches").then(r => r.json()).catch(() => [])
+        ]);
+
+        if (statRes) applyStatsToDom(statRes);
+
+        if (accRes && Array.isArray(accRes)) {
+          globalAccounts = accRes;
+          renderAccountsTable(globalAccounts);
+          renderFanoutCheckboxes(globalAccounts);
+        }
+
+        if (logRes && Array.isArray(logRes)) {
+          cachedBroadcastLogsList = logRes;
+          renderBroadcastLogs(cachedBroadcastLogsList);
+        }
+
+        if (nchRes && Array.isArray(nchRes)) {
+          globalNiches = nchRes;
+          renderNichePills();
+          if (currentNicheId && !currentCluster) selectNiche(currentNicheId);
+        }
+
+        // Asynchronously preload sources and reels in background so tab switching is instantaneous
+        setTimeout(loadSourcesAndReelsBackground, 60);
+      } catch (err) {
+        console.error("Dashboard fast load error:", err);
+      } finally {
+        isDashboardLoading = false;
+      }
+    }
+
+    async function loadSourcesAsync() {
+      try {
+        const res = await fetch("/api/sources");
+        globalSources = await res.json();
+        renderSourcesTable(globalSources, sourcesCurrentPage);
       } catch (e) {}
+    }
 
-      // 5. Broadcast Logs / Activity
-      const logRes = await fetch("/api/broadcasts");
-      const logs = await logRes.json();
-      renderBroadcastLogs(logs);
+    async function loadReelsAsync() {
+      try {
+        const res = await fetch("/api/reels");
+        const reels = await res.json();
+        renderReelsLibrary(reels, reelsCurrentPage);
+      } catch (e) {}
+    }
 
-      // 6. Niche Pods Hub
-      await loadNiches();
+    async function loadBroadcastsAsync() {
+      try {
+        const res = await fetch("/api/broadcasts");
+        const logs = await res.json();
+        renderBroadcastLogs(logs, broadcastAuditCurrentPage);
+      } catch (e) {}
+    }
+
+    async function loadSourcesAndReelsBackground() {
+      if (!globalSources || globalSources.length === 0) {
+        loadSourcesAsync();
+      }
+      if (!cachedReelsList || cachedReelsList.length === 0) {
+        loadReelsAsync();
+      }
     }
 
     // ==================== NICHE AUTOMATION PODS LOGIC ====================
@@ -3981,7 +4089,34 @@
       biotech: { name: "BioTech & Genomics", icon: "🧬", color: "#059669" }
     };
 
-    function renderSourcesTable(sourcesList) {
+    // ==================== FAST PAGINATED SOURCES RENDERING ====================
+    let sourcesCurrentPage = 1;
+    const SOURCES_PAGE_SIZE = 30;
+    let currentFilteredSources = null;
+
+    function renderSourcesPaginationControls(currentPage, totalPages) {
+      const container = document.getElementById("sourcesPaginationControls");
+      if (!container) return;
+      if (totalPages <= 1) {
+        container.innerHTML = "";
+        return;
+      }
+      container.innerHTML = `
+        <button onclick="goToSourcesPage(1)" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">« First</button>
+        <button onclick="goToSourcesPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">‹ Prev</button>
+        <span class="px-2.5 py-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded text-[11px] font-semibold text-[#1C1917]">Page ${currentPage} of ${totalPages}</span>
+        <button onclick="goToSourcesPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Next ›</button>
+        <button onclick="goToSourcesPage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Last »</button>
+      `;
+    }
+
+    function goToSourcesPage(page) {
+      renderSourcesTable(null, page);
+      const el = document.getElementById("view_sources");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderSourcesTable(sourcesList, page = 1) {
       // 1. Update Top KPI Stat Boxes using global master dataset
       const totalSources = globalSources.length;
       const igSources = globalSources.filter(s => s.source_type === 'instagram_handle').length;
@@ -3994,21 +4129,37 @@
       const statReddit = document.getElementById("statSourcesReddit");
       const statNiches = document.getElementById("statSourcesNiches");
 
-      if (totalBadge) totalBadge.innerText = `${totalSources} Sources`;
-      if (statTotal) statTotal.innerText = totalSources;
-      if (statIg) statIg.innerText = igSources;
-      if (statReddit) statReddit.innerText = redditSources;
+      if (totalBadge) totalBadge.innerText = `${totalSources.toLocaleString()} Sources`;
+      if (statTotal) statTotal.innerText = totalSources.toLocaleString();
+      if (statIg) statIg.innerText = igSources.toLocaleString();
+      if (statReddit) statReddit.innerText = redditSources.toLocaleString();
       if (statNiches) statNiches.innerText = uniqueNiches;
 
-      // 2. Render rows for current filtered list
-      const listToRender = sourcesList || globalSources;
+      // 2. Set current dataset for pagination
+      if (sourcesList !== null && sourcesList !== undefined) {
+        currentFilteredSources = sourcesList;
+      }
+      const listToRender = currentFilteredSources || globalSources;
+      const totalCount = listToRender.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / SOURCES_PAGE_SIZE));
+      sourcesCurrentPage = Math.max(1, Math.min(page, totalPages));
+
+      const startIdx = (sourcesCurrentPage - 1) * SOURCES_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + SOURCES_PAGE_SIZE, totalCount);
+      const pageItems = listToRender.slice(startIdx, endIdx);
+
       const countEl = document.getElementById("srcFilteredCount");
-      if (countEl) countEl.innerText = `Showing ${listToRender.length} of ${totalSources}`;
+      if (countEl) countEl.innerText = totalCount === 0 ? "Showing 0 of 0" : `Showing ${startIdx + 1}–${endIdx} of ${totalCount.toLocaleString()}`;
+
+      const infoEl = document.getElementById("sourcesPaginationInfo");
+      if (infoEl) infoEl.innerText = totalCount === 0 ? "No sources found" : `Showing ${startIdx + 1} to ${endIdx} of ${totalCount.toLocaleString()} sources`;
+
+      renderSourcesPaginationControls(sourcesCurrentPage, totalPages);
 
       const tbody = document.getElementById("sourcesTbody");
       if (!tbody) return;
 
-      if (listToRender.length === 0) {
+      if (pageItems.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="p-8 text-center text-xs text-[#78716C] bg-[#FAF8F5]">
@@ -4019,7 +4170,7 @@
         return;
       }
 
-      tbody.innerHTML = listToRender.map(s => {
+      tbody.innerHTML = pageItems.map(s => {
         const catKey = (s.category || s.niche_id || 'other').toLowerCase();
         const nicheMeta = NICHE_DISPLAY_MAP[catKey] || { name: catKey.charAt(0).toUpperCase() + catKey.slice(1), icon: "💡", color: "#C86237" };
         const isIg = s.source_type === 'instagram_handle';
@@ -4027,7 +4178,7 @@
         const linkUrl = isIg ? `https://instagram.com/${s.source_value}` : isReddit ? `https://reddit.com/r/${s.source_value}` : '#';
 
         return `
-          <tr class="hover:bg-[#FAF8F5]/80 transition">
+          <tr class="hover:bg-[#FAF8F5]/80 transition-fast">
             <!-- 1. Source Type Badge -->
             <td class="p-3 whitespace-nowrap">
               ${isIg ? `
@@ -4118,24 +4269,29 @@
       }).join("");
     }
 
+    // Debounced filter for smooth typing without lag
+    let filterSourcesTimeout = null;
     function filterSources() {
-      const q = (document.getElementById("srcSearchInput")?.value || "").toLowerCase().trim();
-      const niche = (document.getElementById("srcNicheFilter")?.value || "all").toLowerCase();
-      const type = (document.getElementById("srcTypeFilter")?.value || "all").toLowerCase();
+      clearTimeout(filterSourcesTimeout);
+      filterSourcesTimeout = setTimeout(() => {
+        const q = (document.getElementById("srcSearchInput")?.value || "").toLowerCase().trim();
+        const niche = (document.getElementById("srcNicheFilter")?.value || "all").toLowerCase();
+        const type = (document.getElementById("srcTypeFilter")?.value || "all").toLowerCase();
 
-      const filtered = globalSources.filter(s => {
-        const handle = (s.source_value || "").toLowerCase();
-        const cat = (s.category || s.niche_id || "").toLowerCase();
-        const srcType = (s.source_type || "").toLowerCase();
+        const filtered = globalSources.filter(s => {
+          const handle = (s.source_value || "").toLowerCase();
+          const cat = (s.category || s.niche_id || "").toLowerCase();
+          const srcType = (s.source_type || "").toLowerCase();
 
-        const matchesQ = !q || handle.includes(q) || cat.includes(q) || srcType.includes(q);
-        const matchesNiche = (niche === "all") || (cat === niche);
-        const matchesType = (type === "all") || (srcType === type);
+          const matchesQ = !q || handle.includes(q) || cat.includes(q) || srcType.includes(q);
+          const matchesNiche = (niche === "all") || (cat === niche);
+          const matchesType = (type === "all") || (srcType === type);
 
-        return matchesQ && matchesNiche && matchesType;
-      });
+          return matchesQ && matchesNiche && matchesType;
+        });
 
-      renderSourcesTable(filtered);
+        renderSourcesTable(filtered, 1);
+      }, 120);
     }
 
     function setSourceTypeFilter(typeVal) {
@@ -4156,17 +4312,74 @@
       filterSources();
     }
 
-    function renderReelsLibrary(reels) {
+    // ==================== FAST PAGINATED REELS LIBRARY ====================
+    let reelsCurrentPage = 1;
+    const REELS_PAGE_SIZE = 25;
+    let cachedReelsList = [];
+
+    function renderReelsPaginationControls(currentPage, totalPages) {
+      const container = document.getElementById("reelsPaginationControls");
+      if (!container) return;
+      if (totalPages <= 1) {
+        container.innerHTML = "";
+        return;
+      }
+      container.innerHTML = `
+        <button onclick="goToReelsPage(1)" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">« First</button>
+        <button onclick="goToReelsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">‹ Prev</button>
+        <span class="px-2.5 py-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded text-[11px] font-semibold text-[#1C1917]">Page ${currentPage} of ${totalPages}</span>
+        <button onclick="goToReelsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Next ›</button>
+        <button onclick="goToReelsPage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Last »</button>
+      `;
+    }
+
+    function goToReelsPage(page) {
+      renderReelsLibrary(null, page);
+      const el = document.getElementById("view_reels");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderReelsLibrary(reels, page = 1) {
+      if (reels !== null && reels !== undefined) cachedReelsList = reels;
+      const list = cachedReelsList || [];
+      const totalCount = list.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / REELS_PAGE_SIZE));
+      reelsCurrentPage = Math.max(1, Math.min(page, totalPages));
+
+      const startIdx = (reelsCurrentPage - 1) * REELS_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + REELS_PAGE_SIZE, totalCount);
+      const pageItems = list.slice(startIdx, endIdx);
+
+      const countBadge = document.getElementById("reelsCountBadge");
+      if (countBadge) countBadge.innerText = `${totalCount.toLocaleString()} Reels`;
+
+      const infoEl = document.getElementById("reelsPaginationInfo");
+      if (infoEl) infoEl.innerText = totalCount === 0 ? "No reels" : `Showing ${startIdx + 1} to ${endIdx} of ${totalCount.toLocaleString()} reels`;
+
+      renderReelsPaginationControls(reelsCurrentPage, totalPages);
+
       const tbody = document.getElementById("reelsLibraryTbody");
       if (!tbody) return;
-      tbody.innerHTML = reels.map(r => `
-        <tr class="hover:bg-[#FAF8F5]/80 transition">
-          <td class="p-3 font-mono text-[11px] text-[#C86237]">${r.id}</td>
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-8 text-center text-xs text-[#78716C] bg-[#FAF8F5]">
+              No rendered reels found in vault yet.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = pageItems.map(r => `
+        <tr class="hover:bg-[#FAF8F5]/80 transition-fast">
+          <td class="p-3 font-mono text-[11px] text-[#C86237] font-semibold">${r.id}</td>
           <td class="p-3 font-medium text-[#1C1917] max-w-xs truncate">${r.hook_text || r.original_title || 'Processing...'}</td>
           <td class="p-3 truncate max-w-[140px]"><a href="${r.source_url}" target="_blank" class="text-[#78716C] hover:text-[#C86237] underline">Source Link ↗</a></td>
           <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status === 'READY_FOR_PUBLISH' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${r.status}</span></td>
           <td class="p-3">
-            ${r.rendered_filename ? `<button onclick="openVideoModal('/output/${r.rendered_filename}')" class="px-3 py-1 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold rounded-lg text-xs">▶ Watch 9:16</button>` : '<span class="text-[#A8A29E]">—</span>'}
+            ${r.rendered_filename ? `<button onclick="openVideoModal('/output/${r.rendered_filename}')" class="px-3 py-1 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold rounded-lg text-xs shadow-2xs transition-fast">▶ Watch 9:16</button>` : '<span class="text-[#A8A29E]">—</span>'}
           </td>
           <td class="p-3 text-right">
             <button onclick="triggerReelBroadcast('${r.id}')" class="orange-gradient-btn px-3 py-1 text-white font-bold rounded-lg text-xs">🐙 Broadcast All</button>
@@ -4175,7 +4388,37 @@
       `).join("");
     }
 
-    function renderBroadcastLogs(logs) {
+    // ==================== FAST PAGINATED BROADCAST AUDIT LOGS ====================
+    let broadcastAuditCurrentPage = 1;
+    const BROADCAST_AUDIT_PAGE_SIZE = 25;
+    let cachedBroadcastLogsList = [];
+
+    function renderBroadcastPaginationControls(currentPage, totalPages) {
+      const container = document.getElementById("broadcastsPaginationControls");
+      if (!container) return;
+      if (totalPages <= 1) {
+        container.innerHTML = "";
+        return;
+      }
+      container.innerHTML = `
+        <button onclick="goToBroadcastAuditPage(1)" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">« First</button>
+        <button onclick="goToBroadcastAuditPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">‹ Prev</button>
+        <span class="px-2.5 py-1 bg-[#FAF8F5] border border-[#E8DCD1] rounded text-[11px] font-semibold text-[#1C1917]">Page ${currentPage} of ${totalPages}</span>
+        <button onclick="goToBroadcastAuditPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2.5 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Next ›</button>
+        <button onclick="goToBroadcastAuditPage(${totalPages})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="hover:bg-[#F3EDE4]"'} class="px-2 py-1 bg-white border border-[#E8DCD1] rounded text-[11px] font-bold text-[#1C1917] transition shadow-2xs">Last »</button>
+      `;
+    }
+
+    function goToBroadcastAuditPage(page) {
+      renderBroadcastLogs(null, page);
+      const el = document.getElementById("view_broadcasts");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderBroadcastLogs(logs, page = 1) {
+      if (logs !== null && logs !== undefined) cachedBroadcastLogsList = logs;
+      const allLogs = cachedBroadcastLogsList || [];
+
       const renderRows = (items) => {
         if (!items || items.length === 0) {
           return `
@@ -4196,7 +4439,7 @@
         return items.map(l => {
           const profilePic = l.profile_pic_url || (l.account_id ? `/assets/logos/logo_${l.account_id}.png` : null);
           return `
-            <tr class="hover:bg-[#FAF8F5] transition">
+            <tr class="hover:bg-[#FAF8F5] transition-fast">
               <!-- Column 1: Target Destination Page & Circular Logo -->
               <td class="p-2.5">
                 <div class="flex items-center gap-2.5">
@@ -4238,7 +4481,7 @@
               <td class="p-2.5">
                 ${l.rendered_filename ? `
                   <button onclick="openVideoModal('/output/${l.rendered_filename}')" 
-                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold text-[11px] shadow-2xs transition">
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[#C86237] font-bold text-[11px] shadow-2xs transition-fast">
                     <span>▶</span>
                     <span>Watch 9:16</span>
                   </button>
@@ -4264,7 +4507,7 @@
               <!-- Column 6: Instagram Post Link -->
               <td class="p-2.5 text-right whitespace-nowrap">
                 ${l.instagram_post_url ? `
-                  <a href="${l.instagram_post_url}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-[#C86237] hover:underline px-2 py-1 rounded hover:bg-[#F7EFE9] transition">
+                  <a href="${l.instagram_post_url}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-[#C86237] hover:underline px-2 py-1 rounded hover:bg-[#F7EFE9] transition-fast">
                     <span>View Post</span>
                     <span>↗</span>
                   </a>
@@ -4275,11 +4518,26 @@
         }).join("");
       };
 
+      // 1. Overview Table: Top 7 rows
       const overviewLogs = document.getElementById("overviewLogsTbody");
-      if (overviewLogs) overviewLogs.innerHTML = renderRows(logs.slice(0, 7));
+      if (overviewLogs) overviewLogs.innerHTML = renderRows(allLogs.slice(0, 7));
+
+      // 2. Full Audit Log Table: Paginated
+      const totalCount = allLogs.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / BROADCAST_AUDIT_PAGE_SIZE));
+      broadcastAuditCurrentPage = Math.max(1, Math.min(page, totalPages));
+
+      const startIdx = (broadcastAuditCurrentPage - 1) * BROADCAST_AUDIT_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + BROADCAST_AUDIT_PAGE_SIZE, totalCount);
+      const pageLogs = allLogs.slice(startIdx, endIdx);
 
       const auditLogs = document.getElementById("broadcastAuditTbody");
-      if (auditLogs) auditLogs.innerHTML = renderRows(logs);
+      if (auditLogs) auditLogs.innerHTML = renderRows(pageLogs);
+
+      const infoEl = document.getElementById("broadcastsPaginationInfo");
+      if (infoEl) infoEl.innerText = totalCount === 0 ? "No records logged" : `Showing ${startIdx + 1} to ${endIdx} of ${totalCount.toLocaleString()} broadcast records`;
+
+      renderBroadcastPaginationControls(broadcastAuditCurrentPage, totalPages);
     }
 
     async function submitAddSource() {
@@ -6605,7 +6863,22 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
         switchTab(initTab);
       }
     } catch (e) {}
-    setInterval(loadDashboard, 10000);
+
+    // Lightweight background sync (only stats and activity, every 30s when tab active)
+    setInterval(async () => {
+      if (document.hidden) return;
+      try {
+        const [stats, logs] = await Promise.all([
+          fetch("/api/stats").then(r => r.json()).catch(() => null),
+          fetch("/api/broadcasts").then(r => r.json()).catch(() => null)
+        ]);
+        if (stats) applyStatsToDom(stats);
+        if (logs && Array.isArray(logs)) {
+          cachedBroadcastLogsList = logs;
+          renderBroadcastLogs(logs, broadcastAuditCurrentPage);
+        }
+      } catch (e) {}
+    }, 30000);
 
     // =========================================================================
     // PEAK-TIME SCHEDULER & CANDIDATE POOL LOGIC
