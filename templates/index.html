@@ -2170,11 +2170,64 @@
 
             <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
               <div class="text-[10px] text-[#78716C] font-bold uppercase">Safety & Cap Guard</div>
-              <div class="text-base font-extrabold text-emerald-700 mt-0.5">Max 5 Posts / Day</div>
-              <div class="text-[10px] text-[#78716C] mt-0.5">≥ 2.5h Spacing Guard Enforced</div>
+              <div class="text-base font-extrabold text-emerald-700 mt-0.5">Max 6 Posts / Day</div>
+              <div class="text-[10px] text-[#78716C] mt-0.5">≥ 2.0h Spacing Guard Enforced</div>
             </div>
           </div>
         </div>
+
+        <!-- Daily Posting Cadence & Source Trigger Control Strip -->
+        <div class="cloud-card rounded-2xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-3.5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#E8DCD1]/60">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-base">📅</span>
+                <h3 class="text-sm font-bold text-[#1C1917]">Daily Cadence & Source Trigger Control</h3>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF8F5] text-[#C86237] border border-[#E8DCD1]">Max 6 Slots / Day</span>
+              </div>
+              <p class="text-xs text-[#78716C] mt-0.5">Manage daily scheduled times (minimum 2.0h apart). Trigger harvested reels from this niche or assign specific reels.</p>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] font-bold text-[#78716C] mr-1">Cadence Presets:</span>
+              <button type="button" onclick="applyCadencePreset(2)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
+                ⚡ 2x / Day
+              </button>
+              <button type="button" onclick="applyCadencePreset(3)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
+                🔥 3x / Day
+              </button>
+              <button type="button" onclick="applyCadencePreset(4)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
+                🚀 4x / Day
+              </button>
+              <button type="button" onclick="applyCadencePreset(6)" class="px-2.5 py-1 rounded-lg bg-[#C86237]/10 hover:bg-[#C86237]/20 border border-[#C86237]/30 text-xs font-extrabold text-[#C86237] transition shadow-2xs">
+                👑 6x / Day (Max Freedom)
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Slots Interactive Manager -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+            <div class="flex items-center gap-2 flex-wrap" id="cadenceSlotPills">
+              <!-- Rendered dynamically by loadScheduleConfig() -->
+            </div>
+
+            <!-- Add Slot Input and Save -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg px-2.5 py-1">
+                <span class="text-xs text-[#78716C] font-medium">New Slot:</span>
+                <input type="time" id="newSlotTimeInput" value="15:00" class="bg-transparent text-xs font-mono font-bold text-[#1C1917] focus:outline-hidden">
+                <button type="button" onclick="addNewSlotTime()" class="px-2.5 py-0.5 rounded bg-[#1C1917] text-white text-[11px] font-bold hover:opacity-90 transition">
+                  + Add
+                </button>
+              </div>
+              <button type="button" onclick="saveCadenceChanges()" id="btnSaveCadence" class="px-3.5 py-1.5 rounded-lg bg-[#C86237] text-white text-xs font-bold hover:opacity-90 transition shadow-2xs">
+                Save Daily Times
+              </button>
+            </div>
+          </div>
+        </div>
+
 
         <!-- 24-Hour Upcoming Slot Timeline -->
         <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
@@ -2256,8 +2309,8 @@
           <div class="space-y-3.5 text-xs">
             <div>
               <label class="font-bold text-[#1C1917] block mb-1">Peak Slot Times (IST, 24h format, comma-separated):</label>
-              <input type="text" id="schedInput_slotTimes" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden focus:border-[#C86237]" placeholder="08:00, 13:00, 18:00, 21:00">
-              <p class="text-[10px] text-[#78716C] mt-1">Recommended 4 slots: 08:00 (morning), 13:00 (lunch), 18:00 (evening peak), 21:00 (prime-time). Minimum 2.5h apart.</p>
+              <input type="text" id="schedInput_slotTimes" class="w-full px-3 py-2 rounded-lg border border-[#E8DCD1] bg-[#FAF8F5] font-mono text-xs focus:outline-hidden focus:border-[#C86237]" placeholder="08:00, 11:00, 14:00, 17:00, 20:00, 22:30">
+              <p class="text-[10px] text-[#78716C] mt-1">Configure up to 6 peak slots (e.g. 08:00, 11:00, 14:00, 17:00, 20:00, 22:30). Minimum 2.0h apart.</p>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -2298,6 +2351,55 @@
           </div>
         </div>
       </div>
+
+      <!-- ==================== MODAL: ASSIGN REEL TO SLOT ==================== -->
+      <div id="assignReelModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-[#E8DCD1] shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+          <div class="p-4 border-b border-[#E8DCD1] bg-[#FAF8F5] flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+              <span class="text-base">📌</span>
+              <div>
+                <h3 class="text-sm font-bold text-[#1C1917]" id="assignReelModalTitle">Assign Reel to Slot</h3>
+                <p class="text-xs text-[#78716C]">Choose a viral candidate from the pool or paste a specific Instagram Reel URL.</p>
+              </div>
+            </div>
+            <button onclick="closeAssignReelModal()" class="w-8 h-8 rounded-lg bg-white border border-[#E8DCD1] hover:bg-[#F3EDE4] text-[#1C1917] font-bold text-xs flex items-center justify-center transition">✕</button>
+          </div>
+
+          <div class="p-5 overflow-y-auto space-y-4 text-xs">
+            <!-- Custom Reel URL Input -->
+            <div class="p-3.5 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2.5">
+              <div class="font-bold text-[#1C1917] flex items-center gap-1.5">
+                <span>🔗</span>
+                <span>Direct Instagram Reel URL (Manual Override)</span>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" id="assignCustomReelUrl" placeholder="https://www.instagram.com/reel/C-xyz123/" class="flex-1 px-3 py-2 rounded-lg border border-[#E8DCD1] bg-white font-mono text-xs focus:outline-hidden focus:border-[#C86237]">
+                <button type="button" onclick="submitCustomReelAssignment()" class="px-4 py-2 rounded-lg bg-[#C86237] text-white font-bold hover:opacity-90 transition">
+                  Bind URL
+                </button>
+              </div>
+              <p class="text-[10px] text-[#78716C]">Paste any public reel link to automatically harvest and post it at this scheduled time.</p>
+            </div>
+
+            <!-- Scored Candidates in Niche -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-[#1C1917] uppercase text-[10px] tracking-wider">Top Scored Candidates for this Niche:</span>
+                <span class="text-[10px] text-[#78716C]" id="assignModalCandidatesCount">Showing available reels</span>
+              </div>
+              <div id="assignModalCandidatesList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 border-t border-[#E8DCD1] bg-[#FAF8F5] flex justify-end">
+            <button onclick="closeAssignReelModal()" class="px-4 py-1.5 rounded-lg border border-[#E8DCD1] bg-white text-xs font-bold text-[#78716C] hover:bg-[#F3EDE4]">Close</button>
+          </div>
+        </div>
+      </div>
+
 
 <!-- ==================== ANTI-SHADOWBAN VARIATION MATRIX MODAL ==================== -->
 <div id="antiShadowbanModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
@@ -6759,20 +6861,129 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
       ]);
     }
 
+    let currentScheduleConfig = null;
+    let activeSlotCadence = [];
+    let selectedSlotRunForAssignment = null;
+
     async function loadScheduleConfig() {
       try {
         const res = await fetch(`/api/niches/${encodeURIComponent(currentSchedulerNiche)}/schedule`);
         const data = await res.json();
         if (data && data.schedule) {
-          const s = data.schedule;
-          const slots = s.slot_times || [];
+          currentScheduleConfig = data.schedule;
+          activeSlotCadence = [...(currentScheduleConfig.slot_times || [])];
+          
           const slotCountEl = document.getElementById("stat_slot_count");
           const slotTimesEl = document.getElementById("stat_slot_times_list");
-          if (slotCountEl) slotCountEl.innerText = `${slots.length} Slots (IST)`;
-          if (slotTimesEl) slotTimesEl.innerText = slots.join(", ");
+          if (slotCountEl) slotCountEl.innerText = `${activeSlotCadence.length} / 6 Active Slots (IST)`;
+          if (slotTimesEl) slotTimesEl.innerText = activeSlotCadence.join(", ");
+
+          renderCadenceSlotPills();
+
+          const schedInput = document.getElementById("schedInput_slotTimes");
+          if (schedInput) schedInput.value = activeSlotCadence.join(", ");
         }
       } catch (e) {
         console.error("Error loading schedule config:", e);
+      }
+    }
+
+    function renderCadenceSlotPills() {
+      const container = document.getElementById("cadenceSlotPills");
+      if (!container) return;
+      if (activeSlotCadence.length === 0) {
+        container.innerHTML = `<span class="text-xs text-[#78716C] italic">No slots scheduled yet. Choose a preset or add a time.</span>`;
+        return;
+      }
+      container.innerHTML = activeSlotCadence.map((t) => `
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] hover:border-[#C86237] transition">
+          <span class="text-xs">🕕</span>
+          <span>${t} IST</span>
+          <button type="button" onclick="removeSlotTime('${t}')" class="w-4 h-4 rounded-full hover:bg-red-100 text-[#78716C] hover:text-red-600 flex items-center justify-center font-bold text-[10px] ml-1 transition" title="Remove this slot">✕</button>
+        </div>
+      `).join("");
+    }
+
+    function removeSlotTime(timeStr) {
+      if (activeSlotCadence.length <= 1) {
+        alert("At least 1 slot is required per day.");
+        return;
+      }
+      activeSlotCadence = activeSlotCadence.filter(t => t !== timeStr);
+      renderCadenceSlotPills();
+    }
+
+    function addNewSlotTime() {
+      const input = document.getElementById("newSlotTimeInput");
+      if (!input || !input.value) return;
+      const t = input.value.trim();
+      if (activeSlotCadence.length >= 6) {
+        alert("Maximum limit of 6 posts per day reached! Please remove a slot to add a new one.");
+        return;
+      }
+      if (activeSlotCadence.includes(t)) {
+        alert("Slot time " + t + " is already in the schedule.");
+        return;
+      }
+      // Check minimum 2.0h spacing
+      const toMins = s => parseInt(s.split(":")[0], 10) * 60 + parseInt(s.split(":")[1], 10);
+      const testList = [...activeSlotCadence, t].sort((a, b) => toMins(a) - toMins(b));
+      for (let i = 0; i < testList.length - 1; i++) {
+        if (toMins(testList[i+1]) - toMins(testList[i]) < 120) {
+          alert(`Spacing Violation: Consecutive slots must be at least 2.0 hours (120 mins) apart. (Detected conflict between ${testList[i]} and ${testList[i+1]})`);
+          return;
+        }
+      }
+      activeSlotCadence = testList;
+      renderCadenceSlotPills();
+    }
+
+    function applyCadencePreset(count) {
+      const presets = {
+        2: ["10:00", "19:00"],
+        3: ["09:00", "14:00", "20:00"],
+        4: ["08:00", "13:00", "18:00", "21:00"],
+        6: ["08:00", "11:00", "14:00", "17:00", "20:00", "22:30"]
+      };
+      if (presets[count]) {
+        activeSlotCadence = [...presets[count]];
+        renderCadenceSlotPills();
+      }
+    }
+
+    async function saveCadenceChanges() {
+      if (activeSlotCadence.length === 0) {
+        alert("Please set at least one slot.");
+        return;
+      }
+      if (activeSlotCadence.length > 6) {
+        alert("Maximum 6 slots per day allowed.");
+        return;
+      }
+      const btn = document.getElementById("btnSaveCadence");
+      const orig = btn ? btn.innerText : "";
+      if (btn) { btn.innerText = "Saving..."; btn.disabled = true; }
+
+      try {
+        const payload = {
+          slot_times: activeSlotCadence
+        };
+        const res = await fetch(`/api/niches/${encodeURIComponent(currentSchedulerNiche)}/schedule`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Error: " + (err.detail || "Validation error"));
+          return;
+        }
+        alert(`Posting cadence updated! Active: ${activeSlotCadence.length} slots/day (${activeSlotCadence.join(", ")} IST). Re-planning slots in background.`);
+        await loadSchedulerView();
+      } catch (e) {
+        alert("Error saving cadence: " + e.message);
+      } finally {
+        if (btn) { btn.innerText = orig; btn.disabled = false; }
       }
     }
 
@@ -6796,7 +7007,7 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
         container.innerHTML = "";
         runs.forEach(r => {
           const card = document.createElement("div");
-          card.className = "p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-2.5 flex flex-col justify-between";
+          card.className = "p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3 flex flex-col justify-between hover:border-[#C86237]/40 transition shadow-2xs";
           
           let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-300">${r.status}</span>`;
           if (r.status === 'DONE') {
@@ -6807,10 +7018,16 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
             statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">📡 BROADCASTING</span>`;
           } else if (r.status === 'SKIPPED') {
             statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">SKIPPED</span>`;
+          } else if (r.candidate_id) {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🎯 REEL BOUND</span>`;
+          } else {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#78716C] border border-[#E8DCD1]">🤖 AUTO-EVALUATING</span>`;
           }
 
+          const hasCandidate = !!(r.candidate_id || r.source_handle);
           const candHandle = r.source_handle ? `@${r.source_handle}` : (r.candidate_id ? `Candidate #${r.candidate_id}` : 'Auto-Evaluating...');
-          const scoreText = r.final_score ? `Score: ${r.final_score.toFixed(1)}/100` : 'Pending evaluation';
+          const scorePill = r.final_score ? `<span class="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200">⭐ ${r.final_score.toFixed(1)}/100</span>` : '';
+          const origLink = r.permalink ? `<a href="${r.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono truncate max-w-[140px] block">View Reel ↗</a>` : '';
 
           card.innerHTML = `
             <div>
@@ -6821,22 +7038,48 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
                 </span>
                 ${statusBadge}
               </div>
-              <div class="text-[10px] text-[#78716C] font-mono mt-1">Date: ${r.slot_date}</div>
+              <div class="text-[10px] text-[#78716C] font-mono mt-1 flex items-center justify-between">
+                <span>Date: <strong>${r.slot_date}</strong></span>
+                <span>${r.dry_run ? 'Simulation (Dry-Run)' : 'Live Mode'}</span>
+              </div>
 
-              <div class="mt-2.5 p-2 rounded-lg bg-white border border-[#E8DCD1] text-xs space-y-1">
-                <div class="font-bold text-[#1C1917] truncate">${candHandle}</div>
-                <div class="text-[10px] text-[#C86237] font-semibold">${scoreText}</div>
+              <div class="mt-2.5 p-2.5 rounded-lg bg-white border border-[#E8DCD1] text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-[#1C1917] truncate flex items-center gap-1">
+                    <span>${hasCandidate ? '🎬' : '🔍'}</span>
+                    <span>${candHandle}</span>
+                  </span>
+                  ${scorePill}
+                </div>
+                ${origLink}
+                ${r.candidate_caption ? `<p class="text-[10px] text-[#78716C] line-clamp-2 italic">"${r.candidate_caption}"</p>` : (hasCandidate ? '' : `<p class="text-[10px] text-[#78716C]">AI will harvest & select the top viral candidate at T-30m or assign one manually below.</p>`)}
               </div>
             </div>
 
-            <!-- Action buttons for planned slots -->
-            <div class="pt-2 flex items-center gap-1.5 border-t border-[#E8DCD1]/60">
-              ${r.status === 'AWAITING_APPROVAL' ? `
-                <button onclick="approveSlotRun(${r.id})" class="flex-1 py-1 px-2 rounded bg-emerald-600 text-white font-bold text-[10px] hover:opacity-90">Approve</button>
-                <button onclick="swapSlotRun(${r.id})" class="py-1 px-2 rounded bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] hover:bg-[#F3EDE4]">Swap #2</button>
-              ` : ''}
+            <!-- Action buttons for slot -->
+            <div class="pt-2 flex flex-wrap items-center gap-1.5 border-t border-[#E8DCD1]/60">
               ${r.status === 'PLANNED' ? `
-                <button onclick="skipSlotRun(${r.id})" class="py-1 px-2 rounded bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#78716C] hover:bg-[#F3EDE4]">Skip</button>
+                <button onclick="openAssignReelModal(${r.id}, '${r.slot_time}', '${r.slot_date}')" class="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] transition flex items-center justify-center gap-1" title="Assign specific reel to this slot">
+                  <span>📌</span>
+                  <span>Assign Reel</span>
+                </button>
+                <button onclick="prepareSlotRunNow(${r.id})" class="py-1.5 px-2.5 rounded-lg bg-[#C86237] hover:opacity-90 font-bold text-[10px] text-white transition flex items-center gap-1" title="Pre-render now">
+                  <span>⚡</span>
+                  <span>Render Now</span>
+                </button>
+                <button onclick="skipSlotRun(${r.id})" class="py-1.5 px-2 rounded-lg bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#78716C] hover:bg-red-50 hover:text-red-600 transition" title="Skip this slot">
+                  <span>⏭</span>
+                </button>
+              ` : ''}
+              ${r.status === 'AWAITING_APPROVAL' ? `
+                <button onclick="approveSlotRun(${r.id})" class="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:opacity-90">Approve & Broadcast</button>
+                <button onclick="swapSlotRun(${r.id})" class="py-1.5 px-2 rounded-lg bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] hover:bg-[#F3EDE4]">Swap #2</button>
+              ` : ''}
+              ${r.status === 'APPROVED' ? `
+                <span class="text-[10px] text-emerald-700 font-bold flex items-center gap-1">✓ Armed for auto-fanout</span>
+              ` : ''}
+              ${r.status === 'DONE' ? `
+                <span class="text-[10px] text-emerald-800 font-bold">✓ Broadcast Complete (${r.accounts_posted} accounts)</span>
               ` : ''}
             </div>
           `;
@@ -7082,6 +7325,115 @@ Duration: ${data.harvest.duration_seconds}s`);
         alert("Error saving schedule: " + e.message);
       }
     }
+
+    function openAssignReelModal(slotRunId, slotTime, slotDate) {
+      selectedSlotRunForAssignment = slotRunId;
+      const modal = document.getElementById("assignReelModal");
+      const title = document.getElementById("assignReelModalTitle");
+      const countEl = document.getElementById("assignModalCandidatesCount");
+      const listEl = document.getElementById("assignModalCandidatesList");
+      const urlInput = document.getElementById("assignCustomReelUrl");
+
+      if (title) title.innerText = `Assign Reel to Slot: ${slotTime} IST (${slotDate})`;
+      if (urlInput) urlInput.value = "";
+      if (modal) modal.classList.remove("hidden");
+
+      if (listEl) {
+        if (!cachedCandidates || cachedCandidates.length === 0) {
+          listEl.innerHTML = `<div class="p-4 text-center text-xs text-[#78716C]">No scored candidates in memory yet. Harvest sources or paste a direct Instagram Reel URL above!</div>`;
+          return;
+        }
+        if (countEl) countEl.innerText = `${cachedCandidates.length} reels available in pool`;
+        listEl.innerHTML = cachedCandidates.map((c) => `
+          <div class="p-3 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] hover:border-[#C86237]/40 flex items-center justify-between gap-3 transition">
+            <div class="space-y-1 min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-extrabold text-xs text-[#1C1917]">@${c.source_handle || 'source'}</span>
+                <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200">
+                  ⭐ ${(c.final_score || 0).toFixed(1)}
+                </span>
+                <span class="text-[10px] text-[#78716C]">${c.like_count ? c.like_count.toLocaleString() + ' likes' : ''}</span>
+              </div>
+              <p class="text-[11px] text-[#78716C] truncate">${c.caption || 'No caption'}</p>
+              <a href="${c.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono">View Original ↗</a>
+            </div>
+            <button type="button" onclick="submitCandidateAssignment(${c.id})" class="px-3 py-1.5 rounded-lg bg-[#1C1917] hover:bg-[#C86237] text-white text-xs font-bold transition whitespace-nowrap shadow-2xs">
+              Select This Reel
+            </button>
+          </div>
+        `).join("");
+      }
+    }
+
+    function closeAssignReelModal() {
+      const modal = document.getElementById("assignReelModal");
+      if (modal) modal.classList.add("hidden");
+      selectedSlotRunForAssignment = null;
+    }
+
+    async function submitCandidateAssignment(candId) {
+      if (!selectedSlotRunForAssignment) return;
+      try {
+        const res = await fetch(`/api/schedule/slot/${selectedSlotRunForAssignment}/assign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ candidate_id: candId })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("Error: " + (data.detail || "Failed to assign"));
+          return;
+        }
+        closeAssignReelModal();
+        alert("Reel successfully assigned to slot!");
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error assigning candidate: " + e.message);
+      }
+    }
+
+    async function submitCustomReelAssignment() {
+      if (!selectedSlotRunForAssignment) return;
+      const urlInput = document.getElementById("assignCustomReelUrl");
+      const url = urlInput ? urlInput.value.trim() : "";
+      if (!url) {
+        alert("Please enter an Instagram Reel URL.");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/schedule/slot/${selectedSlotRunForAssignment}/assign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reel_url: url })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("Error: " + (data.detail || "Failed to assign"));
+          return;
+        }
+        closeAssignReelModal();
+        alert("Custom Reel successfully bound to slot!");
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error assigning custom reel: " + e.message);
+      }
+    }
+
+    async function prepareSlotRunNow(runId) {
+      try {
+        const res = await fetch(`/api/schedule/slot/${runId}/prepare-now`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("Error: " + (data.detail || "Failed to prepare slot"));
+          return;
+        }
+        alert(`Slot pre-render initiated! Result status: ${data.slot_run.status || 'PRE-RENDERED'}`);
+        await loadSchedulerUpcoming();
+      } catch (e) {
+        alert("Error preparing slot: " + e.message);
+      }
+    }
+
 
   
     // ==================== AI VISION REEL READER & RE-SKINNER JS ====================

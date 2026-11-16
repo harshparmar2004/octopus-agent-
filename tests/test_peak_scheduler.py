@@ -137,21 +137,21 @@ class TestPeakSchedulerSuite:
 
     def test_04_niche_schedule_validation_and_ist_slots(self):
         """Verifies default peak slots (08:00, 13:00, 18:00, 21:00 IST) and spacing constraints."""
-        sched = get_niche_schedule("information")
+        sched = get_niche_schedule("unconfigured_test_niche")
         assert "18:00" in sched["slot_times"]
         assert sched["timezone"] == "Asia/Kolkata"
 
         # Update with valid 4 slots
-        updated = save_niche_schedule("information", {
+        updated = save_niche_schedule("test_sched_niche", {
             "slot_times": ["08:00", "13:00", "18:00", "21:30"],
             "jitter_minutes": 6
         })
         assert updated["jitter_minutes"] == 6
         assert len(updated["slot_times"]) == 4
 
-        # Enforce >= 2.5 hours gap: attempt slots with 1 hour gap should raise ValueError
+        # Enforce >= 2.0 hours gap: attempt slots with 1 hour gap should raise ValueError
         with pytest.raises(ValueError):
-            save_niche_schedule("information", {"slot_times": ["18:00", "19:00"]})
+            save_niche_schedule("test_sched_niche", {"slot_times": ["18:00", "19:00"]})
 
     def test_05_account_guard_daily_cap_and_spacing(self):
         """Verifies account guard prevents posting if daily cap reached or last post was too recent."""
@@ -207,3 +207,38 @@ class TestPeakSchedulerSuite:
         res = client.get("/api/schedule/upcoming?hours=48")
         assert res.status_code == 200
         assert "slot_runs" in res.json()
+
+    def test_08_six_slots_maximum_and_assignment(self):
+        """Verifies exactly 6 slots/day can be saved (with >= 2.0h spacing) and >6 is rejected."""
+        # Valid 6 slots with 2.0h-2.5h spacing across 08:00 to 22:30
+        six_slots = ["08:00", "11:00", "14:00", "17:00", "20:00", "22:30"]
+        saved = save_niche_schedule("six_slot_niche", {"slot_times": six_slots})
+        assert len(saved["slot_times"]) == 6
+        assert saved["slot_times"] == six_slots
+
+        # Attempting 7 slots must raise ValueError
+        seven_slots = ["08:00", "10:30", "13:00", "15:30", "18:00", "20:30", "23:00"]
+        with pytest.raises(ValueError):
+            save_niche_schedule("six_slot_niche", {"slot_times": seven_slots})
+
+        # Test candidate assignment API endpoint
+        # First ensure a slot run exists
+        upcoming = client.get("/api/schedule/upcoming?niche_id=information&hours=48").json()
+        slot_runs = upcoming.get("slot_runs", [])
+        if not slot_runs:
+            slot_dt = utcnow() + timedelta(hours=3)
+            create_slot_run("information", "14:00", slot_dt.date().isoformat(), slot_dt)
+            slot_runs = client.get("/api/schedule/upcoming?niche_id=information&hours=48").json()["slot_runs"]
+        
+        target_slot_id = slot_runs[0]["id"]
+        # Ensure a candidate exists
+        cands = client.get("/api/candidates?niche_id=information").json()["candidates"]
+        cand_id = cands[0]["id"]
+
+        # Assign candidate to slot
+        res = client.post(f"/api/schedule/slot/{target_slot_id}/assign", json={"candidate_id": cand_id})
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["slot_run"]["candidate_id"] == cand_id
+

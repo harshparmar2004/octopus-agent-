@@ -1113,9 +1113,12 @@ from storage.scheduler_db import (
     get_niche_schedule,
     save_niche_schedule,
     get_candidates,
+    get_candidate,
     update_candidate,
+    upsert_candidate,
     get_slot_runs,
     get_slot_run,
+    assign_candidate_to_slot,
     utcnow
 )
 from datetime import timedelta
@@ -1134,6 +1137,11 @@ class NicheScheduleUpdateRequest(BaseModel):
 
 class CandidateActionRequest(BaseModel):
     reason: Optional[str] = None
+
+class AssignSlotCandidateRequest(BaseModel):
+    candidate_id: Optional[int] = None
+    reel_url: Optional[str] = None
+    source_handle: Optional[str] = None
 
 @app.on_event("startup")
 def start_scheduler_lifecycle():
@@ -1232,6 +1240,50 @@ def skip_slot_endpoint(slot_run_id: int, req: Optional[CandidateActionRequest] =
     reason = req.reason if req and req.reason else "Skipped via API"
     run = get_peak_scheduler().skip_slot(slot_run_id, reason=reason)
     return {"status": "success", "slot_run": run}
+
+@app.post("/api/schedule/slot/{slot_run_id}/assign")
+def assign_candidate_to_slot_endpoint(slot_run_id: int, req: AssignSlotCandidateRequest):
+    run = get_slot_run(slot_run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Slot run not found")
+    
+    cand_id = req.candidate_id
+    if not cand_id and req.reel_url:
+        import re
+        m = re.search(r"/(?:reel|reels|p)/([A-Za-z0-9_-]+)", req.reel_url)
+        shortcode = m.group(1) if m else f"manual_{int(time.time())}"
+        cand_id = upsert_candidate({
+            "niche_id": run["niche_id"],
+            "source_handle": (req.source_handle or "custom").lstrip("@"),
+            "shortcode": shortcode,
+            "permalink": req.reel_url,
+            "caption": "Operator manually assigned reel",
+            "pinned": 1
+        })
+    
+    if not cand_id:
+        raise HTTPException(status_code=400, detail="Either candidate_id or reel_url must be provided.")
+    
+    cand = get_candidate(cand_id)
+    if not cand:
+        raise HTTPException(status_code=404, detail=f"Candidate #{cand_id} not found")
+    
+    updated_run = assign_candidate_to_slot(slot_run_id, cand_id)
+    return {
+        "status": "success",
+        "slot_run": updated_run,
+        "candidate": cand,
+        "message": f"Bound Reel candidate #{cand_id} to slot {run['slot_time']} ({run['slot_date']})"
+    }
+
+@app.post("/api/schedule/slot/{slot_run_id}/prepare-now")
+def prepare_slot_now_endpoint(slot_run_id: int):
+    run = get_slot_run(slot_run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Slot run not found")
+    res = get_peak_scheduler().prepare_slot(slot_run_id)
+    return {"status": "success", "slot_run": res}
+
 
 # ==================== AI VISION REEL READER & RE-SKINNER ====================
 class VisionReadRequest(BaseModel):

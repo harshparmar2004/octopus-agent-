@@ -20,8 +20,8 @@ OPTIONAL_SLOT_TIMES = ["22:30"]
 DEFAULT_TIMEZONE = "Asia/Kolkata"
 
 # Safety guards (per destination account)
-MAX_POSTS_PER_ACCOUNT_PER_DAY = 5
-MIN_GAP_BETWEEN_POSTS_HOURS = 2.5
+MAX_POSTS_PER_ACCOUNT_PER_DAY = 6
+MIN_GAP_BETWEEN_POSTS_HOURS = 2.0
 CANDIDATE_MAX_AGE_HOURS = 72
 
 
@@ -372,6 +372,17 @@ def update_slot_run(slot_run_id: int, updates: Dict[str, Any]) -> None:
     conn.execute(f"UPDATE slot_runs SET {cols} WHERE id = ?", (*updates.values(), slot_run_id))
     conn.commit()
     conn.close()
+
+
+def assign_candidate_to_slot(slot_run_id: int, candidate_id: int) -> Dict[str, Any]:
+    """Manually binds a specific candidate to a slot run."""
+    update_slot_run(slot_run_id, {
+        "candidate_id": candidate_id,
+        "status": "PLANNED",
+    })
+    update_candidate(candidate_id, {"pinned": 1, "selected_for_slot": slot_run_id})
+    return get_slot_run(slot_run_id) or {}
+
 
 
 def get_slot_runs(since: Optional[datetime] = None, until: Optional[datetime] = None,

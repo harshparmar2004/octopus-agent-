@@ -274,6 +274,10 @@ class PeakTimeScheduler:
                 ranked = self.scorer.rank_for_slot(niche_id, sched, now=now, day_start_utc=local_day_start.astimezone(timezone.utc))
             excl = set(exclude_candidate_ids or [])
             ranked = [c for c in ranked if c["id"] not in excl]
+            if run.get("candidate_id"):
+                pinned_cand = get_candidate(run["candidate_id"])
+                if pinned_cand and pinned_cand["id"] not in excl:
+                    ranked = [pinned_cand] + [c for c in ranked if c["id"] != pinned_cand["id"]]
 
             for cand in ranked:
                 update_candidate(cand["id"], {"status": "SELECTED", "selected_for_slot": slot_run_id})
