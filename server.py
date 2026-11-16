@@ -77,7 +77,11 @@ fanout_engine = OctopusFanoutEngine()
 telegram_bot = OctopusTelegramBot()
 telegram_bot.start_background()
 
-TEMPLATE_PATH = settings.BASE_DIR / "templates" / "index.html"
+TEMPLATE_PATH = (
+    settings.BASE_DIR / "frontend" / "index.html"
+    if (settings.BASE_DIR / "frontend" / "index.html").exists()
+    else settings.BASE_DIR / "templates" / "index.html"
+)
 
 # Request schemas
 class IngestRequest(BaseModel):
@@ -554,7 +558,7 @@ def run_pipeline(req: PipelineRunRequest):
     
     return {
         "success": True,
-        "message": f"Pipeline pass executed for {handle} ➔ [{niche_id}] ({latest_pipeline_trace['step5_fanout']['accounts_dispatched']} pages)!",
+        "message": f"Pipeline pass executed for {handle} ➔ [{niche_id}] ({latest_pipeline_trace['step5_fanout'].get('accounts_dispatched', 0)} pages)!",
         "state": latest_pipeline_trace
     }
 
