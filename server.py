@@ -1,6 +1,8 @@
 import os
+import json
 import uuid
 import logging
+import requests
 from pathlib import Path
 from typing import Optional, Dict, List, Any
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Request
@@ -197,6 +199,15 @@ class LLMTestRequest(BaseModel):
     model: str
     api_key: Optional[str] = None
     base_url: Optional[str] = None
+
+class GeminiVisionSettingsRequest(BaseModel):
+    gemini_api_key: Optional[str] = None
+    model: str = "gemini-1.5-flash"
+    auto_crop_competitor_headers: bool = True
+    dynamic_neon_highlights: bool = True
+
+class GeminiVisionTestRequest(BaseModel):
+    api_key: Optional[str] = None
 
 class PipelineRunRequest(BaseModel):
     source_handle: Optional[str] = "@dailyfacts"
@@ -406,6 +417,108 @@ def test_llm_connection(req: LLMTestRequest):
         base_url=req.base_url
     )
     return res
+
+# ==================== GEMINI MULTIMODAL VISION SETTINGS API ====================
+
+@app.get("/api/settings/gemini")
+def get_gemini_settings():
+    key = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
+    cfg_file = settings.STORAGE_DIR / "gemini_config.json"
+    model = "gemini-1.5-flash"
+    auto_crop = True
+    dynamic_neon = True
+    if cfg_file.exists():
+        try:
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                key = saved.get("gemini_api_key") or key
+                model = saved.get("model", model)
+                auto_crop = saved.get("auto_crop_competitor_headers", True)
+                dynamic_neon = saved.get("dynamic_neon_highlights", True)
+        except Exception as e:
+            logger.warning(f"Failed to read gemini_config.json: {e}")
+
+    masked = ""
+    if key and len(key) > 8:
+        masked = key[:6] + "..." + key[-4:]
+    elif key:
+        masked = "••••••••"
+
+    return {
+        "has_key": bool(key),
+        "masked_key": masked,
+        "model": model,
+        "auto_crop_competitor_headers": auto_crop,
+        "dynamic_neon_highlights": dynamic_neon,
+        "status": "active" if bool(key) else "fallback"
+    }
+
+@app.post("/api/settings/gemini")
+def save_gemini_settings(req: GeminiVisionSettingsRequest):
+    key = (req.gemini_api_key or "").strip()
+    cfg_file = settings.STORAGE_DIR / "gemini_config.json"
+    cfg = {}
+    if cfg_file.exists():
+        try:
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except Exception:
+            cfg = {}
+
+    if key:
+        cfg["gemini_api_key"] = key
+        settings.GEMINI_API_KEY = key
+        os.environ["GEMINI_API_KEY"] = key
+
+        # Save to .env
+        env_path = settings.BASE_DIR / ".env"
+        existing_lines = []
+        if env_path.exists():
+            with open(env_path, "r", encoding="utf-8") as f:
+                existing_lines = f.readlines()
+        updated = False
+        new_lines = []
+        for line in existing_lines:
+            if line.startswith("GEMINI_API_KEY="):
+                new_lines.append(f"GEMINI_API_KEY={key}\n")
+                updated = True
+            else:
+                new_lines.append(line)
+        if not updated:
+            new_lines.append(f"GEMINI_API_KEY={key}\n")
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+
+    cfg["model"] = req.model
+    cfg["auto_crop_competitor_headers"] = req.auto_crop_competitor_headers
+    cfg["dynamic_neon_highlights"] = req.dynamic_neon_highlights
+
+    with open(cfg_file, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2)
+
+    return {"status": "success", "message": "Gemini Multimodal Vision settings saved successfully!"}
+
+@app.post("/api/settings/gemini/test")
+def test_gemini_key(req: GeminiVisionTestRequest):
+    key = req.api_key or os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
+    cfg_file = settings.STORAGE_DIR / "gemini_config.json"
+    if not key and cfg_file.exists():
+        try:
+            with open(cfg_file, "r", encoding="utf-8") as f:
+                key = json.load(f).get("gemini_api_key")
+        except Exception:
+            pass
+    if not key:
+        raise HTTPException(status_code=400, detail="Gemini API Key is required to test.")
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key}"
+        res = requests.get(url, timeout=10)
+        if res.status_code == 200:
+            return {"status": "success", "message": "Google Gemini Vision API authenticated successfully!"}
+        else:
+            return {"status": "error", "message": f"Gemini API returned status {res.status_code}: {res.text[:200]}"}
+    except Exception as e:
+        return {"status": "error", "message": f"Connection error: {str(e)}"}
 
 latest_pipeline_trace = {
     "active_step": 3,

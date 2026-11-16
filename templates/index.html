@@ -163,17 +163,6 @@
           </div>
         </button>
 
-        <!-- 4b. AI Vision Re-Skinner -->
-        <button onclick="switchTab('vision_reskinner')" id="tabBtn_vision_reskinner" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-            <span>AI Vision Re-Skinner</span>
-          </div>
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Gemini</span>
-        </button>
 
         <!-- 5. Sources -->
         <button onclick="switchTab('sources')" id="tabBtn_sources" class="w-full flex items-center justify-between px-4 py-2.5 nav-item-inactive transition">
@@ -1876,289 +1865,6 @@
         </div>
       </section>
 
-      <!-- ==================== TAB: AI VISION REEL READER & RE-SKINNER ==================== -->
-      <section id="view_vision_reskinner" class="space-y-6 hidden">
-        <!-- Top Banner -->
-        <div class="cloud-card rounded-lg p-5 border-l-4 border-purple-600 space-y-2">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-md bg-purple-50 border border-purple-200 flex items-center justify-center text-xl shadow-xs">
-                👁️
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-black text-[#1C1917]">AI Vision Reel Reader & Brand Re-Skinner Studio</h3>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200">Gemini Multimodal</span>
-                </div>
-                <p class="text-xs text-[#78716C] mt-0.5">Drop any reel link. AI vision reads whatever is written on the video, understands context, and extracts hook lines. Copy or edit the line, and the system re-writes that exact hook in our brand theme with our fonts, neon accents, and logo!</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] text-[#78716C] font-semibold">Gemini API Key:</span>
-              <input id="visionCustomApiKey" type="password" placeholder="AIzaSy... (optional if in .env)" 
-                class="bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-2.5 py-1 text-xs text-[#1C1917] w-48 focus:outline-none focus:border-purple-600">
-            </div>
-          </div>
-        </div>
-
-        <!-- 2 Column Studio Layout: Left Input & Controls | Right Live Branded Preview -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          
-          <!-- Left Column (7 cols): Vision Reader & Hook Editor -->
-          <div class="lg:col-span-7 space-y-4">
-            
-            <!-- Step 1: Input URL & Trigger Scan -->
-            <div class="cloud-card rounded-lg p-5 space-y-3 border border-[#E6E0D6]">
-              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
-                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">1</span>
-                  <span>Input Reel Link or Video Path</span>
-                </h4>
-                <span class="text-[10px] text-[#78716C]">Instagram Reel, Reddit, Shorts, or MP4</span>
-              </div>
-
-              <div class="flex gap-2">
-                <div class="relative flex-1">
-                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-[#A8A29E]">🔗</span>
-                  <input id="visionInputUrl" type="text" placeholder="https://www.instagram.com/reel/Dffuae7ub5N/ or storage/reel_Dffuae7ub5N.mp4" 
-                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md pl-8 pr-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs transition">
-                </div>
-                <button onclick="scanReelWithVision()" id="btnVisionScan" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-md shadow-xs flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer">
-                  <span>🔍</span>
-                  <span id="btnVisionScanText">Scan & Read Reel</span>
-                </button>
-              </div>
-
-              <!-- Quick Sample Buttons -->
-              <div class="flex items-center gap-2 pt-1 text-[11px] text-[#78716C]">
-                <span class="font-semibold">Test Sample:</span>
-                <button type="button" onclick="loadVisionSample('storage/reel_Dffuae7ub5N.mp4')" class="px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-purple-50 text-purple-700 border border-[#E6E0D6] font-mono text-[10px]">reel_Dffuae7ub5N.mp4</button>
-                <button type="button" onclick="loadVisionSample('https://www.instagram.com/reel/Dffuae7ub5N/')" class="px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-purple-50 text-purple-700 border border-[#E6E0D6] font-mono text-[10px]">Instagram Live Link</button>
-              </div>
-            </div>
-
-            <!-- Step 2: Extracted Video Frames Inspection Strip -->
-            <div id="visionFramesCard" class="cloud-card rounded-lg p-5 space-y-3 hidden border border-[#E6E0D6]">
-              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
-                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">2</span>
-                  <span>AI Multimodal Vision Inspection (Extracted Keyframes)</span>
-                </h4>
-                <span id="visionEngineBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">Gemini 1.5 Flash</span>
-              </div>
-
-              <!-- Thumbnails Grid -->
-              <div id="visionThumbnailsRow" class="grid grid-cols-3 gap-3">
-                <!-- Dynamically populated keyframe images -->
-              </div>
-
-              <!-- Detected Context & Exact OCR Text -->
-              <div class="bg-[#FAF8F5] border border-[#E8DCD1] rounded-md p-3 space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#78716C]">On-Screen Text Detected by AI</span>
-                  <button type="button" onclick="copyVisionText()" class="text-[11px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer">
-                    <span>📋</span>
-                    <span id="copyBtnText">Copy Extracted Text</span>
-                  </button>
-                </div>
-                <div id="visionExactTextDisplay" class="text-xs font-mono font-medium text-[#1C1917] bg-white p-2.5 rounded border border-[#E8DCD1] select-all">
-                  No text scanned yet.
-                </div>
-                <div class="flex items-center gap-2 text-[11px] text-[#78716C] pt-1">
-                  <span class="font-bold text-[#1C1917]">Visual Context:</span>
-                  <span id="visionContextDisplay" class="italic">Awaiting scan...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 3: Brand Re-Skinning Configuration & Hook Customization -->
-            <div id="visionReskinConfigCard" class="cloud-card rounded-lg p-5 space-y-3.5 hidden border border-[#E6E0D6]">
-              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
-                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-black text-[11px] flex items-center justify-center">3</span>
-                  <span>Brand Re-Skinning & Typography Studio</span>
-                </h4>
-                <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Brand Theme Ready</span>
-              </div>
-
-              <!-- Competitor Header Auto-Crop Alert Banner -->
-              <div id="visionCompetitorHeaderAlert" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2 text-amber-900">
-                  <span class="text-base">✂️</span>
-                  <span><strong>Competitor Repost Header Detected:</strong> Static top header will be sliced away to retain only the clean moving video in center.</span>
-                </div>
-                <label class="flex items-center gap-1.5 font-bold text-amber-900 cursor-pointer">
-                  <input type="checkbox" id="visionAutoCropCheck" checked class="rounded text-amber-600">
-                  <span>Auto-Crop Header</span>
-                </label>
-              </div>
-
-              <!-- Editable Headline Input -->
-              <div class="space-y-1">
-                <div class="flex justify-between items-center text-[11px]">
-                  <label class="font-bold text-[#1C1917]">Branded Headline / Hook Line (On-Screen Card):</label>
-                  <button type="button" onclick="pasteExtractedToHeadline()" class="text-purple-600 font-semibold hover:underline">Paste Extracted</button>
-                </div>
-                <textarea id="visionHeadlineInput" rows="2" 
-                  class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-2 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs transition"
-                  placeholder="Enter hook headline to render on video..."></textarea>
-              </div>
-
-              <!-- Highlight Word & Niche Controls in 2 Cols -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <!-- Highlight Word Input -->
-                <div class="space-y-1">
-                  <label class="block text-[11px] font-bold text-[#1C1917] flex items-center justify-between">
-                    <span>Glowing Neon Highlight Word(s):</span>
-                    <span id="visionHighlightPill" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">#DDF51A Neon</span>
-                  </label>
-                  <input id="visionHighlightInput" type="text" placeholder="Word to highlight with neon glow" 
-                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-amber-700 focus:outline-none focus:border-purple-600">
-                </div>
-
-                <!-- Niche Selector -->
-                <div class="space-y-1">
-                  <label class="block text-[11px] font-bold text-[#1C1917]">Target Niche & Layout Template:</label>
-                  <select id="visionNicheSelect" onchange="onVisionNicheChange()" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600">
-                    <option value="ai_tech" selected>💡 Informative AI Tech (Top Card + Mid Video)</option>
-                    <option value="clubbing">🎉 Clubbing & Parties (Neon Pink Box HUD)</option>
-                    <option value="memes">🔥 Memes (Native Top White Caption Bar)</option>
-                    <option value="concerts">🎸 Concerts & Live (Full-Bleed + Lower-Third)</option>
-                    <option value="ai_content">🤖 AI Showcase (100% Clean Raw Video)</option>
-                    <option value="girls_dance">💃 Dance & Choreography (Full-Bleed Raw)</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Source Caption / Bio (Copied As-Is) -->
-              <div class="space-y-1">
-                <div class="flex justify-between items-center text-[11px]">
-                  <label class="font-bold text-[#1C1917]">Source Caption / Bio (Copied As-Is into Bio):</label>
-                  <button type="button" onclick="copySourceBioText()" class="text-purple-600 font-semibold hover:underline flex items-center gap-1 cursor-pointer">
-                    <span>📋</span>
-                    <span id="copyBioBtnText">Copy Bio</span>
-                  </button>
-                </div>
-                <textarea id="visionOriginalBioInput" rows="2" 
-                  class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600 focus:bg-white shadow-2xs font-sans transition"
-                  placeholder="Original caption/bio extracted from source reel..."></textarea>
-                <span class="text-[10px] text-[#78716C]">Copied exactly from source reel. Follow CTA (e.g. <i>Follow @handle for daily deep tech breakdowns!</i>) is appended dynamically per account.</span>
-              </div>
-
-              <!-- Destination Account Selector -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div class="space-y-1">
-                  <label class="block text-[11px] font-bold text-[#1C1917]">Single Destination Account:</label>
-                  <select id="visionAccountSelect" class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs font-bold text-[#1C1917] focus:outline-none focus:border-purple-600">
-                    <!-- Populated dynamically via JS -->
-                  </select>
-                </div>
-
-                <div class="space-y-1">
-                  <label class="block text-[11px] font-bold text-[#1C1917]">Credit / Source Tag (Optional):</label>
-                  <input id="visionCreditInput" type="text" placeholder="@creator or source tag" 
-                    class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3 py-1.5 text-xs text-[#1C1917] focus:outline-none focus:border-purple-600">
-                </div>
-              </div>
-
-              <!-- Brand Theme Badges -->
-              <div class="bg-white border border-[#E8DCD1] rounded-md p-2.5 flex items-center justify-between text-[11px]">
-                <div class="flex items-center gap-3">
-                  <span class="text-[#78716C] font-semibold">Theme Specs:</span>
-                  <span class="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#1C1917]">
-                    <span class="w-2 h-2 rounded-full bg-[#DDF51A] border border-black/20" id="themeColorDot"></span>
-                    <span id="themeColorText">#DDF51A Neon Yellow</span>
-                  </span>
-                  <span class="inline-flex items-center gap-1 font-mono text-[10px] text-[#78716C]">
-                    <span>🔤 Segoe UI Bold</span>
-                  </span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <input type="checkbox" id="visionAutoPublishCheck" class="rounded text-purple-600">
-                  <label for="visionAutoPublishCheck" class="font-bold text-[#1C1917] cursor-pointer">Auto-broadcast to Instagram</label>
-                </div>
-              </div>
-
-              <!-- Dual Action Buttons: Single Reel Re-Skin vs Scale to 20 Tech Pages -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-                <button onclick="runVisionReskin()" id="btnVisionReskin" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs py-2.5 px-3 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
-                  <span>🎨</span>
-                  <span id="btnVisionReskinText">Re-Skin Single Reel</span>
-                </button>
-                <button onclick="runVisionScale20()" id="btnVisionScale20" class="orange-gradient-btn text-white font-extrabold text-xs py-2.5 px-3 rounded-md shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
-                  <span>🚀</span>
-                  <span id="btnVisionScale20Text">Scale to 20 Tech Pages (1-Click)</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column (5 cols): Live Branded Output Stage & Player -->
-          <div class="lg:col-span-5 space-y-4">
-            <div class="cloud-card rounded-lg p-5 space-y-3.5 border border-[#E6E0D6]">
-              <div class="flex justify-between items-center pb-2 border-b border-[#E6E0D6]">
-                <h4 class="text-xs font-bold text-[#1C1917] flex items-center gap-1.5">
-                  <span>🎬</span>
-                  <span>Branded Reel Live Preview</span>
-                </h4>
-                <span id="reskinStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FAF8F5] text-[#78716C] border border-[#E6E0D6]">Awaiting Render</span>
-              </div>
-
-              <!-- Video Player or Placeholder -->
-              <div class="relative bg-black rounded-lg overflow-hidden aspect-[9/16] flex items-center justify-center border border-[#E6E0D6]">
-                <video id="visionResultVideo" controls class="w-full h-full object-contain hidden" playsinline></video>
-                <div id="visionPlayerPlaceholder" class="text-center p-6 space-y-2">
-                  <div class="text-4xl text-purple-400">⚡</div>
-                  <p class="text-xs font-bold text-white">No Branded Video Generated Yet</p>
-                  <p class="text-[11px] text-zinc-400 max-w-xs">Scan any reel on the left and tap "Re-Skin with Our Brand Theme" to render high-contrast typography, neon highlights, and your logo.</p>
-                </div>
-              </div>
-
-              <!-- Output Metadata & Action Buttons -->
-              <div id="visionOutputActions" class="space-y-2.5 hidden pt-2 border-t border-[#E6E0D6]">
-                <div class="text-[11px] space-y-1">
-                  <div class="flex justify-between"><span class="text-[#78716C]">Template Used:</span><span id="reskinOutTemplate" class="font-bold text-[#1C1917]">-</span></div>
-                  <div class="flex justify-between"><span class="text-[#78716C]">Channel Badge:</span><span id="reskinOutHandle" class="font-mono font-bold text-purple-700">-</span></div>
-                </div>
-
-                <div class="flex gap-2 pt-1">
-                  <a id="visionDownloadLink" href="#" download class="flex-1 bg-white hover:bg-[#FAF8F5] border border-[#E6E0D6] text-[#1C1917] font-bold text-xs py-2 px-3 rounded-md text-center flex items-center justify-center gap-1 shadow-2xs transition">
-                    <span>💾</span> Download MP4
-                  </a>
-                  <button type="button" onclick="broadcastVisionReelNow()" id="btnVisionBroadcast" class="flex-1 orange-gradient-btn text-white font-bold text-xs py-2 px-3 rounded-md flex items-center justify-center gap-1 shadow-2xs">
-                    <span>🚀</span> Publish to Meta
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 20-Page Network Scaling Matrix Results -->
-          <div id="visionBatchCard" class="cloud-card rounded-lg p-5 space-y-4 hidden border border-[#E6E0D6] mt-4 col-span-1 lg:col-span-12">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#E6E0D6]">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">🚀</span>
-                <div>
-                  <h4 class="text-xs font-bold text-[#1C1917]">20-Page Network Scaling Results (Auto-Cropped Video Master)</h4>
-                  <p class="text-[10px] text-[#78716C]">Video cropped once to slice competitor header. Scaled across network accounts with unique handles, logos, and bio CTAs.</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <span id="visionBatchCountBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">20 Accounts Scaled</span>
-                <button type="button" onclick="copyAllBios()" id="btnCopyAllBios" class="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-md cursor-pointer flex items-center gap-1 shadow-2xs">
-                  <span>📋</span> Copy All Bios
-                </button>
-              </div>
-            </div>
-            
-            <div id="visionBatchGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <!-- Dynamically populated cards for each account with handle, thumbnail, custom bio, download -->
-            </div>
-          </div>
-
-        </div>
-      </section>
-
       <!-- ==================== TAB 4: TARGET SOURCES & SCRAPER ==================== -->
       <section id="view_sources" class="space-y-6 hidden">
         <div class="cloud-card rounded-lg p-5 space-y-4">
@@ -2835,6 +2541,71 @@
             <div id="tgActivationAlert" class="text-xs font-semibold text-emerald-700 hidden"></div>
           </div>
         </div>
+
+        <!-- Section C: Gemini Multimodal Vision & Reel Render Key -->
+        <div class="cloud-card rounded-lg p-6 space-y-4">
+          <div class="border-b border-[#E8DCD1] pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-base">👁️</span>
+                <h3 class="text-base font-bold text-[#1C1917]">Gemini Multimodal Vision &amp; Reel Render Key</h3>
+                <span id="geminiVisionStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">● Checking Vision...</span>
+              </div>
+              <p class="text-xs text-[#78716C] mt-0.5">Powers the autonomous backend vision worker. When Telegram reels or competitor posts arrive, Gemini Vision inspects keyframes, detects exact on-screen hooks, context, crops competitor headers, and renders your Cult brand aesthetic.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="testGeminiVisionKey()" id="btnTestGeminiVision" class="px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] rounded-md transition flex items-center gap-1.5 shadow-2xs">
+                <span>⚡</span>
+                <span>Test Gemini Key</span>
+              </button>
+              <button type="button" onclick="saveGeminiVisionSettings()" class="orange-gradient-btn px-4 py-1.5 text-white font-bold text-xs rounded-md shadow-sm">
+                Save Vision Key
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Model Selection -->
+            <div>
+              <label class="block text-xs font-bold text-[#1C1917] mb-1">Vision Model</label>
+              <select id="geminiVisionModelSelect" class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3.5 py-2 text-xs font-semibold text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+                <option value="gemini-1.5-flash" selected>gemini-1.5-flash (Recommended · Fast Multimodal)</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash (Next-Gen Multimodal Vision)</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro (High Precision Deep Reasoning)</option>
+              </select>
+              <span class="text-[10px] text-[#78716C] mt-1 block">Flash models process video frames in ~300ms for instant background rendering.</span>
+            </div>
+
+            <!-- Gemini API Key Input -->
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-bold text-[#1C1917]">Gemini API Key</label>
+                <button type="button" onclick="toggleGeminiKeyVisibility()" class="text-[10px] text-[#C86237] hover:underline font-semibold">Show/Hide</button>
+              </div>
+              <input id="settingGeminiVisionKey" type="password" placeholder="AIzaSy... (leave blank to keep current key)" 
+                class="w-full bg-[#FAF8F5] border border-[#E8DCD1] rounded-md px-3.5 py-2 text-xs font-mono text-[#1C1917] focus:outline-none focus:border-[#C86237]">
+              <span class="text-[10px] text-[#78716C] mt-1 block">Get a free key from Google AI Studio (aistudio.google.com).</span>
+            </div>
+
+            <!-- Autonomous Pipeline Features -->
+            <div>
+              <label class="block text-xs font-bold text-[#1C1917] mb-1">Backend Autonomous Execution</label>
+              <div class="space-y-1.5 pt-1">
+                <label class="flex items-center gap-2 text-xs text-[#1C1917] cursor-pointer">
+                  <input type="checkbox" id="geminiAutoCropCheck" checked class="accent-[#C86237] rounded">
+                  <span class="font-medium">Auto-Crop Competitor Headers</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs text-[#1C1917] cursor-pointer">
+                  <input type="checkbox" id="geminiNeonHighlightsCheck" checked class="accent-[#C86237] rounded">
+                  <span class="font-medium">Dynamic Neon Theme Highlights</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert / Status Result Banner -->
+          <div id="geminiVisionAlert" class="text-xs font-semibold hidden p-3 rounded-md"></div>
+        </div>
       </section>
 
     </div>
@@ -3103,8 +2874,7 @@
       reels: { title: "Reels", sub: "Rendered 9:16 Vertical Video Vault" },
       broadcasts: { title: "Activity", sub: "Live Per-Account Publishing History" },
       settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" },
-      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" },
-      vision_reskinner: { title: "AI Vision Reel Reader & Brand Re-Skinner", sub: "Gemini Vision reads reels, extracts hooks & headlines, and re-skins with your brand theme" }
+      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" }
     };
 
     let currentActiveTab = "overview";
@@ -3127,7 +2897,7 @@
 
     function switchTab(tabKey) {
       currentActiveTab = tabKey;
-      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "vision_reskinner", "sources", "reels", "broadcasts", "settings", "scheduler"];
+      const tabs = ["overview", "niche_pods", "pipeline", "accounts", "ingest", "sources", "reels", "broadcasts", "settings", "scheduler"];
       
       for (let i = 0; i < tabs.length; i++) {
         const t = tabs[i];
@@ -3198,8 +2968,9 @@
         loadSchedulerView();
       }
 
-      if (tabKey === 'vision_reskinner') {
-        loadVisionAccounts();
+      if (tabKey === 'settings') {
+        loadLlmSettings();
+        loadGeminiSettings();
       }
     }
 
@@ -5110,6 +4881,120 @@
       }
     }
 
+    // ==================== GEMINI MULTIMODAL VISION SETTINGS JS ====================
+    async function loadGeminiSettings() {
+      try {
+        const res = await fetch("/api/settings/gemini");
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById("geminiVisionStatusBadge");
+        const keyInp = document.getElementById("settingGeminiVisionKey");
+        const modelSel = document.getElementById("geminiVisionModelSelect");
+        const autoCrop = document.getElementById("geminiAutoCropCheck");
+        const dynamicNeon = document.getElementById("geminiNeonHighlightsCheck");
+
+        if (modelSel && data.model) modelSel.value = data.model;
+        if (autoCrop && data.auto_crop_competitor_headers !== undefined) autoCrop.checked = data.auto_crop_competitor_headers;
+        if (dynamicNeon && data.dynamic_neon_highlights !== undefined) dynamicNeon.checked = data.dynamic_neon_highlights;
+
+        if (data.has_key) {
+          if (badge) {
+            badge.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200";
+            badge.innerText = `● Vision Active (${data.model || "gemini-1.5-flash"})`;
+          }
+          if (keyInp) {
+            keyInp.placeholder = `${data.masked_key} (Saved in .env)`;
+          }
+        } else {
+          if (badge) {
+            badge.className = "text-[10px] px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-semibold border border-stone-200";
+            badge.innerText = "○ Local Fallback (No Gemini Key)";
+          }
+          if (keyInp) {
+            keyInp.placeholder = "AIzaSy... (Paste Google Gemini API Key)";
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load Gemini settings:", e);
+      }
+    }
+
+    async function saveGeminiVisionSettings() {
+      const keyInp = document.getElementById("settingGeminiVisionKey");
+      const modelSel = document.getElementById("geminiVisionModelSelect");
+      const autoCrop = document.getElementById("geminiAutoCropCheck");
+      const dynamicNeon = document.getElementById("geminiNeonHighlightsCheck");
+      const alertBox = document.getElementById("geminiVisionAlert");
+
+      const payload = {
+        gemini_api_key: keyInp ? keyInp.value.trim() : "",
+        model: modelSel ? modelSel.value : "gemini-1.5-flash",
+        auto_crop_competitor_headers: autoCrop ? autoCrop.checked : true,
+        dynamic_neon_highlights: dynamicNeon ? dynamicNeon.checked : true
+      };
+
+      try {
+        const res = await fetch("/api/settings/gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (alertBox) {
+          alertBox.className = "text-xs font-semibold block p-3 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200";
+          alertBox.innerText = `✅ ${data.message || "Gemini Vision settings saved successfully!"}`;
+          setTimeout(() => { alertBox.className = "text-xs font-semibold hidden p-3 rounded-md"; }, 4000);
+        }
+        if (keyInp) keyInp.value = "";
+        loadGeminiSettings();
+      } catch (err) {
+        if (alertBox) {
+          alertBox.className = "text-xs font-semibold block p-3 rounded-md bg-red-50 text-red-800 border border-red-200";
+          alertBox.innerText = `❌ Error saving settings: ${err.message}`;
+        }
+      }
+    }
+
+    async function testGeminiVisionKey() {
+      const keyInp = document.getElementById("settingGeminiVisionKey");
+      const alertBox = document.getElementById("geminiVisionAlert");
+      const btn = document.getElementById("btnTestGeminiVision");
+      const key = keyInp ? keyInp.value.trim() : "";
+
+      if (btn) btn.innerText = "⏳ Testing...";
+      try {
+        const res = await fetch("/api/settings/gemini/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: key || undefined })
+        });
+        const data = await res.json();
+        if (alertBox) {
+          if (data.status === "success") {
+            alertBox.className = "text-xs font-semibold block p-3 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200";
+            alertBox.innerText = `✅ ${data.message}`;
+          } else {
+            alertBox.className = "text-xs font-semibold block p-3 rounded-md bg-amber-50 text-amber-800 border border-amber-200";
+            alertBox.innerText = `⚠️ ${data.message}`;
+          }
+        }
+      } catch (err) {
+        if (alertBox) {
+          alertBox.className = "text-xs font-semibold block p-3 rounded-md bg-red-50 text-red-800 border border-red-200";
+          alertBox.innerText = `❌ Test failed: ${err.message}`;
+        }
+      } finally {
+        if (btn) btn.innerText = "⚡ Test Gemini Key";
+      }
+    }
+
+    function toggleGeminiKeyVisibility() {
+      const inp = document.getElementById("settingGeminiVisionKey");
+      if (inp) {
+        inp.type = inp.type === "password" ? "text" : "password";
+      }
+    }
+
     // ==================== REELS PRODUCTION PIPELINE STUDIO JAVASCRIPT ====================
     let studioAccountsList = [];
     let studioSelectedAccount = null;
@@ -6826,6 +6711,7 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
     // Startup
     loadDashboard();
     loadLlmSettings();
+    loadGeminiSettings();
     fetchPipelineState();
     inspectCompetitorSource('dailyfacts');
     try {

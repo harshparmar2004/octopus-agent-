@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import uuid
 import logging
@@ -82,14 +82,32 @@ class ReelsAutomationPipeline:
         })
         insert_or_update_reel(tracker_record)
 
-        # 2. AI Hook & Caption Generation
+        # 2. AI Hook, Vision Extraction & Caption Generation
         logger.info(f"[{task_id}] Synthesizing AI hook and caption...")
+        highlight_word = None
+        crop_box = None
+        try:
+            from processors.vision_extractor import VisionExtractor
+            v_res = VisionExtractor.analyze_reel(raw_filepath)
+            if v_res and v_res.get("success"):
+                if v_res.get("headline"):
+                    title = v_res["headline"]
+                if v_res.get("highlight_word"):
+                    highlight_word = v_res["highlight_word"]
+                if v_res.get("crop_box"):
+                    crop_box = v_res["crop_box"]
+        except Exception as ve:
+            logger.warning(f"Pipeline vision extraction skipped: {ve}")
+
         enriched = self.enricher.generate_hook_and_caption(title, desc, self.channel)
         hook_text = enriched["hook_text"]
+        if not highlight_word and enriched.get("highlight_word"):
+            highlight_word = enriched.get("highlight_word")
         full_caption = enriched["full_caption"]
 
         tracker_record.update({
             "hook_text": hook_text,
+            "highlight_word": highlight_word,
             "caption": full_caption,
             "status": "ENRICHED"
         })
@@ -102,7 +120,10 @@ class ReelsAutomationPipeline:
             raw_video_path=raw_filepath,
             hook_text=hook_text,
             channel=self.channel,
-            output_filename=output_filename
+            output_filename=output_filename,
+            highlight_word=highlight_word,
+            crop_box=crop_box,
+            auto_crop_header=True
         )
 
         if not rendered_reel_path:

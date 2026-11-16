@@ -329,8 +329,21 @@ class VisionExtractor:
                 "error": f"Failed to extract video frames from: {local_video_path}"
             }
 
-        # 4. Determine Gemini API Key
-        effective_key = api_key or os.getenv("GEMINI_API_KEY")
+        # 4. Determine Gemini API Key and Model
+        effective_key = api_key or os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
+        model_name = "gemini-1.5-flash"
+        gemini_cfg_file = settings.STORAGE_DIR / "gemini_config.json"
+        if gemini_cfg_file.exists():
+            try:
+                with open(gemini_cfg_file, "r", encoding="utf-8") as f:
+                    g_cfg = json.load(f)
+                    if not effective_key and g_cfg.get("gemini_api_key"):
+                        effective_key = g_cfg["gemini_api_key"]
+                    if g_cfg.get("model"):
+                        model_name = g_cfg["model"]
+            except Exception as ge:
+                logger.warning(f"Error reading gemini_config.json: {ge}")
+
         if not effective_key:
             mgr_cfg = LLMManager().config
             if mgr_cfg.get("provider") == "gemini" and mgr_cfg.get("api_key"):
@@ -340,7 +353,7 @@ class VisionExtractor:
         analysis: Dict[str, Any] = {}
         if effective_key:
             try:
-                analysis = cls.analyze_with_gemini(frame_paths, api_key=effective_key)
+                analysis = cls.analyze_with_gemini(frame_paths, api_key=effective_key, model=model_name)
             except Exception as e:
                 logger.warning(f"Gemini Vision call failed, switching to local fallback: {e}")
                 analysis = cls.analyze_fallback(local_video_path, frame_paths, fallback_title=source_title)

@@ -1,0 +1,6 @@
+{
+  "gemini_api_key": "AIzaSyTestKey1234567890",
+  "model": "gemini-1.5-flash",
+  "auto_crop_competitor_headers": true,
+  "dynamic_neon_highlights": true
+}

@@ -676,8 +676,8 @@ class OctopusTelegramBot:
         else:
             if not session.get("headline") or not session.get("highlight_word") or not session.get("crop_box"):
                 try:
-                    from processors.vision_extractor import VideoVisionInspector
-                    v_res = VideoVisionInspector.analyze_reel(dl["filepath"], api_key=getattr(settings, "GEMINI_API_KEY", None))
+                    from processors.vision_extractor import VisionExtractor
+                    v_res = VisionExtractor.analyze_reel(dl["filepath"], api_key=getattr(settings, "GEMINI_API_KEY", None))
                     if v_res.get("success"):
                         if not session.get("headline") and v_res.get("headline"):
                             session["headline"] = v_res.get("headline")

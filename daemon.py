@@ -117,12 +117,29 @@ class Octopus24x7Daemon:
 
                 # 5. Synthesize AI Hook & Educational Caption with Original Credit
                 logger.info(f"Synthesizing AI hook and caption for @{target_account['handle']}...")
+                highlight_word = None
+                crop_box = None
+                try:
+                    from processors.vision_extractor import VisionExtractor
+                    v_res = VisionExtractor.analyze_reel(raw_video_path)
+                    if v_res and v_res.get("success"):
+                        if v_res.get("headline"):
+                            orig_title = v_res["headline"]
+                        if v_res.get("highlight_word"):
+                            highlight_word = v_res["highlight_word"]
+                        if v_res.get("crop_box"):
+                            crop_box = v_res["crop_box"]
+                except Exception as ve:
+                    logger.warning(f"Daemon vision extraction skipped: {ve}")
+
                 enriched = self.enricher.generate_hook_and_caption(orig_title, orig_desc, channel_profile)
                 hook_text = enriched["hook_text"]
+                if not highlight_word and enriched.get("highlight_word"):
+                    highlight_word = enriched.get("highlight_word")
                 caption = (
                     f"{enriched['full_caption']}\n\n"
-                    f"?? Video clip via @{handle}\n"
-                    f"? Follow {target_account['handle']} for daily {target_account['niche']}."
+                    f"👉 Video clip via @{handle}\n"
+                    f"👉 Follow {target_account['handle']} for daily {target_account['niche']}."
                 )
 
                 # 6. Composite 9:16 Video with our Template Logo & Branding
@@ -132,7 +149,10 @@ class Octopus24x7Daemon:
                     hook_text=hook_text,
                     channel=channel_profile,
                     output_filename=output_filename,
-                    credit_handle=handle
+                    credit_handle=handle,
+                    highlight_word=highlight_word,
+                    crop_box=crop_box,
+                    auto_crop_header=True
                 )
 
                 if not rendered_path:
