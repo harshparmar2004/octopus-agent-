@@ -398,104 +398,70 @@
           </div>
         </div>
 
-        <!-- 4-Stage Visual Lifecycle Strip: How Octopus Agent Works -->
-        <div class="cloud-card rounded-lg p-5 border border-[#E6E0D6] bg-white space-y-3.5 shadow-2xs">
+        <!-- Compact Autonomous Lifecycle Pipeline -->
+        <div class="cloud-card rounded-lg px-4 py-3 border border-[#E6E0D6] bg-white space-y-2.5 shadow-2xs">
           <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-xs font-bold text-[#1C1917] flex items-center gap-2">
-                <span>⚡ How Octopus Agent Works</span>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-[#FAF8F5] text-[#78716C] font-semibold border border-[#E8DCD1]">Autonomous Pipeline</span>
-              </h3>
-              <p class="text-[11px] text-[#78716C] mt-0.5">End-to-end lifecycle from raw competitor video to branded multi-page broadcast.</p>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#C86237]"></span>
+              <h3 class="text-xs font-bold text-[#1C1917] tracking-tight">Autonomous Video Pipeline</h3>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF8F5] text-[#78716C] font-semibold border border-[#E8DCD1]">4 Stages Active</span>
             </div>
-            <button onclick="switchTab('pipeline')" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1">
+            <button onclick="switchTab('pipeline')" class="text-[11px] font-bold text-[#C86237] hover:underline flex items-center gap-1">
               <span>View Workflow</span>
               <span>&rarr;</span>
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+          <!-- Sleek Connected Steps -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
             <!-- Stage 1 -->
-            <div class="p-3.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] space-y-1.5 relative">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black font-mono text-[#C86237]">01 / INGEST</span>
-                <span class="text-base">📥</span>
+            <div class="flex items-center gap-2.5 p-2 rounded-md bg-[#FAF8F5] border border-[#EAE3D9] hover:border-[#C86237]/40 transition">
+              <span class="w-7 h-7 rounded-md bg-white border border-[#E8DCD1] flex items-center justify-center text-xs shrink-0 shadow-2xs">📥</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[10px] font-mono font-bold text-[#C86237]">01 INGEST</span>
+                  <span class="text-[9px] px-1 py-0.2 rounded bg-white text-[#78716C] border border-[#E8DCD1] font-medium">Telegram</span>
+                </div>
+                <div class="text-[11px] font-bold text-[#1C1917] truncate">Bot &amp; Scrapers</div>
               </div>
-              <div class="text-xs font-bold text-[#1C1917]">Telegram &amp; Scrapers</div>
-              <p class="text-[11px] text-[#78716C] leading-relaxed">Send a reel via Telegram bot, drop a link, or let the 24/7 daemon harvest competitor accounts.</p>
             </div>
 
             <!-- Stage 2 -->
-            <div class="p-3.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] space-y-1.5 relative">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black font-mono text-[#C86237]">02 / VISION</span>
-                <span class="text-base">👁️</span>
+            <div class="flex items-center gap-2.5 p-2 rounded-md bg-[#FAF8F5] border border-[#EAE3D9] hover:border-[#C86237]/40 transition">
+              <span class="w-7 h-7 rounded-md bg-white border border-[#E8DCD1] flex items-center justify-center text-xs shrink-0 shadow-2xs">👁️</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[10px] font-mono font-bold text-[#C86237]">02 VISION</span>
+                  <span class="text-[9px] px-1 py-0.2 rounded bg-white text-[#78716C] border border-[#E8DCD1] font-medium">Gemini</span>
+                </div>
+                <div class="text-[11px] font-bold text-[#1C1917] truncate">Clean &amp; Smart Crop</div>
               </div>
-              <div class="text-xs font-bold text-[#1C1917]">Clean &amp; Smart Crop</div>
-              <p class="text-[11px] text-[#78716C] leading-relaxed">Gemini Vision detects existing overlays, subtitles &amp; watermarks, cropping the clean central video frame.</p>
             </div>
 
             <!-- Stage 3 -->
-            <div class="p-3.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] space-y-1.5 relative">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black font-mono text-[#C86237]">03 / BRANDING</span>
-                <span class="text-base">🎨</span>
+            <div class="flex items-center gap-2.5 p-2 rounded-md bg-[#FAF8F5] border border-[#EAE3D9] hover:border-[#C86237]/40 transition">
+              <span class="w-7 h-7 rounded-md bg-white border border-[#E8DCD1] flex items-center justify-center text-xs shrink-0 shadow-2xs">🎨</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[10px] font-mono font-bold text-[#C86237]">03 BRANDING</span>
+                  <span class="text-[9px] px-1 py-0.2 rounded bg-white text-[#78716C] border border-[#E8DCD1] font-medium">9:16 Cult</span>
+                </div>
+                <div class="text-[11px] font-bold text-[#1C1917] truncate">Logo &amp; Dynamic Neon</div>
               </div>
-              <div class="text-xs font-bold text-[#1C1917]">Cult Theme Studio</div>
-              <p class="text-[11px] text-[#78716C] leading-relaxed">Applies 9:16 canvas, centered circular Cult logo, adaptive header height &amp; dynamic neon text highlights.</p>
             </div>
 
             <!-- Stage 4 -->
-            <div class="p-3.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] space-y-1.5 relative">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black font-mono text-[#C86237]">04 / FANOUT</span>
-                <span class="text-base">🚀</span>
+            <div class="flex items-center gap-2.5 p-2 rounded-md bg-[#FAF8F5] border border-[#EAE3D9] hover:border-[#C86237]/40 transition">
+              <span class="w-7 h-7 rounded-md bg-white border border-[#E8DCD1] flex items-center justify-center text-xs shrink-0 shadow-2xs">🚀</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[10px] font-mono font-bold text-[#C86237]">04 FANOUT</span>
+                  <span class="text-[9px] px-1 py-0.2 rounded bg-white text-[#78716C] border border-[#E8DCD1] font-medium">Meta API</span>
+                </div>
+                <div class="text-[11px] font-bold text-[#1C1917] truncate">Multi-Page Broadcast</div>
               </div>
-              <div class="text-xs font-bold text-[#1C1917]">Meta Network Broadcast</div>
-              <p class="text-[11px] text-[#78716C] leading-relaxed">Simultaneously posts the composited reel to all assigned Instagram accounts via official Meta Graph API.</p>
             </div>
           </div>
-        </div>
-
-        <!-- 1-Click Universal Ingest & Broadcast Launchpad -->
-        <div class="cloud-card rounded-lg p-5 space-y-3.5 border border-[#E6E0D6] bg-white shadow-2xs">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs bg-[#F7EFE9] text-[#C86237] font-bold px-2 py-0.5 rounded border border-[#E8DCD1]">⚡ 1-Click Launchpad</span>
-                <h3 class="text-xs font-bold text-[#1C1917]">Instant Video Ingest &amp; Network Broadcast</h3>
-              </div>
-              <p class="text-[11px] text-[#78716C] mt-1">Paste any video URL below to immediately clean, apply your Cult branding, and broadcast to all connected pages.</p>
-            </div>
-            <button onclick="switchTab('niche_pods')" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1 whitespace-nowrap">
-              <span>Open Pods Hub</span>
-              <span>&rarr;</span>
-            </button>
-          </div>
-
-          <div class="flex flex-col sm:flex-row gap-2.5">
-            <div class="relative flex-1">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-xs text-[#A8A29E]">🔗</span>
-              <input id="quickIngestUrl" type="text" placeholder="Paste Instagram Reel, YouTube Shorts, TikTok, Reddit, or MP4 link..." 
-                class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md pl-8 pr-3 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237] focus:bg-white shadow-2xs transition">
-            </div>
-            <button onclick="submitQuickIngest()" class="orange-gradient-btn px-6 py-2 text-white font-bold text-xs rounded-md shadow-xs whitespace-nowrap flex items-center justify-center gap-2 hover:opacity-95 transition">
-              <span>🚀</span>
-              <span>Deploy to Network</span>
-            </button>
-          </div>
-
-          <!-- Platform Support Tags -->
-          <div class="flex flex-wrap items-center gap-2 pt-0.5">
-            <span class="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Supported Platforms:</span>
-            <span class="text-[10px] font-semibold text-[#57534E] bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">📸 Instagram Reels</span>
-            <span class="text-[10px] font-semibold text-[#57534E] bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">▶️ YouTube Shorts</span>
-            <span class="text-[10px] font-semibold text-[#57534E] bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">🎵 TikTok</span>
-            <span class="text-[10px] font-semibold text-[#57534E] bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">👾 Reddit Video</span>
-            <span class="text-[10px] font-semibold text-[#57534E] bg-[#FAF8F5] border border-[#E8DCD1] px-2 py-0.5 rounded">📁 Direct MP4</span>
-          </div>
-
-          <div id="quickToast" class="text-xs hidden font-semibold"></div>
         </div>
 
         <!-- Recent Broadcast Activity Channel -->
@@ -4427,7 +4393,7 @@
                 <div class="max-w-sm mx-auto space-y-2 py-2">
                   <div class="w-10 h-10 rounded-full bg-[#F7EFE9] text-[#C86237] flex items-center justify-center mx-auto text-lg shadow-2xs">📡</div>
                   <div class="text-xs font-bold text-[#1C1917]">No Broadcast Records Logged Yet</div>
-                  <p class="text-[11px] text-[#78716C]">Send a video link via Telegram or paste a URL in the 1-Click Launchpad above to broadcast your first reel across your page matrix.</p>
+                  <p class="text-[11px] text-[#78716C]">Send a video link via Telegram bot or trigger an autonomous scrape cycle to broadcast your first reel across your page matrix.</p>
                   <div class="pt-1">
                     <button onclick="switchTab('niche_pods')" class="text-xs font-bold text-[#C86237] hover:underline">Open Niche Pods Hub &rarr;</button>
                   </div>
@@ -4592,21 +4558,27 @@
     }
 
     async function submitQuickIngest() {
-      const url = document.getElementById("quickIngestUrl").value.trim();
+      const input = document.getElementById("quickIngestUrl");
       const toast = document.getElementById("quickToast");
-      if (!url) return alert("Please enter a video URL");
+      const url = input ? input.value.trim() : "";
+      if (!url) return;
 
-      toast.className = "text-xs text-[#C86237] block";
-      toast.innerText = "🐙 Octopus Ingesting video & compositing card variations...";
+      if (toast) {
+        toast.className = "text-xs text-[#C86237] block";
+        toast.innerText = "🐙 Octopus Ingesting video & compositing card variations...";
+      }
 
-      await fetch("/api/ingest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, auto_broadcast: true, dry_run: isDryRunMode() })
-      });
-
-      document.getElementById("quickIngestUrl").value = "";
-      setTimeout(loadDashboard, 3000);
+      try {
+        await fetch("/api/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, auto_broadcast: true, dry_run: isDryRunMode() })
+        });
+        if (input) input.value = "";
+        setTimeout(loadDashboard, 3000);
+      } catch (err) {
+        console.error("submitQuickIngest error:", err);
+      }
     }
 
     async function submitFanoutStudio() {
