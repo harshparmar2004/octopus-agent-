@@ -262,21 +262,23 @@
         <span id="stageSubtitle" class="text-xs text-[#78716C]">Cloud Analytics & Live Activity</span>
       </div>
 
-      <div class="flex items-center gap-4">
-        <!-- Publishing Mode Switch -->
-        <div class="flex items-center gap-2 bg-[#FAF8F5] border border-[#E6E0D6] px-3 py-1.5 rounded-md text-xs">
-          <span class="text-[#78716C] text-[11px] font-semibold">Mode:</span>
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="globalDryRunToggle" checked onchange="toggleGlobalMode()" class="rounded text-[#C86237] focus:ring-0">
-            <span id="modeLabel" class="text-[11px] font-bold text-amber-700">Dry-Run Simulation</span>
-          </label>
-        </div>
+      <div class="flex items-center gap-3">
+        <!-- Publishing Mode Switch (Proper modern switch, no bulky box) -->
+        <label class="flex items-center gap-2 cursor-pointer select-none px-2 py-1 text-xs">
+          <span class="text-[11px] font-medium text-[#78716C] uppercase tracking-wider">Dry-Run</span>
+          <div class="relative inline-block w-8 h-4 align-middle">
+            <input type="checkbox" id="globalDryRunToggle" checked onchange="toggleGlobalMode()" class="sr-only peer">
+            <div class="w-8 h-4 bg-[#E8DCD1] peer-focus:outline-hidden peer-focus:ring-2 peer-focus:ring-[#D97B3F] rounded-full peer peer-checked:bg-[#D97B3F] transition-colors"></div>
+            <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-4"></div>
+          </div>
+          <span id="modeLabel" class="text-[11px] font-medium text-amber-700">Simulation</span>
+        </label>
 
-        <button onclick="loadDashboard()" class="p-2 text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F5] rounded-md border border-[#E6E0D6] text-xs font-semibold transition" title="Refresh Data">
-          🔄 Refresh
+        <button onclick="loadDashboard()" class="h-8 px-2.5 text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F5] rounded-[6px] border border-[#E6E0D6] text-xs font-medium transition flex items-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-[#D97B3F]" title="Refresh Data">
+          <span>↻</span> Refresh
         </button>
 
-        <button onclick="switchTab('ingest')" class="orange-gradient-btn px-4 py-2 text-white font-bold text-xs rounded-md shadow-sm flex items-center gap-1.5">
+        <button onclick="switchTab('ingest')" class="h-8 px-3.5 bg-[#D97B3F] hover:bg-[#C86237] text-white font-semibold text-xs rounded-[6px] shadow-2xs flex items-center gap-1.5 transition focus:outline-hidden focus:ring-2 focus:ring-[#D97B3F]">
           <span>⚡</span> New Reel Fanout
         </button>
       </div>
@@ -2099,189 +2101,193 @@
       </section>
 
       <!-- ==================== TAB: PEAK-TIME SCHEDULER & CANDIDATE POOL ==================== -->
-      <section id="view_scheduler" class="space-y-6 hidden">
-        <!-- Top Banner & Controls -->
-        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">📅</span>
-                <h2 class="text-lg font-bold text-[#1C1917]">Peak-Time Scheduler & AI Candidate Pool</h2>
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">⚡ IST Automation Active</span>
-              </div>
-              <p class="text-xs text-[#78716C] max-w-2xl">
-                Harvests from 10+ sources per niche throughout the day, scores reels using AI velocity + freshness + niche-fit, and automatically pre-renders and fanouts across 20+ accounts at peak viral traffic hours (IST).
+      <section id="view_scheduler" class="max-w-[1200px] mx-auto space-y-12 py-2 hidden">
+        
+        <!-- SECTION 1: HEADER & PRIMARY CONTROLS (Single row + subtle secondary bar) -->
+        <header class="space-y-3">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#E8DCD1]">
+            <div class="min-w-0">
+              <h1 class="text-[24px] font-semibold tracking-tight text-[#1C1917] leading-tight">Peak-Time Scheduler</h1>
+              <p class="text-xs text-[#78716C] mt-0.5 truncate max-w-xl">
+                Automated peak-hour reel publication staggered across accounts with anti-burst safety guards.
               </p>
             </div>
 
-            <!-- Niche Selector & Quick Actions -->
-            <div class="flex flex-wrap items-center gap-2.5">
-              <div class="flex items-center gap-1.5 bg-[#FAF8F5] border border-[#E8DCD1] px-3 py-1.5 rounded-lg text-xs">
-                <span class="text-[#78716C] font-medium">Pod:</span>
-                <select id="schedulerNicheSelect" onchange="onSchedulerNicheChanged()" class="bg-transparent font-bold text-[#1C1917] focus:outline-hidden cursor-pointer">
-                  <option value="information">💡 Information & Infotainment</option>
-                  <option value="quantum">⚛️ Quantum Physics</option>
-                  <option value="ai">🤖 Generative AI</option>
-                  <option value="robotics">🦾 Robotics</option>
-                  <option value="space">🚀 Space Exploration</option>
-                  <option value="biotech">🧬 BioTech</option>
-                  <option value="parties">🎉 Parties & EDM</option>
-                  <option value="organizing">🧺 Home Organizing</option>
-                  <option value="fashion">✨ Fashion & Beauty</option>
+            <!-- Header Controls: Pod Selector, Refresh, Primary Action -->
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <div class="flex items-center gap-1.5 text-xs text-[#78716C]">
+                <label for="schedulerNicheSelect" class="font-medium text-[11px] uppercase tracking-wider">Pod:</label>
+                <select id="schedulerNicheSelect" onchange="onSchedulerNicheChanged()" class="h-8 pl-2.5 pr-7 rounded-[6px] border border-[#E8DCD1] bg-white text-xs font-semibold text-[#1C1917] focus:outline-hidden focus:ring-2 focus:ring-[#D97B3F] cursor-pointer">
+                  <option value="information">Information &amp; Infotainment</option>
+                  <option value="quantum">Quantum Physics</option>
+                  <option value="ai">Generative AI</option>
+                  <option value="robotics">Robotics</option>
+                  <option value="space">Space Exploration</option>
+                  <option value="biotech">BioTech</option>
+                  <option value="parties">Parties &amp; EDM</option>
+                  <option value="organizing">Home Organizing</option>
+                  <option value="fashion">Fashion &amp; Beauty</option>
                 </select>
               </div>
 
-              <button type="button" onclick="triggerHarvestNow()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] flex items-center gap-1.5 transition shadow-2xs">
-                <span>🌾</span>
-                <span>Harvest Sources</span>
+              <button type="button" onclick="loadSchedulerView()" class="h-8 px-2.5 rounded-[6px] border border-[#E8DCD1] bg-white hover:bg-[#F5F2EB] text-xs font-medium text-[#1C1917] transition flex items-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-[#D97B3F]" title="Refresh Schedule and Pool">
+                <span>↻</span>
+                <span>Refresh</span>
               </button>
 
-              <button type="button" onclick="triggerRunSlotNow()" class="px-3.5 py-1.5 rounded-lg bg-[#C86237] hover:opacity-90 text-xs font-bold text-white flex items-center gap-1.5 transition shadow-2xs">
+              <button type="button" onclick="switchTab('ingest')" class="h-8 px-3.5 rounded-[6px] bg-[#D97B3F] hover:bg-[#C86237] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-[#D97B3F]">
                 <span>⚡</span>
-                <span>Run Slot Now (Test)</span>
-              </button>
-
-              <button type="button" onclick="openScheduleEditorModal()" class="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#78716C] flex items-center gap-1 transition">
-                <span>⚙️</span>
-                <span>Edit Timing</span>
+                <span>New Reel Fanout</span>
               </button>
             </div>
           </div>
 
-          <!-- KPI Metrics Row -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-[#E8DCD1]/60">
-            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
-              <div class="text-[10px] text-[#78716C] font-bold uppercase">Daily Peak Slots</div>
-              <div id="stat_slot_count" class="text-base font-extrabold text-[#1C1917] mt-0.5">4 Slots (IST)</div>
-              <div id="stat_slot_times_list" class="text-[10px] text-[#C86237] font-mono mt-0.5">08:00, 13:00, 18:00, 21:00</div>
+          <!-- Secondary Toolbar: Secondary actions & operational status -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#78716C]">
+            <div class="flex items-center gap-2 text-[11px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span class="font-medium text-[#1C1917]">Peak Scheduler Active</span>
+              <span class="text-[#E8DCD1]">·</span>
+              <span id="schedulerDryRunStatusBadge" class="text-amber-700">Dry-Run Simulation: pre-renders without live publishing</span>
             </div>
 
-            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
-              <div class="text-[10px] text-[#78716C] font-bold uppercase">Stagger & Jitter</div>
-              <div class="text-base font-extrabold text-[#1C1917] mt-0.5">⚡ Balanced (30–45s)</div>
-              <div class="text-[10px] text-emerald-700 font-bold mt-0.5">±8 min Niche Variance (Anti-Burst)</div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="triggerHarvestNow()" class="h-7 px-2.5 rounded-[6px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] border border-[#E8DCD1] bg-white transition flex items-center gap-1">
+                <span>🌾</span> Harvest Sources
+              </button>
+              <button type="button" onclick="triggerRunSlotNow()" class="h-7 px-2.5 rounded-[6px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] border border-[#E8DCD1] bg-white transition flex items-center gap-1">
+                <span>⚡</span> Run Slot Now (Test)
+              </button>
+              <button type="button" onclick="openScheduleEditorModal()" class="h-7 px-2.5 rounded-[6px] text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#F5F2EB] border border-[#E8DCD1] bg-white transition flex items-center gap-1">
+                <span>⚙️</span> Edit Timing
+              </button>
             </div>
+          </div>
+        </header>
 
-            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
-              <div class="text-[10px] text-[#78716C] font-bold uppercase">Scored Candidate Pool</div>
-              <div id="stat_candidate_pool_size" class="text-base font-extrabold text-[#1C1917] mt-0.5">Loading...</div>
-              <div class="text-[10px] text-[#78716C] mt-0.5">Ranked by AI Velocity & Niche Fit</div>
-            </div>
+        <!-- SECTION 2: SUMMARY STRIP (Single row, 4 columns, vertical hairlines, NO BOXES) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 border-y border-[#E8DCD1] py-4">
+          <div class="px-4 border-r border-[#E8DCD1] first:pl-0">
+            <div class="text-[11px] font-medium tracking-wider text-[#78716C] uppercase">Daily Slots</div>
+            <div id="stat_slot_count" class="text-[24px] font-semibold text-[#1C1917] tabular-nums mt-1 leading-tight">4 / 6 Active</div>
+            <div id="stat_slot_times_list" class="text-xs text-[#78716C] mt-1 tabular-nums truncate">08:00 · 13:00 · 18:00 · 21:00 IST</div>
+          </div>
 
-            <div class="p-3 rounded-xl bg-[#FAF8F5] border border-[#E8DCD1]">
-              <div class="text-[10px] text-[#78716C] font-bold uppercase">Safety & Cap Guard</div>
-              <div class="text-base font-extrabold text-emerald-700 mt-0.5">Max 6 Posts / Day</div>
-              <div class="text-[10px] text-[#78716C] mt-0.5">≥ 2.0h Spacing Guard Enforced</div>
-            </div>
+          <div class="px-4 border-r border-[#E8DCD1]">
+            <div class="text-[11px] font-medium tracking-wider text-[#78716C] uppercase">Stagger &amp; Jitter</div>
+            <div class="text-[24px] font-semibold text-[#1C1917] tabular-nums mt-1 leading-tight">Balanced 30–45s</div>
+            <div class="text-xs text-[#78716C] mt-1">±8m niche variance (anti-burst)</div>
+          </div>
+
+          <div class="px-4 border-r border-[#E8DCD1]">
+            <div class="text-[11px] font-medium tracking-wider text-[#78716C] uppercase">Candidate Pool</div>
+            <div id="stat_candidate_pool_size" class="text-[24px] font-semibold text-[#1C1917] tabular-nums mt-1 leading-tight">-- Re-Ranked</div>
+            <div class="text-xs text-[#78716C] mt-1">Ranked by AI velocity &amp; niche-fit</div>
+          </div>
+
+          <div class="px-4 last:pr-0">
+            <div class="text-[11px] font-medium tracking-wider text-[#78716C] uppercase">Safety Cap</div>
+            <div class="text-[24px] font-semibold text-[#1C1917] tabular-nums mt-1 leading-tight">6 Posts / Day</div>
+            <div class="text-xs text-[#78716C] mt-1">≥ 2.0h spacing guard enforced</div>
           </div>
         </div>
 
-        <!-- Daily Posting Cadence & Source Trigger Control Strip -->
-        <div class="cloud-card rounded-2xl p-5 border border-[#E8DCD1] bg-white shadow-xs space-y-3.5">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#E8DCD1]/60">
+        <!-- SECTION 3: SCHEDULE SETTINGS (Inline slot times list, segmented presets, compact add) -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD1]">
             <div>
-              <div class="flex items-center gap-2">
-                <span class="text-base">📅</span>
-                <h3 class="text-sm font-bold text-[#1C1917]">Daily Cadence & Source Trigger Control</h3>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF8F5] text-[#C86237] border border-[#E8DCD1]">Max 6 Slots / Day</span>
-              </div>
-              <p class="text-xs text-[#78716C] mt-0.5">Manage daily scheduled times (minimum 2.0h apart). Trigger harvested reels from this niche or assign specific reels.</p>
+              <h2 class="text-base font-semibold text-[#1C1917]">Daily Cadence &amp; Slot Times</h2>
+              <p class="text-xs text-[#78716C]">Daily publication schedule for this pod (minimum 2.0h gap between slots, up to 6 slots daily).</p>
             </div>
 
-            <!-- Quick Presets -->
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-[11px] font-bold text-[#78716C] mr-1">Cadence Presets:</span>
-              <button type="button" onclick="applyCadencePreset(2)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
-                ⚡ 2x / Day
-              </button>
-              <button type="button" onclick="applyCadencePreset(3)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
-                🔥 3x / Day
-              </button>
-              <button type="button" onclick="applyCadencePreset(4)" class="px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#F3EDE4] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] transition shadow-2xs">
-                🚀 4x / Day
-              </button>
-              <button type="button" onclick="applyCadencePreset(6)" class="px-2.5 py-1 rounded-lg bg-[#C86237]/10 hover:bg-[#C86237]/20 border border-[#C86237]/30 text-xs font-extrabold text-[#C86237] transition shadow-2xs">
-                👑 6x / Day (Max Freedom)
-              </button>
+            <!-- Segmented Control for Presets -->
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-medium text-[#78716C] uppercase tracking-wider">Presets:</span>
+              <div id="cadenceSegmentedControl" class="inline-flex rounded-[6px] border border-[#E8DCD1] bg-white p-0.5 text-xs">
+                <button type="button" onclick="applyCadencePreset(2)" class="px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition cadence-seg-btn" data-preset="2">2x</button>
+                <button type="button" onclick="applyCadencePreset(3)" class="px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition cadence-seg-btn" data-preset="3">3x</button>
+                <button type="button" onclick="applyCadencePreset(4)" class="px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition cadence-seg-btn" data-preset="4">4x</button>
+                <button type="button" onclick="applyCadencePreset(6)" class="px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition cadence-seg-btn" data-preset="6">6x (Max)</button>
+              </div>
             </div>
           </div>
 
-          <!-- Active Slots Interactive Manager -->
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 py-1">
+            <!-- Inline Slot Times List (No chips! Just clean text with hover remove x) -->
             <div class="flex items-center gap-2 flex-wrap" id="cadenceSlotPills">
-              <!-- Rendered dynamically by loadScheduleConfig() -->
+              <!-- Rendered dynamically as "08:00 · 11:00 · 14:00 · 17:00 · 20:00 · 22:30" -->
             </div>
 
-            <!-- Add Slot Input and Save -->
-            <div class="flex items-center gap-2 flex-wrap">
-              <div class="flex items-center gap-1.5 bg-[#FAF8F5] border border-[#E8DCD1] rounded-lg px-2.5 py-1">
-                <span class="text-xs text-[#78716C] font-medium">New Slot:</span>
-                <input type="time" id="newSlotTimeInput" value="15:00" class="bg-transparent text-xs font-mono font-bold text-[#1C1917] focus:outline-hidden">
-                <button type="button" onclick="addNewSlotTime()" class="px-2.5 py-0.5 rounded bg-[#1C1917] text-white text-[11px] font-bold hover:opacity-90 transition">
+            <!-- Compact Inline Time Input + Add + Save -->
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="inline-flex items-center rounded-[6px] border border-[#E8DCD1] bg-white h-8 overflow-hidden">
+                <span class="px-2 text-[11px] font-medium text-[#78716C] bg-[#FAF8F5] border-r border-[#E8DCD1]">Time</span>
+                <input type="time" id="newSlotTimeInput" value="15:00" class="h-full px-2 text-xs font-mono font-medium text-[#1C1917] bg-transparent focus:outline-hidden">
+                <button type="button" onclick="addNewSlotTime()" class="h-full px-2.5 text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] border-l border-[#E8DCD1] transition">
                   + Add
                 </button>
               </div>
-              <button type="button" onclick="saveCadenceChanges()" id="btnSaveCadence" class="px-3.5 py-1.5 rounded-lg bg-[#C86237] text-white text-xs font-bold hover:opacity-90 transition shadow-2xs">
+
+              <button type="button" onclick="saveCadenceChanges()" id="btnSaveCadence" disabled class="h-8 px-3.5 rounded-[6px] bg-white border border-[#E8DCD1] text-xs font-medium text-[#78716C] opacity-40 cursor-not-allowed transition shadow-2xs">
                 Save Daily Times
               </button>
             </div>
           </div>
         </div>
 
-
-        <!-- 24-Hour Upcoming Slot Timeline -->
-        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-          <div class="flex items-center justify-between">
+        <!-- SECTION 4: 24-HOUR PEAK POSTING TIMELINE (List/Table, sticky day headers, NO CARD WALL) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-[#E8DCD1]">
             <div>
-              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
-                <span>⏱️</span>
-                <span>24-Hour Peak Posting Timeline (IST)</span>
-              </h3>
+              <h2 class="text-base font-semibold text-[#1C1917]">24-Hour Peak Posting Timeline (IST)</h2>
               <p class="text-xs text-[#78716C]">Shows the next planned execution slots for this niche, assigned AI candidates, and approval state.</p>
             </div>
-            <button type="button" onclick="loadSchedulerUpcoming()" class="text-xs font-bold text-[#C86237] hover:underline flex items-center gap-1">
-              <span>↻ Refresh Schedule</span>
+            <button type="button" onclick="loadSchedulerUpcoming()" class="text-xs font-medium text-[#D97B3F] hover:underline flex items-center gap-1">
+              ↻ Refresh Schedule
             </button>
           </div>
 
-          <!-- Timeline Grid Container -->
-          <div id="schedulerTimelineContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <div class="col-span-full py-8 text-center text-xs text-[#78716C]">Loading upcoming slot runs...</div>
+          <!-- Timeline Container (Rendered as structured list with sticky day headers) -->
+          <div id="schedulerTimelineContainer" class="border border-[#E8DCD1] rounded-[6px] bg-white overflow-hidden">
+            <!-- Skeleton Rows Placeholder while loading -->
+            <div class="p-4 space-y-3">
+              <div class="h-8 bg-[#E8DCD1]/20 rounded-[4px] animate-pulse"></div>
+              <div class="h-8 bg-[#E8DCD1]/15 rounded-[4px] animate-pulse"></div>
+              <div class="h-8 bg-[#E8DCD1]/20 rounded-[4px] animate-pulse"></div>
+              <div class="h-8 bg-[#E8DCD1]/15 rounded-[4px] animate-pulse"></div>
+            </div>
           </div>
         </div>
 
-        <!-- AI Scored Candidate Pool Matrix -->
-        <div class="cloud-card rounded-2xl p-6 border border-[#E8DCD1] bg-white shadow-xs space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <!-- SECTION 5: AI REEL CANDIDATE POOL (Calm flat table with 1px hairlines) -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#E8DCD1]">
             <div>
-              <h3 class="text-sm font-bold text-[#1C1917] flex items-center gap-2">
-                <span>🎯</span>
-                <span>AI Reel Candidate Pool (Scored & Ranked)</span>
-              </h3>
+              <h2 class="text-base font-semibold text-[#1C1917]">AI Reel Candidate Pool</h2>
               <p class="text-xs text-[#78716C]">Every harvested reel is ranked 0–100 using engagement velocity, freshness, and LLM niche-fit.</p>
             </div>
 
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-[#78716C]">Filter:</span>
-              <button onclick="filterCandidates('ALL')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#1C1917] text-white">All</button>
-              <button onclick="filterCandidates('SCORED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Scored</button>
-              <button onclick="filterCandidates('SELECTED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Selected</button>
-              <button onclick="filterCandidates('PUBLISHED')" class="px-2.5 py-1 rounded text-xs font-bold bg-[#FAF8F5] text-[#78716C] hover:bg-[#F3EDE4] border border-[#E8DCD1]">Published</button>
+            <!-- Segmented Filter Control -->
+            <div class="inline-flex rounded-[6px] border border-[#E8DCD1] bg-white p-0.5 text-xs">
+              <button onclick="filterCandidates('ALL')" class="cand-filter-btn px-2.5 py-1 rounded-[4px] font-semibold bg-white border border-[#E8DCD1] text-[#1C1917] shadow-2xs transition" data-filter="ALL">All</button>
+              <button onclick="filterCandidates('SCORED')" class="cand-filter-btn px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition" data-filter="SCORED">Scored</button>
+              <button onclick="filterCandidates('SELECTED')" class="cand-filter-btn px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition" data-filter="SELECTED">Selected</button>
+              <button onclick="filterCandidates('PUBLISHED')" class="cand-filter-btn px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition" data-filter="PUBLISHED">Published</button>
             </div>
           </div>
 
-          <!-- Candidate Pool Table -->
-          <div class="border border-[#E8DCD1] rounded-xl overflow-hidden bg-white">
+          <!-- Flat Candidate Table -->
+          <div class="border border-[#E8DCD1] rounded-[6px] bg-white overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="bg-[#FAF8F5] border-b border-[#E8DCD1] text-[10px] text-[#78716C] uppercase font-bold tracking-wider">
+                <thead class="bg-[#FAF8F5] border-b border-[#E8DCD1] text-[11px] text-[#78716C] uppercase font-medium tracking-wider">
                   <tr>
-                    <th class="px-4 py-3">Rank & Score</th>
-                    <th class="px-4 py-3">Source & Age</th>
-                    <th class="px-4 py-3">Engagement</th>
-                    <th class="px-4 py-3">Score Breakdown (Velocity / Fresh / Niche)</th>
-                    <th class="px-4 py-3">Status</th>
-                    <th class="px-4 py-3 text-right">Actions</th>
+                    <th class="px-4 py-2.5 w-24">Rank &amp; Score</th>
+                    <th class="px-4 py-2.5">Source &amp; Reel</th>
+                    <th class="px-4 py-2.5 w-28">Engagement</th>
+                    <th class="px-4 py-2.5">Score Breakdown (Velocity / Fresh / Niche)</th>
+                    <th class="px-4 py-2.5 w-28">Status</th>
+                    <th class="px-4 py-2.5 text-right w-24">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="candidatesTableBody" class="divide-y divide-[#E8DCD1]/60">
@@ -2976,7 +2982,8 @@
       reels: { title: "Reels", sub: "Rendered 9:16 Vertical Video Vault" },
       broadcasts: { title: "Activity", sub: "Live Per-Account Publishing History" },
       settings: { title: "Settings", sub: "Auto-Discovery Wizard & Network Configuration" },
-      scheduler: { title: "Peak-Time Scheduler & Candidate Pool", sub: "AI-Ranked Multi-Source Reels Automatically Stagger-Published at Peak IST Hours" }
+      scheduler: { title: "Peak-Time Scheduler", sub: "Automated peak-hour reel publication staggered across accounts with anti-burst safety guards." }
+
     };
 
     let currentActiveTab = "overview";
@@ -6891,16 +6898,49 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
     function renderCadenceSlotPills() {
       const container = document.getElementById("cadenceSlotPills");
       if (!container) return;
+
+      const slotCountEl = document.getElementById("stat_slot_count");
+      const slotTimesEl = document.getElementById("stat_slot_times_list");
+      if (slotCountEl) slotCountEl.innerText = `${activeSlotCadence.length} / 6 Active Slots (IST)`;
+      if (slotTimesEl) slotTimesEl.innerText = activeSlotCadence.length > 0 ? activeSlotCadence.join(", ") : "None";
+
+      // Sync segmented preset buttons
+      const segBtns = document.querySelectorAll("#cadenceSegmentedControl .cadence-seg-btn");
+      segBtns.forEach(btn => {
+        const p = parseInt(btn.getAttribute("data-preset"), 10);
+        if (p === activeSlotCadence.length) {
+          btn.className = "px-2.5 py-1 rounded-[4px] font-semibold text-[#1C1917] bg-[#F5F2EB] shadow-2xs transition cadence-seg-btn";
+        } else {
+          btn.className = "px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition cadence-seg-btn";
+        }
+      });
+
+      // Update Save button dirty state
+      const savedTimes = (currentScheduleConfig && currentScheduleConfig.slot_times) ? currentScheduleConfig.slot_times.join(",") : "";
+      const currentTimes = activeSlotCadence.join(",");
+      const isDirty = savedTimes !== currentTimes;
+      const btnSave = document.getElementById("btnSaveCadence");
+      if (btnSave) {
+        btnSave.disabled = !isDirty;
+        if (isDirty) {
+          btnSave.className = "h-8 px-3.5 rounded-[6px] bg-[#1C1917] text-white hover:bg-[#D97B3F] text-xs font-medium transition shadow-2xs cursor-pointer";
+        } else {
+          btnSave.className = "h-8 px-3.5 rounded-[6px] bg-white border border-[#E8DCD1] text-xs font-medium text-[#78716C] opacity-40 cursor-not-allowed transition shadow-2xs";
+        }
+      }
+
       if (activeSlotCadence.length === 0) {
         container.innerHTML = `<span class="text-xs text-[#78716C] italic">No slots scheduled yet. Choose a preset or add a time.</span>`;
         return;
       }
-      container.innerHTML = activeSlotCadence.map((t) => `
-        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F5] border border-[#E8DCD1] text-xs font-bold text-[#1C1917] hover:border-[#C86237] transition">
-          <span class="text-xs">🕕</span>
-          <span>${t} IST</span>
-          <button type="button" onclick="removeSlotTime('${t}')" class="w-4 h-4 rounded-full hover:bg-red-100 text-[#78716C] hover:text-red-600 flex items-center justify-center font-bold text-[10px] ml-1 transition" title="Remove this slot">✕</button>
-        </div>
+
+      // Render as clean inline text list with middle dot separator and hover remove x
+      container.innerHTML = activeSlotCadence.map((t, idx) => `
+        <span class="inline-flex items-center gap-1 text-xs font-semibold text-[#1C1917] tabular-nums font-mono group">
+          <span>${t}</span>
+          <button type="button" onclick="removeSlotTime('${t}')" class="text-[#78716C] hover:text-[#D97B3F] text-xs leading-none opacity-40 group-hover:opacity-100 transition p-0.5" title="Remove ${t}">×</button>
+        </span>
+        ${idx < activeSlotCadence.length - 1 ? '<span class="text-[#D6C7B7] text-xs select-none">·</span>' : ''}
       `).join("");
     }
 
@@ -6978,6 +7018,10 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
           alert("Error: " + (err.detail || "Validation error"));
           return;
         }
+        if (currentScheduleConfig) {
+          currentScheduleConfig.slot_times = [...activeSlotCadence];
+        }
+        renderCadenceSlotPills();
         alert(`Posting cadence updated! Active: ${activeSlotCadence.length} slots/day (${activeSlotCadence.join(", ")} IST). Re-planning slots in background.`);
         await loadSchedulerView();
       } catch (e) {
@@ -6998,96 +7042,188 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
 
         if (runs.length === 0) {
           container.innerHTML = `
-            <div class="col-span-full py-8 text-center text-xs text-[#78716C]">
-              No upcoming slot runs planned for this niche yet. Click <strong>Run Slot Now</strong> to test or wait for next peak hour.
+            <div class="py-12 text-center text-xs text-[#78716C]">
+              No upcoming slot runs planned for this niche yet. Click <button type="button" onclick="triggerRunSlotNow()" class="font-semibold text-[#D97B3F] hover:underline">Run Slot Now</button> to test or wait for next scheduled peak hour.
             </div>`;
           return;
         }
 
-        container.innerHTML = "";
-        runs.forEach(r => {
-          const card = document.createElement("div");
-          card.className = "p-4 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] space-y-3 flex flex-col justify-between hover:border-[#C86237]/40 transition shadow-2xs";
-          
-          let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-300">${r.status}</span>`;
-          if (r.status === 'DONE') {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EBF5EE] text-[#1E7E34] border border-[#C3E6CB]">✓ POSTED (${r.accounts_posted}p)</span>`;
-          } else if (r.status === 'APPROVED' || r.status === 'AWAITING_APPROVAL') {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">⚡ PRE-RENDERED</span>`;
-          } else if (r.status === 'PUBLISHING') {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">📡 BROADCASTING</span>`;
-          } else if (r.status === 'SKIPPED') {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">SKIPPED</span>`;
-          } else if (r.candidate_id) {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🎯 REEL BOUND</span>`;
-          } else {
-            statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#78716C] border border-[#E8DCD1]">🤖 AUTO-EVALUATING</span>`;
+        // Determine next upcoming slot to fire (earliest planned/approving slot)
+        let nextSlotId = null;
+        for (const r of runs) {
+          if (r.status !== 'DONE' && r.status !== 'SKIPPED') {
+            nextSlotId = r.id;
+            break;
           }
+        }
 
-          const hasCandidate = !!(r.candidate_id || r.source_handle);
-          const candHandle = r.source_handle ? `@${r.source_handle}` : (r.candidate_id ? `Candidate #${r.candidate_id}` : 'Auto-Evaluating...');
-          const scorePill = r.final_score ? `<span class="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200">⭐ ${r.final_score.toFixed(1)}/100</span>` : '';
-          const origLink = r.permalink ? `<a href="${r.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono truncate max-w-[140px] block">View Reel ↗</a>` : '';
+        // Helper for status dot indicator
+        const getStatusDot = (r) => {
+          if (r.status === 'DONE') {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-[#1E7E34] shrink-0"></span>Posted ${r.accounts_posted ? `(${r.accounts_posted})` : ''}</span>`;
+          }
+          if (r.status === 'APPROVED') {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>Pre-rendered (Armed)</span>`;
+          }
+          if (r.status === 'AWAITING_APPROVAL') {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>Pre-rendered</span>`;
+          }
+          if (r.status === 'PUBLISHING') {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0"></span>Broadcasting</span>`;
+          }
+          if (r.status === 'SKIPPED') {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#A8A29E]"><span class="w-1.5 h-1.5 rounded-full bg-[#A8A29E] shrink-0"></span>Skipped</span>`;
+          }
+          if (r.candidate_id || r.source_handle) {
+            return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#D97B3F]"><span class="w-1.5 h-1.5 rounded-full bg-[#D97B3F] shrink-0"></span>Reel bound</span>`;
+          }
+          return `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#78716C]"><span class="w-1.5 h-1.5 rounded-full bg-[#78716C] shrink-0"></span>Auto-evaluating</span>`;
+        };
 
-          card.innerHTML = `
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-black text-[#1C1917] flex items-center gap-1.5">
-                  <span>🕕</span>
-                  <span>${r.slot_time} IST</span>
-                </span>
-                ${statusBadge}
-              </div>
-              <div class="text-[10px] text-[#78716C] font-mono mt-1 flex items-center justify-between">
-                <span>Date: <strong>${r.slot_date}</strong></span>
-                <span>${r.dry_run ? 'Simulation (Dry-Run)' : 'Live Mode'}</span>
-              </div>
-
-              <div class="mt-2.5 p-2.5 rounded-lg bg-white border border-[#E8DCD1] text-xs space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-[#1C1917] truncate flex items-center gap-1">
-                    <span>${hasCandidate ? '🎬' : '🔍'}</span>
-                    <span>${candHandle}</span>
-                  </span>
-                  ${scorePill}
-                </div>
-                ${origLink}
-                ${r.candidate_caption ? `<p class="text-[10px] text-[#78716C] line-clamp-2 italic">"${r.candidate_caption}"</p>` : (hasCandidate ? '' : `<p class="text-[10px] text-[#78716C]">AI will harvest & select the top viral candidate at T-30m or assign one manually below.</p>`)}
-              </div>
-            </div>
-
-            <!-- Action buttons for slot -->
-            <div class="pt-2 flex flex-wrap items-center gap-1.5 border-t border-[#E8DCD1]/60">
-              ${r.status === 'PLANNED' ? `
-                <button onclick="openAssignReelModal(${r.id}, '${r.slot_time}', '${r.slot_date}')" class="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] transition flex items-center justify-center gap-1" title="Assign specific reel to this slot">
-                  <span>📌</span>
-                  <span>Assign Reel</span>
-                </button>
-                <button onclick="prepareSlotRunNow(${r.id})" class="py-1.5 px-2.5 rounded-lg bg-[#C86237] hover:opacity-90 font-bold text-[10px] text-white transition flex items-center gap-1" title="Pre-render now">
-                  <span>⚡</span>
-                  <span>Render Now</span>
-                </button>
-                <button onclick="skipSlotRun(${r.id})" class="py-1.5 px-2 rounded-lg bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#78716C] hover:bg-red-50 hover:text-red-600 transition" title="Skip this slot">
-                  <span>⏭</span>
-                </button>
-              ` : ''}
-              ${r.status === 'AWAITING_APPROVAL' ? `
-                <button onclick="approveSlotRun(${r.id})" class="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:opacity-90">Approve & Broadcast</button>
-                <button onclick="swapSlotRun(${r.id})" class="py-1.5 px-2 rounded-lg bg-white border border-[#E8DCD1] font-bold text-[10px] text-[#1C1917] hover:bg-[#F3EDE4]">Swap #2</button>
-              ` : ''}
-              ${r.status === 'APPROVED' ? `
-                <span class="text-[10px] text-emerald-700 font-bold flex items-center gap-1">✓ Armed for auto-fanout</span>
-              ` : ''}
-              ${r.status === 'DONE' ? `
-                <span class="text-[10px] text-emerald-800 font-bold">✓ Broadcast Complete (${r.accounts_posted} accounts)</span>
-              ` : ''}
-            </div>
-          `;
-          container.appendChild(card);
+        // Group runs by slot_date
+        const runsByDate = {};
+        runs.forEach(r => {
+          const d = r.slot_date || "Upcoming";
+          if (!runsByDate[d]) runsByDate[d] = [];
+          runsByDate[d].push(r);
         });
 
+        // Format day header
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrowStr = tomorrowDate.toISOString().slice(0, 10);
+
+        const formatDayHeader = (dateStr) => {
+          if (!dateStr || dateStr === "Upcoming") return "Upcoming Schedule";
+          const [y, m, d] = dateStr.split("-").map(Number);
+          const dt = new Date(y, m - 1, d);
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const formatted = `${d} ${monthNames[m - 1]}`;
+          if (dateStr === todayStr) return `Today · ${formatted}`;
+          if (dateStr === tomorrowStr) return `Tomorrow · ${formatted}`;
+          const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          return `${dayNames[dt.getDay()]} · ${formatted}`;
+        };
+
+        let html = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-[#E8DCD1] bg-[#FAF8F5]/80 text-[#78716C] font-medium text-[11px] uppercase tracking-wider">
+                  <th class="py-2.5 px-4 font-medium w-28">Time (IST)</th>
+                  <th class="py-2.5 px-4 font-medium w-40">Status</th>
+                  <th class="py-2.5 px-4 font-medium">Candidate</th>
+                  <th class="py-2.5 px-4 font-medium text-right w-20">Score</th>
+                  <th class="py-2.5 px-4 font-medium text-right w-44">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        Object.keys(runsByDate).forEach(dateStr => {
+          const dayRuns = runsByDate[dateStr];
+          html += `
+            <tr class="bg-[#FAF8F5] border-y border-[#E8DCD1]">
+              <td colspan="5" class="py-1.5 px-4 text-xs font-semibold text-[#1C1917]">
+                <div class="flex items-center justify-between">
+                  <span>${formatDayHeader(dateStr)}</span>
+                  <span class="text-[11px] font-normal text-[#78716C]">${dayRuns.length} slots</span>
+                </div>
+              </td>
+            </tr>
+          `;
+
+          dayRuns.forEach(r => {
+            const isNext = r.id === nextSlotId;
+            const isSkipped = r.status === 'SKIPPED';
+            const hasCandidate = !!(r.candidate_id || r.source_handle);
+            const candHandle = r.source_handle ? `@${r.source_handle}` : (r.candidate_id ? `Candidate #${r.candidate_id}` : null);
+            const scoreVal = (r.final_score != null) ? r.final_score.toFixed(1) : null;
+
+            // Candidate cell markup
+            let candCell = '';
+            if (hasCandidate) {
+              candCell = `
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-[#1C1917] truncate">${candHandle}</span>
+                  ${r.permalink ? `<a href="${r.permalink}" target="_blank" class="text-[11px] text-[#78716C] hover:text-[#D97B3F] hover:underline shrink-0">View ↗</a>` : ''}
+                  ${r.candidate_caption ? `<span class="text-xs text-[#78716C] truncate max-w-[240px] italic hidden sm:inline" title="${r.candidate_caption}">“${r.candidate_caption}”</span>` : ''}
+                </div>
+              `;
+            } else {
+              candCell = `<span class="text-xs text-[#78716C]">Awaiting AI selection (T-30m)</span>`;
+            }
+
+            // Score cell markup
+            const scoreCell = scoreVal ? `<span class="tabular-nums font-mono text-xs font-medium text-[#1C1917]">${scoreVal}</span>` : `<span class="text-xs text-[#A8A29E] tabular-nums font-mono">—</span>`;
+
+            // Actions cell markup
+            let actionsCell = '<div class="flex items-center justify-end gap-1">';
+            if (r.status === 'PLANNED') {
+              actionsCell += `
+                <button onclick="openAssignReelModal(${r.id}, '${r.slot_time}', '${r.slot_date}')" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition" title="Assign specific reel">
+                  Assign
+                </button>
+                <button onclick="prepareSlotRunNow(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#D97B3F] hover:bg-[#FAF5F0] transition" title="Pre-render now">
+                  Run now
+                </button>
+                <button onclick="skipSlotRun(${r.id})" class="px-1.5 py-0.5 rounded-[4px] text-xs font-medium text-[#78716C] hover:text-red-600 hover:bg-red-50 transition" title="Skip this slot">
+                  Skip
+                </button>
+              `;
+            } else if (r.status === 'AWAITING_APPROVAL') {
+              actionsCell += `
+                <button onclick="approveSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1E7E34] hover:bg-[#EBF5EE] transition">
+                  Approve
+                </button>
+                <button onclick="swapSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition">
+                  Swap #2
+                </button>
+              `;
+            } else if (r.status === 'APPROVED') {
+              actionsCell += `<span class="text-xs text-[#78716C]">Armed</span>`;
+            } else if (r.status === 'DONE') {
+              actionsCell += `<span class="text-xs text-[#78716C]">Complete</span>`;
+            } else {
+              actionsCell += `<span class="text-xs text-[#A8A29E]">—</span>`;
+            }
+            actionsCell += '</div>';
+
+            const rowClass = `border-b border-[#E8DCD1] transition ${isNext ? 'border-l-2 border-[#D97B3F] bg-[#FAF5F0]/70' : (isSkipped ? 'opacity-45 hover:opacity-75' : 'hover:bg-[#FAF8F5]')}`;
+
+            html += `
+              <tr class="${rowClass}">
+                <td class="py-2.5 px-4 font-semibold text-[#1C1917] tabular-nums font-mono">
+                  ${r.slot_time}
+                </td>
+                <td class="py-2.5 px-4">
+                  ${getStatusDot(r)}
+                </td>
+                <td class="py-2.5 px-4">
+                  ${candCell}
+                </td>
+                <td class="py-2.5 px-4 text-right">
+                  ${scoreCell}
+                </td>
+                <td class="py-2.5 px-4 text-right">
+                  ${actionsCell}
+                </td>
+              </tr>
+            `;
+          });
+        });
+
+        html += `
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        container.innerHTML = html;
+
       } catch (e) {
-        container.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-red-600">Error: ${e.message}</div>`;
+        container.innerHTML = `<div class="py-4 text-center text-xs text-red-600">Error loading schedule: ${e.message}</div>`;
       }
     }
 
@@ -7096,6 +7232,16 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
       const tbody = document.getElementById("candidatesTableBody");
       const statEl = document.getElementById("stat_candidate_pool_size");
       if (!tbody) return;
+
+      // Sync segmented filter buttons
+      const candBtns = document.querySelectorAll(".cand-filter-btn");
+      candBtns.forEach(btn => {
+        if (btn.getAttribute("data-filter") === filterStatus) {
+          btn.className = "cand-filter-btn px-2.5 py-1 rounded-[4px] font-semibold bg-white border border-[#E8DCD1] text-[#1C1917] shadow-2xs transition";
+        } else {
+          btn.className = "cand-filter-btn px-2.5 py-1 rounded-[4px] font-medium text-[#78716C] hover:text-[#1C1917] transition";
+        }
+      });
 
       try {
         const query = filterStatus === 'ALL' ? '' : `&status=${filterStatus}`;
@@ -7111,7 +7257,7 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
           tbody.innerHTML = `
             <tr>
               <td colspan="6" class="px-4 py-8 text-center text-xs text-[#78716C]">
-                No reels in candidate pool yet for [${currentSchedulerNiche}]. Click <strong>Harvest Sources</strong> to scrape 10+ handles!
+                No reels in candidate pool yet for [${currentSchedulerNiche}]. Click <button type="button" onclick="triggerHarvestNow()" class="font-semibold text-[#D97B3F] hover:underline">Harvest Sources</button> to scrape 10+ handles!
               </td>
             </tr>`;
           return;
@@ -7127,58 +7273,67 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
           const nScore = Math.round(c.niche_fit_score || 0);
           const finalScore = (c.final_score || 0).toFixed(1);
 
-          const likes = c.like_count ? (c.like_count > 1000 ? (c.like_count/1000).toFixed(1) + 'k' : c.like_count) : '-';
-          const comments = c.comments_count ? (c.comments_count > 1000 ? (c.comments_count/1000).toFixed(1) + 'k' : c.comments_count) : '-';
+          const likes = c.like_count ? (c.like_count > 1000 ? (c.like_count/1000).toFixed(1) + 'k' : c.like_count) : '—';
+          const comments = c.comments_count ? (c.comments_count > 1000 ? (c.comments_count/1000).toFixed(1) + 'k' : c.comments_count) : '—';
 
-          let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700">${c.status}</span>`;
-          if (c.status === 'SCORED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FAF8F5] text-[#C86237] border border-[#E8DCD1]">SCORED</span>`;
-          if (c.status === 'SELECTED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">SELECTED</span>`;
-          if (c.status === 'PUBLISHED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">PUBLISHED</span>`;
-          if (c.status === 'REJECTED') statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">REJECTED</span>`;
+          // Plain text with dot for status (no pills!)
+          let statusBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#78716C]"><span class="w-1.5 h-1.5 rounded-full bg-[#78716C]"></span>${c.status}</span>`;
+          if (c.status === 'SCORED') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-[#D97B3F]"></span>Scored</span>`;
+          } else if (c.status === 'SELECTED') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Selected</span>`;
+          } else if (c.status === 'PUBLISHED') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#1C1917]"><span class="w-1.5 h-1.5 rounded-full bg-[#1E7E34]"></span>Published</span>`;
+          } else if (c.status === 'REJECTED') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-medium text-[#A8A29E]"><span class="w-1.5 h-1.5 rounded-full bg-[#A8A29E]"></span>Rejected</span>`;
+          }
 
           tr.innerHTML = `
-            <td class="px-4 py-3 font-medium">
+            <td class="px-4 py-2.5 font-medium">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-[#1C1917] text-white flex items-center justify-center text-[10px] font-bold">${idx + 1}</span>
-                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-extrabold text-xs border border-emerald-200">
-                  ⭐ ${finalScore}
+                <span class="text-xs text-[#78716C] font-mono tabular-nums w-5 text-right">#${idx + 1}</span>
+                <span class="tabular-nums font-mono text-xs font-semibold text-[#1C1917]">
+                  ${finalScore}
                 </span>
-                ${c.pinned ? '<span class="text-xs" title="Pinned for next slot">📌</span>' : ''}
+                ${c.pinned ? '<span class="text-[11px] text-[#D97B3F]" title="Pinned for next slot">📌</span>' : ''}
               </div>
             </td>
-            <td class="px-4 py-3">
-              <div class="font-bold text-[#1C1917]">@${c.source_handle || 'source'}</div>
-              <a href="${c.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono truncate max-w-[120px] block">View Original ↗</a>
+            <td class="px-4 py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-[#1C1917]">@${c.source_handle || 'source'}</span>
+                ${c.permalink ? `<a href="${c.permalink}" target="_blank" class="text-[11px] text-[#78716C] hover:text-[#D97B3F] hover:underline font-mono shrink-0">View ↗</a>` : ''}
+              </div>
+              ${c.caption ? `<p class="text-[11px] text-[#78716C] truncate max-w-xs mt-0.5" title="${c.caption}">“${c.caption}”</p>` : ''}
             </td>
-            <td class="px-4 py-3 font-mono text-[11px] text-[#78716C]">
-              <div>❤️ ${likes}</div>
-              <div>💬 ${comments}</div>
+            <td class="px-4 py-2.5 font-mono text-[11px] text-[#78716C] tabular-nums">
+              <div>${likes} likes</div>
+              <div>${comments} comments</div>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-2.5">
               <div class="space-y-1 max-w-xs">
-                <div class="flex items-center justify-between text-[10px]">
-                  <span>Velocity: <strong>${vScore}%</strong></span>
-                  <span>Fresh: <strong>${fScore}%</strong></span>
-                  <span>Niche: <strong>${nScore}%</strong></span>
+                <div class="flex items-center justify-between text-[10px] text-[#78716C] font-mono tabular-nums">
+                  <span>Vel: <strong class="text-[#1C1917]">${vScore}%</strong></span>
+                  <span>Fresh: <strong class="text-[#1C1917]">${fScore}%</strong></span>
+                  <span>Niche: <strong class="text-[#1C1917]">${nScore}%</strong></span>
                 </div>
-                <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden flex">
-                  <div class="bg-blue-500 h-full" style="width: ${vScore * 0.4}%"></div>
-                  <div class="bg-amber-500 h-full" style="width: ${fScore * 0.25}%"></div>
-                  <div class="bg-emerald-500 h-full" style="width: ${nScore * 0.3}%"></div>
+                <div class="w-full bg-[#E8DCD1]/50 h-1 rounded-full overflow-hidden flex">
+                  <div class="bg-[#1C1917] h-full" style="width: ${vScore * 0.4}%"></div>
+                  <div class="bg-[#D97B3F] h-full" style="width: ${fScore * 0.25}%"></div>
+                  <div class="bg-[#78716C] h-full" style="width: ${nScore * 0.3}%"></div>
                 </div>
-                <div class="text-[10px] text-[#78716C] truncate">${c.score_reason || ''}</div>
+                ${c.score_reason ? `<div class="text-[10px] text-[#78716C] truncate" title="${c.score_reason}">${c.score_reason}</div>` : ''}
               </div>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-2.5">
               ${statusBadge}
             </td>
-            <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end gap-1.5">
-                <button onclick="pinCandidate(${c.id})" class="px-2 py-1 rounded bg-white hover:bg-[#F3EDE4] border border-[#E8DCD1] text-[10px] font-bold text-[#1C1917]" title="Prioritize for upcoming peak slot">
-                  📌 Pin
+            <td class="px-4 py-2.5 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button onclick="pinCandidate(${c.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition" title="Prioritize for upcoming peak slot">
+                  ${c.pinned ? 'Pinned' : 'Pin'}
                 </button>
-                <button onclick="rejectCandidate(${c.id})" class="px-2 py-1 rounded bg-white hover:bg-red-50 border border-[#E8DCD1] text-[10px] font-bold text-red-600" title="Reject from pool">
-                  ✕
+                <button onclick="rejectCandidate(${c.id})" class="px-1.5 py-0.5 rounded-[4px] text-xs font-medium text-[#78716C] hover:text-red-600 hover:bg-red-50 transition" title="Reject candidate">
+                  ×
                 </button>
               </div>
             </td>
@@ -7345,20 +7500,20 @@ Duration: ${data.harvest.duration_seconds}s`);
         }
         if (countEl) countEl.innerText = `${cachedCandidates.length} reels available in pool`;
         listEl.innerHTML = cachedCandidates.map((c) => `
-          <div class="p-3 rounded-xl border border-[#E8DCD1] bg-[#FAF8F5] hover:border-[#C86237]/40 flex items-center justify-between gap-3 transition">
-            <div class="space-y-1 min-w-0 flex-1">
+          <div class="p-3 rounded-[6px] border border-[#E8DCD1] bg-white hover:border-[#D97B3F] flex items-center justify-between gap-3 transition">
+            <div class="space-y-0.5 min-w-0 flex-1">
               <div class="flex items-center gap-2">
-                <span class="font-extrabold text-xs text-[#1C1917]">@${c.source_handle || 'source'}</span>
-                <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200">
-                  ⭐ ${(c.final_score || 0).toFixed(1)}
+                <span class="font-semibold text-xs text-[#1C1917]">@${c.source_handle || 'source'}</span>
+                <span class="tabular-nums font-mono text-xs font-semibold text-[#D97B3F]">
+                  ${(c.final_score || 0).toFixed(1)}
                 </span>
-                <span class="text-[10px] text-[#78716C]">${c.like_count ? c.like_count.toLocaleString() + ' likes' : ''}</span>
+                <span class="text-[11px] text-[#78716C] font-mono tabular-nums">${c.like_count ? c.like_count.toLocaleString() + ' likes' : ''}</span>
               </div>
-              <p class="text-[11px] text-[#78716C] truncate">${c.caption || 'No caption'}</p>
-              <a href="${c.permalink}" target="_blank" class="text-[10px] text-[#C86237] hover:underline font-mono">View Original ↗</a>
+              <p class="text-xs text-[#78716C] truncate">${c.caption || 'No caption'}</p>
+              ${c.permalink ? `<a href="${c.permalink}" target="_blank" class="text-[11px] text-[#78716C] hover:text-[#D97B3F] hover:underline font-mono">View Original ↗</a>` : ''}
             </div>
-            <button type="button" onclick="submitCandidateAssignment(${c.id})" class="px-3 py-1.5 rounded-lg bg-[#1C1917] hover:bg-[#C86237] text-white text-xs font-bold transition whitespace-nowrap shadow-2xs">
-              Select This Reel
+            <button type="button" onclick="submitCandidateAssignment(${c.id})" class="px-3 py-1.5 rounded-[6px] bg-[#1C1917] hover:bg-[#D97B3F] text-white text-xs font-medium transition whitespace-nowrap shadow-2xs">
+              Select
             </button>
           </div>
         `).join("");
