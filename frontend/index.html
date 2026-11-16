@@ -7115,7 +7115,7 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
                   <th class="py-2.5 px-4 font-medium w-40">Status</th>
                   <th class="py-2.5 px-4 font-medium">Candidate</th>
                   <th class="py-2.5 px-4 font-medium text-right w-20">Score</th>
-                  <th class="py-2.5 px-4 font-medium text-right w-44">Actions</th>
+                  <th class="py-2.5 px-4 font-medium text-right w-52">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -7159,25 +7159,25 @@ Via ${currentCompetitorSource.handle} • Open Science Archives`;
             const scoreCell = scoreVal ? `<span class="tabular-nums font-mono text-xs font-medium text-[#1C1917]">${scoreVal}</span>` : `<span class="text-xs text-[#A8A29E] tabular-nums font-mono">—</span>`;
 
             // Actions cell markup
-            let actionsCell = '<div class="flex items-center justify-end gap-1">';
+            let actionsCell = '<div class="flex items-center justify-end gap-1 whitespace-nowrap">';
             if (r.status === 'PLANNED') {
               actionsCell += `
-                <button onclick="openAssignReelModal(${r.id}, '${r.slot_time}', '${r.slot_date}')" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition" title="Assign specific reel">
+                <button onclick="openAssignReelModal(${r.id}, '${r.slot_time}', '${r.slot_date}')" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition whitespace-nowrap" title="Assign specific reel">
                   Assign
                 </button>
-                <button onclick="prepareSlotRunNow(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#D97B3F] hover:bg-[#FAF5F0] transition" title="Pre-render now">
+                <button onclick="prepareSlotRunNow(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#D97B3F] hover:bg-[#FAF5F0] transition whitespace-nowrap" title="Pre-render now">
                   Run now
                 </button>
-                <button onclick="skipSlotRun(${r.id})" class="px-1.5 py-0.5 rounded-[4px] text-xs font-medium text-[#78716C] hover:text-red-600 hover:bg-red-50 transition" title="Skip this slot">
+                <button onclick="skipSlotRun(${r.id})" class="px-1.5 py-0.5 rounded-[4px] text-xs font-medium text-[#78716C] hover:text-red-600 hover:bg-red-50 transition whitespace-nowrap" title="Skip this slot">
                   Skip
                 </button>
               `;
             } else if (r.status === 'AWAITING_APPROVAL') {
               actionsCell += `
-                <button onclick="approveSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1E7E34] hover:bg-[#EBF5EE] transition">
+                <button onclick="approveSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1E7E34] hover:bg-[#EBF5EE] transition whitespace-nowrap">
                   Approve
                 </button>
-                <button onclick="swapSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition">
+                <button onclick="swapSlotRun(${r.id})" class="px-2 py-0.5 rounded-[4px] text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition whitespace-nowrap">
                   Swap #2
                 </button>
               `;
