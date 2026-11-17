@@ -4,6 +4,7 @@ import json
 import uuid
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 import requests
@@ -473,7 +474,7 @@ class OctopusTelegramBot:
             keyboard = [
                 [
                     {
-                        "text": f"🐙 Publish to ALL ({total_pages}) Pages in {session['niche_name']}",
+                        "text": f"⚡ 1-Click Publish to {accounts[0].get('handle')} ({session['niche_name']})" if total_pages == 1 else f"⚡ 1-Click Fanout to ALL ({total_pages}) Pages in {session['niche_name']}",
                         "callback_data": f"tg_pages:{session_id}:{niche_id}:all"
                     }
                 ]
@@ -567,6 +568,7 @@ class OctopusTelegramBot:
 
         target_desc = f"@{target_accs[0]['handle']}" if len(target_accs) == 1 else f"ALL ({len(target_accs)}) Pages"
         n_title = session.get("niche_name") or niche_id.title()
+        start_exec_ts = time.time()
         is_raw = niche_id in ("girls_dance", "girls", "girls_party")
         v_label = "Raw format - no template" if is_raw else f"9:16 layout ({n_title} branding)"
 
@@ -736,17 +738,28 @@ class OctopusTelegramBot:
             "status": "PROCESSING"
         })
 
+        cached_crop_box = session.get("crop_box")
+        if not is_raw and not cached_crop_box and dl and dl.get("filepath"):
+            try:
+                from processors.video_vision import VideoVisionInspector
+                b = VideoVisionInspector.detect_active_video_bounds(dl["filepath"])
+                if b.get("crop_needed") and b.get("crop_box"):
+                    cached_crop_box = b["crop_box"]
+                    session["crop_box"] = cached_crop_box
+            except Exception as be:
+                logger.warning(f"Bounds detection in Telegram execution skipped: {be}")
+
         rendered_paths: Dict[str, str] = {}
-        for idx, acc in enumerate(target_accs):
+        def _render_acc_worker(item):
+            idx, acc = item
             out_file = f"{task_id}_{acc['id']}.mp4"
             if is_raw:
-                # Raw format: zero re-encoding loss, 100% original sound and video
                 dest_path = self.fanout.compositor.output_dir / out_file
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 if Path(dl["filepath"]).resolve() != dest_path.resolve():
                     import shutil
                     shutil.copy2(dl["filepath"], dest_path)
-                rendered_paths[acc["id"]] = str(dest_path)
+                return acc["id"], str(dest_path)
             else:
                 r_path = self.fanout.generate_account_customized_reel(
                     raw_video_path=dl["filepath"],
@@ -755,9 +768,14 @@ class OctopusTelegramBot:
                     task_id=task_id,
                     account_index=idx,
                     highlight_word=highlight_word,
-                    crop_box=session.get("crop_box")
+                    crop_box=cached_crop_box
                 )
-                rendered_paths[acc["id"]] = r_path or str(dl["filepath"])
+                return acc["id"], r_path or str(dl["filepath"])
+
+        worker_count = min(4, max(1, len(target_accs)))
+        with ThreadPoolExecutor(max_workers=worker_count) as pool:
+            for acc_id, r_path in pool.map(_render_acc_worker, enumerate(target_accs)):
+                rendered_paths[acc_id] = r_path
 
         s3 = f"✅ 3. Video ready ({'Raw clean format - original audio 100%' if is_raw else f'{n_title} branded layout'})"
         s4 = f"⏳ 4. Publishing to Instagram ({target_desc})..."
@@ -792,8 +810,6 @@ class OctopusTelegramBot:
                 )
 
         from storage.db import record_broadcast_log
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        import threading
 
         published_items = []
         publish_results = []
@@ -876,9 +892,10 @@ class OctopusTelegramBot:
                 except Exception as ex:
                     logger.error(f"Parallel fanout worker error: {ex}")
 
+        elapsed_sec = round(time.time() - start_exec_ts, 1)
         if success_count > 0:
             fanout_tag = " (Parallel Fanout 🚀)" if total_accounts_count > 1 else ""
-            s4 = f"✅ 4. Published to {success_count}/{total_accounts_count} Accounts successfully!{fanout_tag}"
+            s4 = f"✅ 4. Published to {success_count}/{total_accounts_count} Accounts successfully in {elapsed_sec}s!{fanout_tag}"
             valid_links = [item["url"] for item in published_items if item.get("url")]
             links_md = "\n".join([f"👉 {url}" for url in valid_links[:10]])
             if len(valid_links) > 10:
@@ -886,6 +903,7 @@ class OctopusTelegramBot:
             footer = (
                 f"🔗 *Published Reel Links:*\n"
                 f"{links_md}\n\n"
+                f"⚡ *Turnaround:* `{elapsed_sec}s` (NVENC GPU Accelerated)\n"
                 f"👥 *Accounts Dispatched:* {success_count}/{total_accounts_count} Live\n"
                 f"🛡️ *Anti-Shadowban Shield:* Active (Unique bitstreams & CTAs)\n"
                 f"📊 *Status:* Live on Instagram Reels"
@@ -1214,6 +1232,46 @@ class OctopusTelegramBot:
             self.send_text_message("🐙 Running full 24/7 Octopus monitoring cycle across all handles & feeds...", target_chat_id=chat_id)
             from daemon import Octopus24x7Daemon
             threading.Thread(target=Octopus24x7Daemon().run_full_cycle, kwargs={"dry_run": True}, daemon=True).start()
+
+        elif text.startswith("/quick") or text.startswith("/post") or text.startswith("/publish") or text.startswith("/fast"):
+            url_match = re.search(r'(https?://[^\s]+)', text)
+            if url_match:
+                clean_url = url_match.group(1).rstrip(".,;!>")
+                niches = get_all_niches()
+                active_n = None
+                for n in niches:
+                    cl = get_niche_cluster(n["id"], allow_placeholders=False)
+                    if len(cl.get("accounts", [])) > 0:
+                        active_n = n
+                        break
+                if not active_n and niches:
+                    active_n = niches[0]
+
+                if active_n:
+                    inbound = self.handle_inbound_url(url=clean_url, chat_id=chat_id)
+                    sid = inbound["session_id"]
+                    nid = active_n["id"]
+                    self.send_text_message(
+                        f"⚡ *Fast-Track Direct Publish Active*\n🎯 Routing to *{active_n.get('name', nid)}*...",
+                        target_chat_id=chat_id
+                    )
+                    threading.Thread(
+                        target=self.handle_execution,
+                        kwargs={
+                            "session_id": sid,
+                            "niche_id": nid,
+                            "target": "all",
+                            "chat_id": chat_id,
+                            "notify_init": True
+                        },
+                        daemon=True
+                    ).start()
+                    return
+            else:
+                self.send_text_message(
+                    "⚡ *Fast-Track Usage:* Send `/quick <video_url>` or `/post <video_url>` to publish instantly with 0 clicks!",
+                    target_chat_id=chat_id
+                )
 
         else:
             # Check for any URL in text or caption

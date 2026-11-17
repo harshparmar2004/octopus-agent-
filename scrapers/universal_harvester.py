@@ -251,7 +251,11 @@ class UniversalContentHarvester:
             "no_warnings": True,
             "merge_output_format": "mp4",
             "match_filter": _duration_filter,
-            "socket_timeout": 25,
+            "socket_timeout": 15,
+            "concurrent_fragment_downloads": 4,
+            "buffersize": 1048576,
+            "nocheckcertificate": True,
+            "noplaylist": True,
             "http_headers": self.headers
         }
 

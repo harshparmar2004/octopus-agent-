@@ -52,11 +52,71 @@ class VideoCompositor:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.card_renderer = CardRenderer()
 
+_DETECTED_VCODEC_ARGS: Optional[List[str]] = None
+
+def get_best_vcodec_args() -> List[str]:
+    """
+    Auto-detects the fastest available H.264 video encoder:
+    1. macOS: h264_videotoolbox
+    2. Windows/Linux: NVIDIA NVENC (h264_nvenc) - hardware accelerated GPU encoding (up to 10x faster)
+    3. Windows/Linux: Intel QuickSync (h264_qsv)
+    4. Fallback: CPU libx264 (preset=fast)
+    """
+    global _DETECTED_VCODEC_ARGS
+    if _DETECTED_VCODEC_ARGS is not None:
+        return list(_DETECTED_VCODEC_ARGS)
+
+    if platform.system() == "Darwin":
+        _DETECTED_VCODEC_ARGS = ["-c:v", "h264_videotoolbox", "-b:v", "6500k"]
+        return list(_DETECTED_VCODEC_ARGS)
+
+    # 1. Probe NVIDIA NVENC
+    try:
+        test_cmd = [
+            "ffmpeg", "-y", "-f", "lavfi",
+            "-i", "testsrc=duration=1:size=320x240:rate=10",
+            "-c:v", "h264_nvenc", "-preset", "p4",
+            "-f", "null", "-"
+        ]
+        res = subprocess.run(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=4)
+        if res.returncode == 0:
+            logger.info("VideoCompositor: Activated NVIDIA NVENC GPU hardware acceleration (h264_nvenc)")
+            _DETECTED_VCODEC_ARGS = ["-c:v", "h264_nvenc", "-preset", "p4", "-cq", "22", "-b:v", "6500k"]
+            return list(_DETECTED_VCODEC_ARGS)
+    except Exception as e:
+        logger.debug(f"NVENC probe error: {e}")
+
+    # 2. Probe Intel QuickSync
+    try:
+        test_cmd = [
+            "ffmpeg", "-y", "-f", "lavfi",
+            "-i", "testsrc=duration=1:size=320x240:rate=10",
+            "-c:v", "h264_qsv",
+            "-f", "null", "-"
+        ]
+        res = subprocess.run(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=4)
+        if res.returncode == 0:
+            logger.info("VideoCompositor: Activated Intel QuickSync GPU acceleration (h264_qsv)")
+            _DETECTED_VCODEC_ARGS = ["-c:v", "h264_qsv", "-b:v", "6500k"]
+            return list(_DETECTED_VCODEC_ARGS)
+    except Exception as e:
+        logger.debug(f"QSV probe error: {e}")
+
+    # 3. CPU Fallback
+    logger.info("VideoCompositor: Hardware acceleration not found, using CPU libx264")
+    _DETECTED_VCODEC_ARGS = ["-c:v", "libx264", "-preset", "fast", "-crf", "22"]
+    return list(_DETECTED_VCODEC_ARGS)
+
+
+class VideoCompositor:
+    def __init__(self, output_dir: Optional[Path] = None):
+        self.output_dir = output_dir or settings.OUTPUT_DIR
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.card_renderer = CardRenderer()
+
     @staticmethod
     def _vcodec_args():
-        if platform.system() == "Darwin":
-            return ["-c:v", "h264_videotoolbox", "-b:v", "6500k"]
-        return ["-c:v", "libx264", "-preset", "fast", "-crf", "22"]
+        return get_best_vcodec_args()
 
     @staticmethod
     def full_bleed_filter(vid_w: int, vid_h: int, src: str = "0:v", out: str = "base") -> str:
@@ -116,38 +176,31 @@ class VideoCompositor:
             logger.error(f"Input video not found: {raw_video_path}")
             return None
 
-        # 0. Active middle video extraction (slices competitor headers, footers & static overlays)
+        # 0. Active middle video extraction / bounds detection
+        effective_crop = crop_box
+        if auto_crop_header and not effective_crop:
+            try:
+                from processors.video_vision import VideoVisionInspector
+                bounds = VideoVisionInspector.detect_active_video_bounds(str(input_path))
+                if bounds.get("crop_needed") and bounds.get("crop_box"):
+                    effective_crop = bounds["crop_box"]
+            except Exception as be:
+                logger.warning(f"Auto-crop bounds detection skipped: {be}")
+
         temp_crop_file: Optional[Path] = None
-        if auto_crop_header:
-            effective_crop = crop_box
-            if not effective_crop:
-                try:
-                    from processors.video_vision import VideoVisionInspector
-                    bounds = VideoVisionInspector.detect_active_video_bounds(str(input_path))
-                    if bounds.get("crop_needed") and bounds.get("crop_box"):
-                        effective_crop = bounds["crop_box"]
-                except Exception as be:
-                    logger.warning(f"Auto-crop bounds detection skipped: {be}")
-
-            if effective_crop:
-                cx = effective_crop.get("x", 0)
-                cy = effective_crop.get("y", 0)
-                cw = (effective_crop.get("w", 1080) // 2) * 2
-                ch = (effective_crop.get("h", 1920) // 2) * 2
-
-                temp_crop_file = self.output_dir / f"clean_middle_crop_{uuid.uuid4().hex[:8]}.mp4"
-                crop_cmd = [
-                    "ffmpeg", "-y",
-                    "-i", str(input_path),
-                    "-vf", f"crop={cw}:{ch}:{cx}:{cy}",
-                    "-c:v", "libx264", "-preset", "fast",
-                    "-c:a", "copy",
-                    str(temp_crop_file)
-                ]
-                logger.info(f"Slicing competitor header/footer: crop={cw}:{ch}:{cx}:{cy} -> {temp_crop_file.name}")
-                crop_res = subprocess.run(crop_cmd, capture_output=True, text=True, timeout=45)
-                if crop_res.returncode == 0 and temp_crop_file.exists():
-                    input_path = temp_crop_file
+        crop_prefix = ""
+        src_v = "0:v"
+        if effective_crop:
+            cx = effective_crop.get("x", 0)
+            cy = effective_crop.get("y", 0)
+            cw = (effective_crop.get("w", 1080) // 2) * 2
+            ch = (effective_crop.get("h", 1920) // 2) * 2
+            crop_prefix = f"[0:v]crop={cw}:{ch}:{cx}:{cy}[v_cropped];"
+            src_v = "v_cropped"
+            vid_w, vid_h = cw, ch
+            logger.info(f"Fusing single-pass active crop: crop={cw}:{ch}:{cx}:{cy}")
+        else:
+            vid_w, vid_h = _probe_dims(str(input_path))
 
         output_path = self.output_dir / output_filename
         stem = f"{input_path.stem}_{account_index}"
@@ -169,7 +222,6 @@ class VideoCompositor:
             common_tail = ["-pix_fmt", "yuv420p"] + audio_args + ["-movflags", "+faststart"] + self._vcodec_args()
 
             if profile in ("light_brand", "concert_tag", "raw_watermark", "logo_only", "raw_full_bleed"):
-                vid_w, vid_h = _probe_dims(str(input_path))
                 self.card_renderer.render_minimal_overlay(
                     profile=profile,
                     channel=channel,
@@ -179,7 +231,8 @@ class VideoCompositor:
                     template=template,
                 )
                 filter_complex = (
-                    self.full_bleed_filter(vid_w, vid_h, "0:v", "base") + ";"
+                    crop_prefix +
+                    self.full_bleed_filter(vid_w, vid_h, src_v, "base") + ";"
                     "[base][1:v]overlay=0:0:shortest=1[outv]"
                 )
                 cmd = [
@@ -191,7 +244,6 @@ class VideoCompositor:
                 ] + common_tail + [str(output_path)]
 
             elif profile == "meme_native":
-                vid_w, vid_h = _probe_dims(str(input_path))
                 bar_h = self.card_renderer.measure_meme_bar(hook_text)
                 vw, vh, bar_y, vid_y = self.meme_geometry(vid_w, vid_h, bar_h)
                 self.card_renderer.render_minimal_overlay(
@@ -204,8 +256,9 @@ class VideoCompositor:
                     meme_bar_h=bar_h,
                 )
                 filter_complex = (
+                    crop_prefix +
                     f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                    f"[0:v]scale={vw}:{vh},setsar=1[v];"
+                    f"[{src_v}]scale={vw}:{vh},setsar=1[v];"
                     f"[bg][v]overlay=(W-w)/2:{vid_y}:shortest=1[wv];"
                     "[wv][1:v]overlay=0:0:shortest=1[outv]"
                 )
@@ -220,15 +273,15 @@ class VideoCompositor:
             elif layout == "full_screen_neon_hud":
                 # Aspect-ratio adaptive neon frame (clubbing network brand)
                 vision = VideoVisionInspector.analyze(str(input_path))
-                vid_w = vision.get("width", 720)
-                vid_h = vision.get("height", 1280)
+                v_w = vision.get("width", vid_w)
+                v_h = vision.get("height", vid_h)
                 placement = vision.get("recommended_placement", "bottom")
 
                 y_top_limit, y_bot_limit, max_w = 210, 1750, 960
                 max_h = y_bot_limit - y_top_limit
-                scale = min(max_w / vid_w, max_h / vid_h)
-                box_w = (int(vid_w * scale) // 2) * 2
-                box_h = (int(vid_h * scale) // 2) * 2
+                scale = min(max_w / v_w, max_h / v_h)
+                box_w = (int(v_w * scale) // 2) * 2
+                box_h = (int(v_h * scale) // 2) * 2
                 box_x = ((CANVAS_W - box_w) // 4) * 2
                 box_y = ((y_top_limit + (max_h - box_h) // 2) // 2) * 2
 
@@ -241,8 +294,11 @@ class VideoCompositor:
                     bg_output_path=bg_png,
                     fg_output_path=fg_png
                 )
+                hud_crop_prefix = f"[1:v]crop={cw}:{ch}:{cx}:{cy}[hud_cropped];" if effective_crop else ""
+                hud_src = "hud_cropped" if effective_crop else "1:v"
                 filter_complex = (
-                    f"[1:v]scale={box_w}:{box_h}[vid];"
+                    hud_crop_prefix +
+                    f"[{hud_src}]scale={box_w}:{box_h}[vid];"
                     f"[0:v][vid]overlay={box_x}:{box_y}:shortest=1[with_vid];"
                     f"[with_vid][2:v]overlay=0:0:shortest=1[outv]"
                 )
@@ -256,7 +312,6 @@ class VideoCompositor:
                 ] + common_tail + [str(output_path)]
 
             else:
-                vid_w, vid_h = _probe_dims(str(input_path))
                 v_ar = vid_w / max(1, vid_h)
                 vh_target = 1480
                 vy_offset = 440
@@ -276,8 +331,9 @@ class VideoCompositor:
                 if NATIVE_VERTICAL_AR[0] <= v_ar <= NATIVE_VERTICAL_AR[1]:
                     # Vertical 9:16 video covers the available area cleanly
                     filter_complex = (
+                        crop_prefix +
                         f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                        f"[0:v]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},setsar=1[vid];"
+                        f"[{src_v}]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},setsar=1[vid];"
                         f"[bg][vid]overlay=0:{vy_offset}:shortest=1[with_vid];"
                         "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
                     )
@@ -288,24 +344,27 @@ class VideoCompositor:
                         if 0.85 <= v_ar <= 1.25:
                             # 1:1 Square video: Shift video upward to y=500 so it leaves comfortable bottom margin
                             filter_complex = (
+                                crop_prefix +
                                 f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                                f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                                f"[{src_v}]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
                                 f"[bg][sharp_vid]overlay=(W-w)/2:500:shortest=1[with_vid];"
                                 "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
                             )
                         else:
                             # 16:9 Landscape / cropped: center video at (H-h)/2, balancing downward header
                             filter_complex = (
+                                crop_prefix +
                                 f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                                f"[0:v]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
+                                f"[{src_v}]scale={CANVAS_W}:-2:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
                                 f"[bg][sharp_vid]overlay=(W-w)/2:(H-h)/2:shortest=1[with_vid];"
                                 "[with_vid][1:v]overlay=0:0:shortest=1[outv]"
                             )
                     else:
                         # Other layouts: blurred ambient fill + centered video below header
                         filter_complex = (
+                            crop_prefix +
                             f"color=c=black:s={CANVAS_W}x{CANVAS_H}[bg];"
-                            f"[0:v]split=2[v_bg][v_fg];"
+                            f"[{src_v}]split=2[v_bg][v_fg];"
                             f"[v_bg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=increase,crop={CANVAS_W}:{vh_target},boxblur=24:2,eq=brightness=-0.08[blur_bg];"
                             f"[v_fg]scale={CANVAS_W}:{vh_target}:force_original_aspect_ratio=decrease,setsar=1[sharp_vid];"
                             f"[blur_bg][sharp_vid]overlay=(W-w)/2:(H-h)/2[fitted_vid];"
@@ -318,7 +377,7 @@ class VideoCompositor:
                     "-i", str(input_path),
                     "-loop", "1", "-i", str(overlay_png),
                     "-filter_complex", filter_complex,
-                    "-map", "[outv]", "-map", "0:a?",
+                    "-map", "[outv]", "-map", "0:a?", "-shortest",
                 ] + common_tail + [str(output_path)]
 
             logger.info(f"Running FFmpeg composition [{profile}/{layout}]: {output_filename}")
