@@ -47,6 +47,7 @@ class InstagramHarvester:
     def __init__(self, download_dir: Optional[Path] = None):
         self.download_dir = download_dir or settings.STORAGE_DIR
         self.download_dir.mkdir(parents=True, exist_ok=True)
+        self.last_error: Optional[str] = None
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         }
@@ -268,7 +269,14 @@ class InstagramHarvester:
         Downloads high-res MP4 video from an Instagram Reel permalink or direct MP4 stream using yt-dlp,
         with local file caching and direct stream fallback.
         """
-        # 1. Check local cache first
+        self.last_error = None
+        # 1. Clean tracking parameters from Instagram URL
+        clean_url = permalink.strip()
+        shortcode_match = re.search(r'/(?:reel|p|tv)/([A-Za-z0-9_-]{10,14})', permalink)
+        if shortcode_match:
+            clean_url = f"https://www.instagram.com/reel/{shortcode_match.group(1)}/"
+
+        # 2. Check local cache first
         for ext in [".mp4", "_raw.mp4"]:
             cached_candidate = self.download_dir / f"{custom_id}{ext}"
             if cached_candidate.exists() and cached_candidate.stat().st_size > 50000:
@@ -281,7 +289,7 @@ class InstagramHarvester:
                     "author": "cached_source"
                 }
 
-        # 2. Direct MP4 stream URL check
+        # 3. Direct MP4 stream URL check
         if permalink.startswith("http") and (".mp4" in permalink or "mixkit.co" in permalink or "fbcdn.net" in permalink):
             try:
                 out_path = self.download_dir / f"{custom_id}_raw.mp4"
@@ -303,7 +311,7 @@ class InstagramHarvester:
             except Exception as direct_err:
                 logger.warning(f"Direct stream download failed, falling back to yt-dlp: {direct_err}")
 
-        # 3. Enhanced yt-dlp download
+        # 4. Enhanced yt-dlp download
         out_template = str(self.download_dir / f"{custom_id}_raw.%(ext)s")
         proxy = getattr(settings, "SCRAPER_PROXY", "") or os.getenv("HTTP_PROXY") or os.getenv("HTTPS_PROXY")
         cookies_file = getattr(settings, "INSTAGRAM_COOKIES_FILE", "")
@@ -342,9 +350,10 @@ class InstagramHarvester:
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(permalink, download=True)
+                info = ydl.extract_info(clean_url, download=True)
                 if not info:
-                    logger.warning(f"Could not extract info for {permalink}")
+                    logger.warning(f"Could not extract info for {clean_url}")
+                    self.last_error = f"Could not extract info for {clean_url}"
                     return None
 
                 filepath = Path(ydl.prepare_filename(info))
@@ -361,5 +370,6 @@ class InstagramHarvester:
                     "author": info.get("uploader") or info.get("channel", "")
                 }
         except Exception as e:
-            logger.error(f"yt-dlp failed downloading {permalink}: {e}")
+            self.last_error = str(e)
+            logger.error(f"yt-dlp failed downloading {clean_url}: {e}")
             return None

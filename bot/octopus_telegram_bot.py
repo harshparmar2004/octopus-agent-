@@ -592,7 +592,11 @@ class OctopusTelegramBot:
                 "error": "No target accounts available."
             }
 
-        target_desc = f"@{target_accs[0]['handle']}" if len(target_accs) == 1 else f"ALL ({len(target_accs)}) Pages"
+        if len(target_accs) == 1:
+            h = target_accs[0].get("handle", "")
+            target_desc = h if h.startswith("@") else f"@{h}"
+        else:
+            target_desc = f"ALL ({len(target_accs)}) Pages"
         n_title = session.get("niche_name") or niche_id.title()
         start_exec_ts = time.time()
         is_raw = niche_id in ("girls_dance", "girls", "girls_party")
@@ -635,43 +639,75 @@ class OctopusTelegramBot:
         dl = None
         clean_handle = "curated_source"
         platform_label = session.get("platform_name") or "Social Video"
+        download_err_detail = None
         if source_url and source_url.strip():
             clean_url = source_url.strip()
             try:
                 from scrapers.universal_harvester import UniversalContentHarvester
                 u_harvester = UniversalContentHarvester()
-                dl = u_harvester.harvest(clean_url, task_id)
+                dl = u_harvester.harvest(clean_url, task_id, bot_token=self.bot_token)
                 if dl:
                     clean_handle = dl.get("author") or clean_handle
                     platform_label = dl.get("platform") or platform_label
+                else:
+                    download_err_detail = getattr(u_harvester, "last_error", None) or "Failed to extract source video stream."
             except Exception as u_err:
                 logger.warning(f"UniversalHarvester download error: {u_err}")
+                download_err_detail = str(u_err)
                 dl = None
 
         if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
-            fallback_candidates = [
-                Path("storage/temp/raw_scraped_clip.mp4"),
-                Path("output/benchmark_rendered_reel.mp4"),
-                Path("output/cult_aesthetic_sample_reel.mp4")
-            ]
-            fallback_file = next((p for p in fallback_candidates if p.exists()), None)
-            if fallback_file:
-                dl = {
-                    "filepath": str(fallback_file),
-                    "title": f"Featured {n_title} showcase",
-                    "description": f"Featured {n_title} reel moment from @{clean_handle}."
-                }
-            else:
-                dummy_path = settings.OUTPUT_DIR / f"{task_id}_master.mp4"
-                dummy_path.parent.mkdir(parents=True, exist_ok=True)
-                import shutil
-                sample = next((p for p in settings.OUTPUT_DIR.glob("*.mp4")), None)
-                if sample:
-                    shutil.copy2(sample, dummy_path)
-                dl = {
-                    "filepath": str(dummy_path),
-                    "title": f"Featured {n_title} performance",
-                    "description": f"Featured {n_title} reel moment from @{clean_handle}."
+            # In unit test / mock dry-run mode, generate a raw clean synthetic test clip if download fails
+            if dry_run:
+                clean_test_vid = settings.STORAGE_DIR / f"{task_id}_clean_mock.mp4"
+                clean_test_vid.parent.mkdir(parents=True, exist_ok=True)
+                if not clean_test_vid.exists():
+                    import subprocess
+                    cmd = [
+                        "ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=black:s=720x1280:d=1:r=30",
+                        "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+                        "-c:v", "libx264", "-c:a", "aac", "-t", "1", "-shortest",
+                        str(clean_test_vid)
+                    ]
+                    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if clean_test_vid.exists():
+                    dl = {
+                        "filepath": str(clean_test_vid),
+                        "title": f"Test {n_title} clip",
+                        "description": f"Test {n_title} clip"
+                    }
+
+            if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
+                logger.error(f"Cannot proceed with reel publishing: source download failed for {source_url}: {download_err_detail}")
+                err_lower = (download_err_detail or "").lower()
+                if "isn't available to everyone" in err_lower or "certain audiences" in err_lower or "login" in err_lower:
+                    reason_desc = "Instagram restricted access to this Reel (requires login / age-gated audience)."
+                elif "private" in err_lower:
+                    reason_desc = "This Reel belongs to a private Instagram account."
+                elif "not found" in err_lower or "404" in err_lower:
+                    reason_desc = "Reel was not found or has been removed from Instagram."
+                else:
+                    reason_desc = download_err_detail or "Failed to download 1080p source stream."
+
+                halt_msg = (
+                    f"⚡ *Octopus AI Engine · Pipeline Halted*\n"
+                    f"🎯 *Target:* {target_desc} ({n_title})\n\n"
+                    f"❌ *1. Downloader: Download Failed*\n"
+                    f"   ⚠️ _{reason_desc}_\n\n"
+                    f"💡 *How to publish this reel easily:*\n"
+                    f"• *Forward or upload the video directly* into this chat (Telegram file upload bypasses Instagram login walls!)\n"
+                    f"• Or send a public, unrestricted Reel or YouTube Shorts URL\n"
+                    f"• Or provide a direct `.mp4` video URL"
+                )
+                if status_msg_id and cid:
+                    self.edit_text_message(status_msg_id, halt_msg, target_chat_id=cid)
+                elif cid:
+                    self.send_text_message(halt_msg, target_chat_id=cid)
+                return {
+                    "session_id": session_id,
+                    "step": "failed",
+                    "niche_id": niche_id,
+                    "error": download_err_detail or "Download failed"
                 }
 
         s1 = f"✅ 1. Downloader: 1080p source stream ready ({platform_label} · 100% audio intact)"
@@ -1414,6 +1450,9 @@ class OctopusTelegramBot:
                 self.handle_inbound_url(url=clean_url, chat_id=chat_id)
             elif "video" in msg:
                 file_id = msg["video"]["file_id"]
+                self.handle_inbound_url(url=f"telegram_video:{file_id}", chat_id=chat_id)
+            elif "document" in msg and msg.get("document", {}).get("mime_type", "").startswith("video/"):
+                file_id = msg["document"]["file_id"]
                 self.handle_inbound_url(url=f"telegram_video:{file_id}", chat_id=chat_id)
 
     def start_background(self):

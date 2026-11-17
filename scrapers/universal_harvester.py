@@ -28,6 +28,7 @@ class UniversalContentHarvester:
     def __init__(self, download_dir: Optional[Path] = None):
         self.download_dir = download_dir or settings.STORAGE_DIR
         self.download_dir.mkdir(parents=True, exist_ok=True)
+        self.last_error: Optional[str] = None
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,video/*,*/*;q=0.8",
@@ -53,6 +54,17 @@ class UniversalContentHarvester:
 
     @classmethod
     def classify_url(cls, raw_url: str) -> Dict[str, Any]:
+        # 0. Telegram Direct Video Protocol
+        if raw_url.startswith("telegram_video:") or raw_url.startswith("telegram_doc:"):
+            file_id = raw_url.split(":", 1)[1]
+            return {
+                "platform": "telegram",
+                "platform_name": "Telegram Video Upload",
+                "platform_emoji": "📹",
+                "content_id": file_id[:16],
+                "canonical_url": raw_url
+            }
+
         canonical_url = cls.unroll_url(raw_url)
         parsed = urlparse(canonical_url)
         domain = parsed.netloc.lower()
@@ -61,21 +73,28 @@ class UniversalContentHarvester:
         # 1. Instagram
         if "instagram.com" in domain or "instagr.am" in domain:
             content_id = "reel"
+            clean_canonical = canonical_url
             if "/reel/" in path:
                 parts = path.split("/reel/")[1].split("/")[0]
-                if parts: content_id = parts
+                if parts:
+                    content_id = parts
+                    clean_canonical = f"https://www.instagram.com/reel/{parts}/"
             elif "/p/" in path:
                 parts = path.split("/p/")[1].split("/")[0]
-                if parts: content_id = parts
+                if parts:
+                    content_id = parts
+                    clean_canonical = f"https://www.instagram.com/p/{parts}/"
             elif "/tv/" in path:
                 parts = path.split("/tv/")[1].split("/")[0]
-                if parts: content_id = parts
+                if parts:
+                    content_id = parts
+                    clean_canonical = f"https://www.instagram.com/tv/{parts}/"
             return {
                 "platform": "instagram",
                 "platform_name": "Instagram Reel",
                 "platform_emoji": "📸",
                 "content_id": content_id,
-                "canonical_url": canonical_url
+                "canonical_url": clean_canonical
             }
 
         # 2. YouTube (Shorts & Standard)
@@ -175,6 +194,7 @@ class UniversalContentHarvester:
         }
 
     def harvest(self, url: str, custom_id: Optional[str] = None, task_id: Optional[str] = None, **kwargs) -> Optional[Dict[str, Any]]:
+        self.last_error = None
         info = self.classify_url(url)
         canonical = info["canonical_url"]
         platform = info["platform"]
@@ -182,6 +202,40 @@ class UniversalContentHarvester:
         out_template = str(self.download_dir / f"{resolved_id}_raw.%(ext)s")
 
         logger.info(f"UniversalHarvester ingesting [{info['platform_name']}] from {canonical[:80]}")
+
+        # 0. Telegram Direct Video Stream Download
+        if platform == "telegram":
+            bot_token = kwargs.get("bot_token") or getattr(settings, "TELEGRAM_BOT_TOKEN", "") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+            if bot_token and ":" in canonical:
+                file_id = canonical.split(":", 1)[1]
+                try:
+                    info_url = f"https://api.telegram.org/bot{bot_token}/getFile"
+                    info_res = requests.get(info_url, params={"file_id": file_id}, timeout=15).json()
+                    if info_res.get("ok"):
+                        f_path = info_res["result"]["file_path"]
+                        dl_url = f"https://api.telegram.org/file/bot{bot_token}/{f_path}"
+                        out_path = self.download_dir / f"{resolved_id}_raw.mp4"
+                        logger.info(f"Downloading direct Telegram video stream to {out_path.name}...")
+                        with requests.get(dl_url, stream=True, timeout=60) as r:
+                            r.raise_for_status()
+                            with open(out_path, "wb") as f_out:
+                                for chunk in r.iter_content(chunk_size=65536):
+                                    if chunk:
+                                        f_out.write(chunk)
+                        if out_path.exists() and out_path.stat().st_size > 1000:
+                            return {
+                                "filepath": str(out_path),
+                                "title": "Uploaded Video Reel",
+                                "description": "High resolution vertical video uploaded via Telegram",
+                                "duration": 15,
+                                "author": "telegram_user",
+                                "platform": "Telegram Video",
+                                "platform_emoji": "📹",
+                                "canonical_url": canonical
+                            }
+                except Exception as tg_err:
+                    self.last_error = f"Telegram direct download error: {tg_err}"
+                    logger.error(self.last_error)
 
         # 1. Local Cache Check
         for ext in [".mp4", "_raw.mp4"]:
@@ -228,13 +282,17 @@ class UniversalContentHarvester:
         if platform == "instagram":
             try:
                 from scrapers.instagram_harvester import InstagramHarvester
-                ig_res = InstagramHarvester(download_dir=self.download_dir).download_reel(canonical, resolved_id)
+                ig_harvester = InstagramHarvester(download_dir=self.download_dir)
+                ig_res = ig_harvester.download_reel(canonical, resolved_id)
                 if ig_res and ig_res.get("filepath") and Path(ig_res["filepath"]).exists():
                     ig_res["platform"] = info["platform_name"]
                     ig_res["platform_emoji"] = info["platform_emoji"]
                     ig_res["canonical_url"] = canonical
                     return ig_res
+                if hasattr(ig_harvester, "last_error") and ig_harvester.last_error:
+                    self.last_error = ig_harvester.last_error
             except Exception as ig_err:
+                self.last_error = str(ig_err)
                 logger.warning(f"InstagramHarvester attempt error, falling back to universal extractor: {ig_err}")
 
         # 4. Universal Tailored yt-dlp Extraction with Guaranteed FFmpeg Audio-Muxing
@@ -259,6 +317,14 @@ class UniversalContentHarvester:
             "http_headers": self.headers
         }
 
+        cookies_file = getattr(settings, "INSTAGRAM_COOKIES_FILE", "")
+        if not cookies_file:
+            default_cookie = settings.STORAGE_DIR / "cookies.txt"
+            if default_cookie.exists():
+                cookies_file = str(default_cookie)
+        if cookies_file and Path(cookies_file).exists():
+            ydl_opts["cookiefile"] = str(cookies_file)
+
         if platform == "twitter":
             ydl_opts["http_headers"]["Referer"] = "https://twitter.com/"
         elif platform == "reddit":
@@ -278,6 +344,7 @@ class UniversalContentHarvester:
                 meta = ydl.extract_info(canonical, download=True)
                 if not meta:
                     logger.warning(f"No video metadata extracted for {canonical}")
+                    self.last_error = f"No video metadata extracted for {canonical}"
                     return None
 
                 filepath = Path(ydl.prepare_filename(meta))
@@ -302,5 +369,6 @@ class UniversalContentHarvester:
                 }
 
         except Exception as ydl_err:
+            self.last_error = str(ydl_err)
             logger.error(f"UniversalHarvester failed downloading {canonical}: {ydl_err}")
             return None

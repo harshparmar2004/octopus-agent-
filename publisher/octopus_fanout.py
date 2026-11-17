@@ -473,24 +473,10 @@ class OctopusFanoutEngine:
                 dl = ContentHarvester().download_video(reel_meta["permalink"], task_id)
 
         if not dl or not dl.get("filepath") or not Path(dl.get("filepath", "")).exists():
-            # Check candidate fallbacks in output/ or storage/
-            fallback_candidates = [
-                Path("storage/temp/raw_scraped_clip.mp4"),
-                Path("output/benchmark_rendered_reel.mp4"),
-                Path("output/cult_aesthetic_sample_reel.mp4")
-            ]
-            fallback_file = next((p for p in fallback_candidates if p.exists()), None)
-            if fallback_file:
-                dl = {
-                    "filepath": str(fallback_file),
-                    "title": f"Fascinating {niche_name} phenomenon demonstration",
-                    "description": f"Detailed educational demonstration exhibiting core principles from @{clean_handle}. Full scientific analysis of the observed interaction."
-                }
-            else:
-                return {
-                    "success": False,
-                    "error": f"Failed to download video stream from source."
-                }
+            return {
+                "success": False,
+                "error": f"Failed to download video stream from source."
+            }
 
         # 2. AI Caption Tracking & Adaptation
         enricher = AIEnricher()
