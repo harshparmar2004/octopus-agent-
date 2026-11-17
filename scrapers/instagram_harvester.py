@@ -264,6 +264,23 @@ class InstagramHarvester:
 
         return None
 
+    @staticmethod
+    def write_session_cookie(session_id: str, cookie_path: Path, ds_user_id: str = "") -> str:
+        """Generates a standard Netscape cookies.txt file for yt-dlp authentication."""
+        cookie_path = Path(cookie_path)
+        cookie_path.parent.mkdir(parents=True, exist_ok=True)
+        exp = int(time.time()) + 86400 * 365
+        content = (
+            "# Netscape HTTP Cookie File\n"
+            "# http://curl.haxx.se/rfc/cookie_spec.html\n\n"
+            f".instagram.com\tTRUE\t/\tTRUE\t{exp}\tsessionid\t{session_id.strip()}\n"
+        )
+        if ds_user_id:
+            content += f".instagram.com\tTRUE\t/\tTRUE\t{exp}\tds_user_id\t{ds_user_id.strip()}\n"
+        cookie_path.write_text(content, encoding="utf-8")
+        logger.info(f"Generated Netscape Instagram cookie file at {cookie_path}")
+        return str(cookie_path)
+
     def download_reel(self, permalink: str, custom_id: str) -> Optional[Dict[str, Any]]:
         """
         Downloads high-res MP4 video from an Instagram Reel permalink or direct MP4 stream using yt-dlp,
@@ -320,6 +337,12 @@ class InstagramHarvester:
             if default_cookie.exists():
                 cookies_file = str(default_cookie)
 
+        # Check for INSTAGRAM_SESSION_ID in settings / env
+        session_id = getattr(settings, "INSTAGRAM_SESSION_ID", "") or os.getenv("INSTAGRAM_SESSION_ID", "")
+        if session_id and (not cookies_file or not Path(cookies_file).exists()):
+            default_cookie = settings.STORAGE_DIR / "cookies.txt"
+            cookies_file = self.write_session_cookie(session_id, default_cookie)
+
         def _duration_filter(info_dict, *, incomplete):
             dur = info_dict.get("duration")
             if dur is not None and dur > 120:
@@ -347,6 +370,12 @@ class InstagramHarvester:
             ydl_opts["proxy"] = proxy
         if cookies_file and Path(cookies_file).exists():
             ydl_opts["cookiefile"] = str(cookies_file)
+        else:
+            # Check if Firefox has a profile
+            import glob
+            firefox_profiles = glob.glob(os.path.expanduser('~\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\*.default*\\cookies.sqlite'))
+            if firefox_profiles:
+                ydl_opts["cookiesfrombrowser"] = ("firefox", None, None, None)
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -370,6 +399,12 @@ class InstagramHarvester:
                     "author": info.get("uploader") or info.get("channel", "")
                 }
         except Exception as e:
-            self.last_error = str(e)
+            err_str = str(e)
+            if "isn't available to everyone" in err_str.lower() or "certain audiences" in err_str.lower():
+                self.last_error = "Instagram restricted access to this Reel (requires login / age-gated audience)."
+            elif "empty media response" in err_str.lower():
+                self.last_error = "Instagram sent an empty response (requires login session / cookies)."
+            else:
+                self.last_error = err_str
             logger.error(f"yt-dlp failed downloading {clean_url}: {e}")
             return None

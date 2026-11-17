@@ -83,6 +83,7 @@ class Settings:
     # Proxy & Scraper Settings (Optional for High-Scale 500+ Account Instagram Scraping)
     SCRAPER_PROXY = os.getenv("SCRAPER_PROXY", "")
     INSTAGRAM_COOKIES_FILE = os.getenv("INSTAGRAM_COOKIES_FILE", "")
+    INSTAGRAM_SESSION_ID = os.getenv("INSTAGRAM_SESSION_ID", "")
     
     # Default active channel
     DEFAULT_CHANNEL_KEY = os.getenv("DEFAULT_CHANNEL", "quantum")

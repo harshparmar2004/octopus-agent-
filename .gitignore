@@ -22,6 +22,8 @@ output/vision_frames/
 storage/*.mp4
 storage/test_sample.mp4
 storage/llm_config.json
+storage/cookies.txt
+storage/temp_frames/
 
 # OS generated files
 .DS_Store

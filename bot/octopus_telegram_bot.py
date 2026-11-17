@@ -695,9 +695,9 @@ class OctopusTelegramBot:
                     f"❌ *1. Downloader: Download Failed*\n"
                     f"   ⚠️ _{reason_desc}_\n\n"
                     f"💡 *How to publish this reel easily:*\n"
-                    f"• *Forward or upload the video directly* into this chat (Telegram file upload bypasses Instagram login walls!)\n"
-                    f"• Or send a public, unrestricted Reel or YouTube Shorts URL\n"
-                    f"• Or provide a direct `.mp4` video URL"
+                    f"1. 📹 *Forward or upload the video directly* into this chat (Telegram file upload bypasses Instagram login walls with 100% HD quality!)\n"
+                    f"2. 🔑 *Or send your Instagram session ID:* `/session <session_id>` (enables automatic authenticated URL downloads)\n"
+                    f"3. 🌐 Or provide a direct `.mp4` video URL or YouTube Shorts link"
                 )
                 if status_msg_id and cid:
                     self.edit_text_message(status_msg_id, halt_msg, target_chat_id=cid)
@@ -1399,6 +1399,44 @@ class OctopusTelegramBot:
             from daemon import Octopus24x7Daemon
             threading.Thread(target=Octopus24x7Daemon().run_full_cycle, kwargs={"dry_run": True}, daemon=True).start()
 
+        elif text.startswith("/session") or text.startswith("/cookie"):
+            parts = text.split(maxsplit=1)
+            if len(parts) > 1 and parts[1].strip():
+                new_session_id = parts[1].strip().strip('"').strip("'")
+                try:
+                    from scrapers.instagram_harvester import InstagramHarvester
+                    cookie_file = settings.STORAGE_DIR / "cookies.txt"
+                    InstagramHarvester.write_session_cookie(new_session_id, cookie_file)
+                    env_path = settings.BASE_DIR / ".env"
+                    if env_path.exists():
+                        env_text = env_path.read_text(encoding="utf-8")
+                        if "INSTAGRAM_SESSION_ID=" in env_text:
+                            env_text = re.sub(r'INSTAGRAM_SESSION_ID=.*', f'INSTAGRAM_SESSION_ID={new_session_id}', env_text)
+                        else:
+                            env_text += f"\nINSTAGRAM_SESSION_ID={new_session_id}\n"
+                        env_path.write_text(env_text, encoding="utf-8")
+                    settings.INSTAGRAM_SESSION_ID = new_session_id
+                    os.environ["INSTAGRAM_SESSION_ID"] = new_session_id
+                    self.send_text_message(
+                        "✅ *Instagram Session Connected Successfully!*\n\n"
+                        "🔑 Session ID has been registered and `cookies.txt` generated.\n"
+                        "Now restricted and age-gated Instagram Reel links will download and publish automatically!\n\n"
+                        "👉 Send any Instagram Reel link now to test it.",
+                        target_chat_id=chat_id
+                    )
+                except Exception as s_err:
+                    self.send_text_message(f"❌ Error setting session: {s_err}", target_chat_id=chat_id)
+            else:
+                self.send_text_message(
+                    "🔑 *How to connect your Instagram Session ID:*\n\n"
+                    "1. In your browser (Chrome/Edge/Firefox), log in to `instagram.com`\n"
+                    "2. Press F12 -> Application (or Storage) -> Cookies -> `https://www.instagram.com`\n"
+                    "3. Copy the value of `sessionid`\n"
+                    "4. Send it here as: `/session <your_session_id>`\n\n"
+                    "💡 *Or even easier:* Just *forward or upload any video file directly* to this chat — it publishes instantly with zero restrictions!",
+                    target_chat_id=chat_id
+                )
+
         elif text.startswith("/quick") or text.startswith("/post") or text.startswith("/publish") or text.startswith("/fast"):
             url_match = re.search(r'(https?://[^\s]+)', text)
             if url_match:
@@ -1450,6 +1488,9 @@ class OctopusTelegramBot:
                 self.handle_inbound_url(url=clean_url, chat_id=chat_id)
             elif "video" in msg:
                 file_id = msg["video"]["file_id"]
+                self.handle_inbound_url(url=f"telegram_video:{file_id}", chat_id=chat_id)
+            elif "video_note" in msg:
+                file_id = msg["video_note"]["file_id"]
                 self.handle_inbound_url(url=f"telegram_video:{file_id}", chat_id=chat_id)
             elif "document" in msg and msg.get("document", {}).get("mime_type", "").startswith("video/"):
                 file_id = msg["document"]["file_id"]

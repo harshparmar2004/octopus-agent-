@@ -322,8 +322,24 @@ class UniversalContentHarvester:
             default_cookie = settings.STORAGE_DIR / "cookies.txt"
             if default_cookie.exists():
                 cookies_file = str(default_cookie)
+
+        # Check for INSTAGRAM_SESSION_ID in settings / env
+        session_id = getattr(settings, "INSTAGRAM_SESSION_ID", "") or os.getenv("INSTAGRAM_SESSION_ID", "")
+        if session_id and (not cookies_file or not Path(cookies_file).exists()):
+            try:
+                from scrapers.instagram_harvester import InstagramHarvester
+                default_cookie = settings.STORAGE_DIR / "cookies.txt"
+                cookies_file = InstagramHarvester.write_session_cookie(session_id, default_cookie)
+            except Exception:
+                pass
+
         if cookies_file and Path(cookies_file).exists():
             ydl_opts["cookiefile"] = str(cookies_file)
+        elif platform == "instagram":
+            import glob
+            firefox_profiles = glob.glob(os.path.expanduser('~\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\*.default*\\cookies.sqlite'))
+            if firefox_profiles:
+                ydl_opts["cookiesfrombrowser"] = ("firefox", None, None, None)
 
         if platform == "twitter":
             ydl_opts["http_headers"]["Referer"] = "https://twitter.com/"
@@ -369,6 +385,12 @@ class UniversalContentHarvester:
                 }
 
         except Exception as ydl_err:
-            self.last_error = str(ydl_err)
+            err_str = str(ydl_err)
+            if "isn't available to everyone" in err_str.lower() or "certain audiences" in err_str.lower():
+                self.last_error = "Instagram restricted access to this Reel (requires login / age-gated audience)."
+            elif "empty media response" in err_str.lower():
+                self.last_error = "Instagram sent an empty response (requires login session / cookies)."
+            else:
+                self.last_error = err_str
             logger.error(f"UniversalHarvester failed downloading {canonical}: {ydl_err}")
             return None

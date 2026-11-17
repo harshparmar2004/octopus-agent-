@@ -6,6 +6,7 @@ root_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root_dir))
 
 from bot.octopus_telegram_bot import OctopusTelegramBot
+from config import settings
 
 def test_telegram_conversational_workflow():
     bot = OctopusTelegramBot()
@@ -57,8 +58,42 @@ def test_girls_dance_single_account_pipeline():
     assert item["status"] == "PUBLISHED"
     assert "instagram.com" in item["url"]
     print("[PASS] Girls Dance single authenticated account (@cute.aarohi.007) verified with link:", item["url"])
+def test_session_cookie_generation(tmp_path):
+    from scrapers.instagram_harvester import InstagramHarvester
+    cookie_file = tmp_path / "test_cookies.txt"
+    res = InstagramHarvester.write_session_cookie("test_session_12345", cookie_file, ds_user_id="17841465383938186")
+    assert cookie_file.exists()
+    content = cookie_file.read_text(encoding="utf-8")
+    assert "test_session_12345" in content
+    assert "17841465383938186" in content
+    assert ".instagram.com" in content
+    print("[PASS] Netscape cookie file generation verified")
+
+def test_telegram_session_command_handling():
+    bot = OctopusTelegramBot()
+    # Test setting session
+    msg = {"text": "/session test_session_abcde", "chat": {"id": 12345}}
+    bot._handle_inbound_message(msg)
+    assert settings.INSTAGRAM_SESSION_ID == "test_session_abcde"
+    assert (settings.STORAGE_DIR / "cookies.txt").exists()
+    assert "test_session_abcde" in (settings.STORAGE_DIR / "cookies.txt").read_text()
+    print("[PASS] Telegram /session command handling verified")
+
+def test_telegram_video_note_handling():
+    bot = OctopusTelegramBot()
+    msg = {"video_note": {"file_id": "test_vn_file_123"}, "chat": {"id": 12345}}
+    bot._handle_inbound_message(msg)
+    sid = bot.chat_active_session.get(12345)
+    assert sid is not None
+    assert bot.sessions[sid]["url"] == "telegram_video:test_vn_file_123"
+    print("[PASS] Telegram video_note handling verified")
 
 if __name__ == "__main__":
     test_telegram_conversational_workflow()
     test_girls_dance_single_account_pipeline()
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        test_session_cookie_generation(Path(td))
+    test_telegram_session_command_handling()
+    test_telegram_video_note_handling()
     print("\nAll Octopus Telegram tests passed successfully!")
