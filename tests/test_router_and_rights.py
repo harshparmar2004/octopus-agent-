@@ -9,6 +9,21 @@ from agents.content_router import ContentRouter
 def setup_db():
     init_octopus_db()
     init_network_tables()
+    from storage.db import get_connection, add_or_update_account
+    add_or_update_account({
+        "id": "info_01",
+        "handle": "@test.info",
+        "display_name": "Test Information",
+        "niche": "information",
+        "niche_id": "information",
+        "is_active": 1
+    })
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM content_ledger")
+    c.execute("DELETE FROM account_profile WHERE account_id = 'info_01'")
+    conn.commit()
+    conn.close()
 
 def test_01_content_router_exclusive_lock():
     """Verifies that once a reel is routed to an account, it cannot be routed to a second account."""

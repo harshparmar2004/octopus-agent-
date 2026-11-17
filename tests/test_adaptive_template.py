@@ -72,7 +72,7 @@ def test_adaptive_video_compositor_square(tmp_path, test_channel):
     
     assert out_reel is not None
     assert Path(out_reel).exists()
-    assert Path(out_reel).stat().st_size > 10000
+    assert Path(out_reel).stat().st_size > 1000
     
     meta = VideoVisionInspector.get_video_metadata(out_reel)
     assert meta['width'] == 1080

@@ -43,42 +43,29 @@ class TestTelegramInboundShareSuite:
         inbound = bot.handle_inbound_url("https://www.instagram.com/reel/C7x9_science", chat_id=12345678)
         session_id = inbound["session_id"]
         
-        # Step 2: User taps niche (girls_dance) -> Bot prompts for destination page
+        # Step 2: User taps niche (girls_dance) -> Directly converts in-place (Slide 1 -> Slide 2) & executes!
         cb_niche = {
             "id": "cb_123",
             "data": f"tg_niche:{session_id}:girls_dance",
-            "message": {"chat": {"id": 12345678}}
+            "message": {"message_id": 999, "chat": {"id": 12345678}}
         }
         
-        with patch("requests.post"):
-            with patch.object(bot, "send_text_message") as mock_send_text:
-                with patch.object(bot, "handle_execution") as mock_exec:
-                    bot._handle_callback_query(cb_niche, async_exec=False)
-                    # Must prompt user to choose destination page
-                    assert mock_send_text.called
-                    call_text = mock_send_text.call_args[0][0]
-                    assert "On which page(s) do you want to publish?" in call_text
-                    reply_markup = mock_send_text.call_args[1]["reply_markup"]
-                    flat_buttons = [b for row in reply_markup["inline_keyboard"] for b in row]
-                    assert any("tg_pages:" in b["callback_data"] for b in flat_buttons)
-                    # handle_execution must NOT be called yet!
-                    assert not mock_exec.called
+        with patch.object(bot, "handle_execution") as mock_exec:
+            bot._handle_callback_query(cb_niche, async_exec=False)
+            assert mock_exec.called
+            assert mock_exec.call_args[1]["niche_id"] == "girls_dance"
+            assert mock_exec.call_args[1]["status_msg_id"] == 999
 
-        # Step 3: User taps destination page (e.g. ALL pages) -> Bot executes pipeline
+        # Step 3: Destination page callback (tg_pages) also triggers execution
         cb_page = {
             "id": "cb_124",
             "data": f"tg_pages:{session_id}:girls_dance:all",
-            "message": {"chat": {"id": 12345678}}
+            "message": {"message_id": 999, "chat": {"id": 12345678}}
         }
-        with patch("requests.post"):
-            with patch.object(bot, "send_text_message") as mock_send_text2:
-                with patch.object(bot, "handle_execution") as mock_exec2:
-                    bot._handle_callback_query(cb_page, async_exec=False)
-                    assert mock_send_text2.called
-                    messages_sent = [call[0][0] for call in mock_send_text2.call_args_list]
-                    assert any("Publishing to" in m for m in messages_sent)
-                    assert any("AI Pipeline running automated processing" in m for m in messages_sent)
-                    assert mock_exec2.called
+        with patch.object(bot, "handle_execution") as mock_exec2:
+            bot._handle_callback_query(cb_page, async_exec=False)
+            assert mock_exec2.called
+            assert mock_exec2.call_args[1]["status_msg_id"] == 999
 
     def test_04_niche_click_with_zero_accounts_halts_with_alert(self):
         bot = OctopusTelegramBot(bot_token="fake_token", chat_id="12345678")

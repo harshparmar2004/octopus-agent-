@@ -492,7 +492,7 @@ NICHE_TO_TEMPLATE_MAP: Dict[str, str] = {
     "live_music": "concert_tag",
     "girls_dance": "girls_raw",
     "girls_dance_party": "girls_raw",
-    "girls_party": "girls_raw",
+    "girls_party": "girls_party_neon",
     "girls_nightlife": "girls_raw",
     "girls_pages": "girls_raw",
     "girls": "girls_raw",

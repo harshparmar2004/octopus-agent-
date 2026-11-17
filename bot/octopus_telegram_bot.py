@@ -29,6 +29,10 @@ class OctopusTelegramBot:
         self.bot_token = bot_token or settings.TELEGRAM_BOT_TOKEN
         self.chat_id = chat_id or settings.TELEGRAM_CHAT_ID
         self.base_url = f"https://api.telegram.org/bot{self.bot_token}"
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(pool_connections=25, pool_maxsize=25, max_retries=2)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
         self.fanout = OctopusFanoutEngine()
         self.is_running = False
         self.sessions: Dict[str, Dict[str, Any]] = {}
@@ -46,6 +50,14 @@ class OctopusTelegramBot:
                 "fanout_rate": "100%"
             }
         ]
+
+    @staticmethod
+    def render_green_bar(pct: int, length: int = 10) -> str:
+        """Renders an intuitive green line progress bar [🟩🟩🟩⬜⬜] from 1% to 100%."""
+        pct = max(1, min(100, int(pct)))
+        filled = max(1, round((pct / 100.0) * length))
+        empty = length - filled
+        return f"[{'🟩' * filled}{'⬜' * empty}] {pct}%"
 
     def is_configured(self) -> bool:
         return bool(self.bot_token and self.chat_id)
@@ -72,14 +84,14 @@ class OctopusTelegramBot:
                 "message": "Telegram credentials not set in .env. Bot simulator active for local testing."
             }
         try:
-            res = requests.post(
+            res = self.session.post(
                 f"{self.base_url}/sendMessage",
                 json={
                     "chat_id": cid,
                     "text": "🐙 *Octopus Agent Bot Ping*\n\nStatus: Online & Ready.\nConversational remote control active.",
                     "parse_mode": "Markdown"
                 },
-                timeout=10
+                timeout=8
             )
             return {"success": res.status_code == 200, "status_code": res.status_code}
         except Exception as e:
@@ -98,7 +110,7 @@ class OctopusTelegramBot:
         if reply_markup:
             payload["reply_markup"] = json.dumps(reply_markup)
         try:
-            res = requests.post(f"{self.base_url}/sendMessage", json=payload, timeout=15)
+            res = self.session.post(f"{self.base_url}/sendMessage", json=payload, timeout=12)
             if res.status_code == 200:
                 return res.json().get("result")
             else:
@@ -121,7 +133,7 @@ class OctopusTelegramBot:
         if reply_markup:
             payload["reply_markup"] = json.dumps(reply_markup)
         try:
-            res = requests.post(f"{self.base_url}/editMessageText", json=payload, timeout=15)
+            res = self.session.post(f"{self.base_url}/editMessageText", json=payload, timeout=12)
             if res.status_code == 200:
                 return True
             else:
@@ -145,7 +157,7 @@ class OctopusTelegramBot:
                     data["caption"] = caption
                 if reply_markup:
                     data["reply_markup"] = json.dumps(reply_markup)
-                res = requests.post(f"{self.base_url}/sendPhoto", data=data, files={"photo": pf}, timeout=30)
+                res = self.session.post(f"{self.base_url}/sendPhoto", data=data, files={"photo": pf}, timeout=25)
                 return res.status_code == 200
         except Exception as e:
             logger.error(f"Error sending photo to Telegram: {e}")
@@ -165,7 +177,7 @@ class OctopusTelegramBot:
                     data["caption"] = caption
                 if reply_markup:
                     data["reply_markup"] = json.dumps(reply_markup)
-                res = requests.post(f"{self.base_url}/sendVideo", data=data, files={"video": vf}, timeout=90)
+                res = self.session.post(f"{self.base_url}/sendVideo", data=data, files={"video": vf}, timeout=90)
                 return res.status_code == 200
         except Exception as e:
             logger.error(f"Error sending video to Telegram: {e}")
@@ -199,7 +211,7 @@ class OctopusTelegramBot:
                     "reply_markup": json.dumps(reply_markup)
                 }
                 files = {"video": video_file}
-                res = requests.post(f"{self.base_url}/sendVideo", data=payload, files=files, timeout=60)
+                res = self.session.post(f"{self.base_url}/sendVideo", data=payload, files=files, timeout=60)
             return res.status_code == 200
         except Exception as e:
             logger.error(f"Error sending video to Telegram: {e}")
@@ -256,7 +268,7 @@ class OctopusTelegramBot:
                         "parse_mode": "Markdown",
                         "reply_markup": json.dumps(reply_markup)
                     }
-                    res = requests.post(f"{self.base_url}/sendVideo", data=payload, files={"video": vf}, timeout=60)
+                    res = self.session.post(f"{self.base_url}/sendVideo", data=payload, files={"video": vf}, timeout=60)
                     return res.status_code == 200
             except Exception as e:
                 logger.error(f"Error sending slot video to Telegram: {e}")
@@ -277,7 +289,8 @@ class OctopusTelegramBot:
         hook_text: Optional[str] = None,
         completed_at_ist: Optional[str] = None,
         dry_run: bool = True,
-        target_chat_id: Optional[Any] = None
+        target_chat_id: Optional[Any] = None,
+        send_telegram_message: bool = True
     ) -> bool:
         """
         Sends an automated concise summary notification to Telegram when a pipeline or peak-slot fanout finishes.
@@ -327,8 +340,8 @@ class OctopusTelegramBot:
         if len(self.dispatch_logs) > 50:
             self.dispatch_logs.pop()
 
-        if not self.bot_token or not cid:
-            logger.info(f"[Telegram Simulator] Notification logged (no credentials configured): \n{text}")
+        if not send_telegram_message or not self.bot_token or not cid:
+            logger.info(f"[Telegram Simulator] Notification logged (send_telegram_message={send_telegram_message}): \n{text}")
             return False
 
         try:
@@ -339,7 +352,7 @@ class OctopusTelegramBot:
             return False
 
     # ==================== STEP 1: INBOUND URL RECEIVED ====================
-    def handle_inbound_url(self, url: str, chat_id: Optional[Any] = None) -> Dict[str, Any]:
+    def handle_inbound_url(self, url: str, chat_id: Optional[Any] = None, edit_msg_id: Optional[int] = None) -> Dict[str, Any]:
         session_id = f"sess_{int(time.time())}_{uuid.uuid4().hex[:6]}"
         cid = chat_id or self.chat_id or 0
 
@@ -425,8 +438,17 @@ class OctopusTelegramBot:
             f"Choose below:"
         )
 
+        sent_msg_id = edit_msg_id
         if self.is_configured() and cid:
-            self.send_text_message(prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
+            if edit_msg_id:
+                self.edit_text_message(edit_msg_id, prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
+            else:
+                sent = self.send_text_message(prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
+                if isinstance(sent, dict) and sent.get("message_id"):
+                    sent_msg_id = sent["message_id"]
+
+        if sent_msg_id:
+            session["message_id"] = sent_msg_id
 
         return {
             "session_id": session_id,
@@ -434,11 +456,12 @@ class OctopusTelegramBot:
             "url": clean_url,
             "reel_id": content_id,
             "prompt_text": prompt_text,
-            "niches": niches
+            "niches": niches,
+            "message_id": sent_msg_id
         }
 
     # ==================== STEP 2: NICHE SELECTED ====================
-    def handle_niche_selection(self, session_id: str, niche_id: str, chat_id: Optional[Any] = None) -> Dict[str, Any]:
+    def handle_niche_selection(self, session_id: str, niche_id: str, chat_id: Optional[Any] = None, status_msg_id: Optional[int] = None) -> Dict[str, Any]:
         session = self.sessions.get(session_id)
         if not session:
             session = {
@@ -499,7 +522,10 @@ class OctopusTelegramBot:
 
         cid = session.get("chat_id") or chat_id or self.chat_id
         if self.is_configured() and cid:
-            self.send_text_message(prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
+            if status_msg_id:
+                self.edit_text_message(status_msg_id, prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
+            else:
+                self.send_text_message(prompt_text, reply_markup={"inline_keyboard": keyboard}, target_chat_id=cid)
 
         return {
             "session_id": session_id,
@@ -572,34 +598,27 @@ class OctopusTelegramBot:
         is_raw = niche_id in ("girls_dance", "girls", "girls_party")
         v_label = "Raw format - no template" if is_raw else f"9:16 layout ({n_title} branding)"
 
-        # Initialize progress message if not already sent
-        if not status_msg_id and notify_init and self.is_configured() and cid:
-            init_msg = (
-                f"⚡ *Octopus AI Pipeline: [{n_title}]*\n"
-                f"👥 Destination: *{target_desc}*\n\n"
-                f"⏳ 1. Downloading 1080p source stream...\n"
-                f"⚪ 2. Writing bio & caption\n"
-                f"⚪ 3. Processing video ({v_label})\n"
-                f"⚪ 4. Publishing to Instagram ({target_desc})"
+        def render_slide_text(step1: str, step2: str, step3: str, step4: str) -> str:
+            return (
+                f"⚡ *Octopus AI Engine · Pipeline Active*\n"
+                f"🎯 *Target:* {target_desc} ({n_title})\n\n"
+                f"{step1}\n"
+                f"{step2}\n"
+                f"{step3}\n"
+                f"{step4}"
             )
-            sent = self.send_text_message(init_msg, target_chat_id=cid)
-            if isinstance(sent, dict):
-                status_msg_id = sent.get("message_id")
 
-        def update_progress(s1: str, s2: str, s3: str, s4: str, footer: str = ""):
-            if not status_msg_id or not cid:
+        def update_progress(step1: str, step2: str, step3: str, step4: str):
+            nonlocal status_msg_id
+            if not cid:
                 return
-            body = (
-                f"⚡ *Octopus AI Pipeline: [{n_title}]*\n"
-                f"👥 Destination: *{target_desc}*\n\n"
-                f"{s1}\n"
-                f"{s2}\n"
-                f"{s3}\n"
-                f"{s4}"
-            )
-            if footer:
-                body += f"\n\n{footer}"
-            self.edit_text_message(status_msg_id, body, target_chat_id=cid)
+            body = render_slide_text(step1, step2, step3, step4)
+            if status_msg_id:
+                self.edit_text_message(status_msg_id, body, target_chat_id=cid)
+            elif notify_init and self.is_configured():
+                sent = self.send_text_message(body, target_chat_id=cid)
+                if isinstance(sent, dict) and sent.get("message_id"):
+                    status_msg_id = sent["message_id"]
 
         source_url = session.get("url", "")
         task_id = f"tg_{niche_id}_{uuid.uuid4().hex[:6]}"
@@ -607,10 +626,10 @@ class OctopusTelegramBot:
         # =========================================================================
         # STEP 1: Download 1080p source stream (Preserve 100% audio)
         # =========================================================================
-        s1 = "⏳ 1. Downloading 1080p source stream..."
-        s2 = "⚪ 2. Writing bio & caption"
-        s3 = f"⚪ 3. Processing video ({v_label})"
-        s4 = f"⚪ 4. Publishing to Instagram ({target_desc})"
+        s1 = "⏳ 1. Downloader: Fetching 1080p source stream..."
+        s2 = "⚪ 2. Synchronize Bio: Pending"
+        s3 = f"⚪ 3. Video Readiness: Pending"
+        s4 = f"⚪ 4. Publishing to Instagram: Pending"
         update_progress(s1, s2, s3, s4)
 
         dl = None
@@ -655,8 +674,8 @@ class OctopusTelegramBot:
                     "description": f"Featured {n_title} reel moment from @{clean_handle}."
                 }
 
-        s1 = f"✅ 1. Downloaded 1080p source stream from {platform_label} (audio 100% intact)"
-        s2 = "⏳ 2. Writing bio & caption..."
+        s1 = f"✅ 1. Downloader: 1080p source stream ready ({platform_label} · 100% audio intact)"
+        s2 = "⏳ 2. Synchronize Bio: Generating caption & account CTA..."
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
@@ -720,8 +739,8 @@ class OctopusTelegramBot:
                 hook = session.get("headline") or dl.get("title") or f"{n_title} breakdown"
                 caption = f"{hook}\n\n👉 Follow {primary_handle} for daily updates!\n\n#reels #viral"
 
-        s2 = f"✅ 2. Synthesized bio & caption with {primary_handle} CTA"
-        s3 = f"⏳ 3. Processing video ({v_label})..."
+        s2 = f"✅ 2. Synchronize Bio: Branded with {primary_handle} CTA"
+        s3 = f"⏳ 3. Video Readiness: Processing video ({'Raw clean video' if is_raw else 'Hardware NVENC GPU'})..."
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
@@ -777,8 +796,9 @@ class OctopusTelegramBot:
             for acc_id, r_path in pool.map(_render_acc_worker, enumerate(target_accs)):
                 rendered_paths[acc_id] = r_path
 
-        s3 = f"✅ 3. Video ready ({'Raw clean format - original audio 100%' if is_raw else f'{n_title} branded layout'})"
-        s4 = f"⏳ 4. Publishing to Instagram ({target_desc})..."
+        v_ready_label = "1080x1920 60fps ready (100% audio & video)" if is_raw else "1080x1920 60fps ready (Hardware NVENC GPU)"
+        s3 = f"✅ 3. Video Readiness: {v_ready_label}"
+        s4 = f"⏳ 4. Publishing to Instagram ({target_desc}):\n{self.render_green_bar(1)}"
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
@@ -819,19 +839,18 @@ class OctopusTelegramBot:
         lock = threading.Lock()
         last_edit_time = 0.0
 
-        def notify_throttled(force: bool = False):
+        def notify_throttled(force: bool = False, custom_pct: Optional[int] = None):
             nonlocal last_edit_time
             now = time.time()
-            if force or (now - last_edit_time > 1.5) or (completed_count == total_accounts_count):
+            if force or (now - last_edit_time > 1.2) or (completed_count == total_accounts_count):
                 last_edit_time = now
-                pct = int((completed_count / max(1, total_accounts_count)) * 100)
-                fanout_tag = " (Parallel Fanout 🚀)" if total_accounts_count > 1 else ""
-                s4_live = f"⏳ 4. Publishing to Instagram: [{completed_count}/{total_accounts_count}] ({pct}%){fanout_tag}"
+                pct = custom_pct if custom_pct is not None else int((completed_count / max(1, total_accounts_count)) * 100)
+                bar = self.render_green_bar(max(1, pct))
+                s4_live = f"⏳ 4. Publishing to Instagram ({target_desc}):\n{bar}"
                 update_progress(s1, s2, s3, s4_live)
 
         def _publish_worker(acc_idx: int, acc: Dict[str, Any]):
             nonlocal success_count, completed_count
-            # Micro-stagger between workers to avoid burst rate limits on Meta App ID
             if total_accounts_count > 1 and acc_idx > 0:
                 time.sleep(min(0.8 * acc_idx, 5.0))
 
@@ -851,12 +870,33 @@ class OctopusTelegramBot:
                 "published_at": None
             })
 
+            def _on_single_acc_progress(stage: str):
+                pct = 10
+                if stage == "init_container":
+                    pct = 25
+                elif stage.startswith("uploading_bytes"):
+                    pct = 50
+                elif stage == "waiting_container":
+                    pct = 75
+                elif stage == "publishing_container":
+                    pct = 90
+                elif stage in ("published_ready", "simulated_publish"):
+                    pct = 100
+                notify_throttled(force=True, custom_pct=pct)
+
+            if should_dry_run:
+                # Smooth green progress bar animation for simulated / dry run
+                for p in [1, 28, 55, 82]:
+                    notify_throttled(force=True, custom_pct=p)
+                    time.sleep(0.18)
+
             pub_res = self.fanout.publish_single_account(
                 log_id=log_id,
                 account=acc,
                 rendered_filename=r_filename,
                 caption=acc_caption,
-                dry_run=should_dry_run
+                dry_run=should_dry_run,
+                on_account_progress=_on_single_acc_progress
             )
 
             with lock:
@@ -864,7 +904,7 @@ class OctopusTelegramBot:
                 completed_count += 1
                 if pub_res.get("success"):
                     success_count += 1
-                    post_url = pub_res.get("post_url", f"https://instagram.com/p/{uuid.uuid4().hex[:11]}")
+                    post_url = pub_res.get("post_url", f"https://instagram.com/reel/{uuid.uuid4().hex[:11]}")
                     published_items.append({
                         "handle": acc.get("handle", acc["id"]),
                         "display_name": acc.get("display_name", acc["id"]),
@@ -879,7 +919,7 @@ class OctopusTelegramBot:
                         "status": "FAILED",
                         "error": pub_res.get("error", "Failed")
                     })
-                notify_throttled()
+                notify_throttled(force=True)
             return pub_res
 
         # Execute parallel fanout across accounts with ThreadPoolExecutor
@@ -894,26 +934,14 @@ class OctopusTelegramBot:
 
         elapsed_sec = round(time.time() - start_exec_ts, 1)
         if success_count > 0:
-            fanout_tag = " (Parallel Fanout 🚀)" if total_accounts_count > 1 else ""
-            s4 = f"✅ 4. Published to {success_count}/{total_accounts_count} Accounts successfully in {elapsed_sec}s!{fanout_tag}"
-            valid_links = [item["url"] for item in published_items if item.get("url")]
-            links_md = "\n".join([f"👉 {url}" for url in valid_links[:10]])
-            if len(valid_links) > 10:
-                links_md += f"\n... and {len(valid_links) - 10} more live accounts!"
-            footer = (
-                f"🔗 *Published Reel Links:*\n"
-                f"{links_md}\n\n"
-                f"⚡ *Turnaround:* `{elapsed_sec}s` (NVENC GPU Accelerated)\n"
-                f"👥 *Accounts Dispatched:* {success_count}/{total_accounts_count} Live\n"
-                f"🛡️ *Anti-Shadowban Shield:* Active (Unique bitstreams & CTAs)\n"
-                f"📊 *Status:* Live on Instagram Reels"
-            )
-            update_progress(s1, s2, s3, s4, footer=footer)
+            s4 = f"✅ 4. Publishing to Instagram: {self.render_green_bar(100)}"
+            update_progress(s1, s2, s3, s4)
         else:
             err = publish_results[0].get("error", "Unknown error") if publish_results else "Publishing failed"
             s4 = f"❌ 4. Publishing failed: {err}"
             update_progress(s1, s2, s3, s4)
 
+        # Build clean dispatch log entry
         log_entry = {
             "id": f"tg_log_{int(time.time())}",
             "timestamp": time.strftime("%H:%M:%S"),
@@ -934,11 +962,56 @@ class OctopusTelegramBot:
         session["step"] = "completed"
         session["result"] = log_entry
 
-        # Automated Telegram completion notification
+        # Format exact Date & Time in IST
         try:
             from zoneinfo import ZoneInfo
             from datetime import datetime as _dt
-            now_ist = _dt.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S IST")
+            now_ist = _dt.now(ZoneInfo("Asia/Kolkata")).strftime("%d %b %Y, %I:%M %p IST")
+        except Exception:
+            now_ist = time.strftime("%d %b %Y, %I:%M %p IST")
+
+        valid_links = [item["url"] for item in published_items if item.get("url")]
+        primary_link = valid_links[0] if valid_links else f"https://www.instagram.com/reel/{task_id}/"
+
+        # =========================================================================
+        # THE SECOND MESSAGE: Sent ONLY after completion
+        # Format: Completed notification, Date & Time (IST), Account Status, Live Link, Turnaround
+        # =========================================================================
+        if success_count > 0:
+            if total_accounts_count == 1:
+                account_status = f"{primary_handle} · Active"
+                receipt = (
+                    f"🎉 *Reel Published Successfully!*\n\n"
+                    f"📅 *Date & Time:* {now_ist}\n"
+                    f"👤 *Account Status:* {account_status}\n"
+                    f"🔗 *Live Reel Link:* {primary_link}\n"
+                    f"⚡ *Execution:* {elapsed_sec}s turnaround · NVENC GPU · 100% Audio Intact"
+                )
+            else:
+                account_status = f"{success_count}/{total_accounts_count} Accounts · Active"
+                links_md = "\n".join([f"• @{item.get('handle', '').lstrip('@')}: {item['url']}" for item in published_items if item.get("url")][:5])
+                receipt = (
+                    f"🎉 *Reels Published Successfully!*\n\n"
+                    f"📅 *Date & Time:* {now_ist}\n"
+                    f"👤 *Account Status:* {account_status}\n"
+                    f"🔗 *Live Reel Links:*\n{links_md}\n\n"
+                    f"⚡ *Execution:* {elapsed_sec}s turnaround · NVENC GPU · 100% Audio Intact"
+                )
+        else:
+            err_msg = publish_results[0].get("error", "Publishing failed") if publish_results else "Publishing failed"
+            receipt = (
+                f"❌ *Reel Publication Failed*\n\n"
+                f"📅 *Date & Time:* {now_ist}\n"
+                f"👤 *Account Status:* {primary_handle} · Error\n"
+                f"⚠️ *Reason:* {err_msg}\n"
+                f"⚡ *Execution:* {elapsed_sec}s turnaround"
+            )
+
+        if self.is_configured() and cid:
+            self.send_text_message(receipt, target_chat_id=cid)
+
+        # Record summary to dispatch logs without sending redundant telegram message
+        try:
             self.send_broadcast_completion_summary(
                 niche_id=niche_id,
                 niche_name=n_title,
@@ -949,10 +1022,11 @@ class OctopusTelegramBot:
                 source_handle=clean_handle,
                 hook_text=hook,
                 completed_at_ist=now_ist,
-                dry_run=should_dry_run
+                dry_run=should_dry_run,
+                send_telegram_message=False
             )
         except Exception as tg_err:
-            logger.warning(f"Telegram completion notification error: {tg_err}")
+            logger.warning(f"Telegram completion summary logging error: {tg_err}")
 
         return {
             "session_id": session_id,
@@ -973,33 +1047,55 @@ class OctopusTelegramBot:
 
         while self.is_running:
             try:
-                res = requests.get(
+                res = self.session.get(
                     f"{self.base_url}/getUpdates",
                     params={"offset": last_update_id + 1, "timeout": 20},
                     timeout=25
                 )
                 if res.status_code != 200:
-                    time.sleep(3)
+                    time.sleep(2)
                     continue
 
                 updates = res.json().get("result", [])
                 for upd in updates:
-                    last_update_id = upd.get("update_id", last_update_id)
+                    last_update_id = max(last_update_id, upd.get("update_id", 0))
                     if "callback_query" in upd:
-                        self._handle_callback_query(upd["callback_query"])
+                        cb = upd["callback_query"]
+                        # Instant ACK in <30ms so Telegram button loading spinner stops immediately
+                        try:
+                            self.session.post(
+                                f"{self.base_url}/answerCallbackQuery",
+                                json={"callback_query_id": cb["id"]},
+                                timeout=3
+                            )
+                        except Exception:
+                            pass
+                        # Dispatch to background thread so polling loop NEVER blocks
+                        threading.Thread(
+                            target=self._handle_callback_query,
+                            args=(cb,),
+                            daemon=True
+                        ).start()
                     elif "message" in upd and "text" in upd["message"]:
-                        self._handle_inbound_message(upd["message"])
+                        msg = upd["message"]
+                        # Dispatch to background thread so polling loop NEVER blocks
+                        threading.Thread(
+                            target=self._handle_inbound_message,
+                            args=(msg,),
+                            daemon=True
+                        ).start()
             except Exception as e:
                 logger.error(f"Telegram polling error: {e}")
-                time.sleep(3)
+                time.sleep(2)
 
     def _handle_callback_query(self, cb: Dict[str, Any], async_exec: bool = True):
         cb_id = cb["id"]
         data = cb.get("data", "")
-        chat_id = cb["message"]["chat"]["id"]
+        chat_id = cb.get("message", {}).get("chat", {}).get("id") or self.chat_id
+        msg_id = cb.get("message", {}).get("message_id")
 
         try:
-            requests.post(f"{self.base_url}/answerCallbackQuery", json={"callback_query_id": cb_id}, timeout=10)
+            self.session.post(f"{self.base_url}/answerCallbackQuery", json={"callback_query_id": cb_id}, timeout=3)
         except Exception:
             pass
 
@@ -1007,56 +1103,87 @@ class OctopusTelegramBot:
             parts = data.split(":")
             session_id = parts[1]
             niche_id = parts[2]
-            self.handle_niche_selection(session_id=session_id, niche_id=niche_id, chat_id=chat_id)
+
+            cluster = get_niche_cluster(niche_id, allow_placeholders=False)
+            n_info = cluster.get("niche") or {}
+            n_name = n_info.get("name") or niche_id.title()
+            accounts = cluster.get("accounts", [])
+
+            session = self.sessions.get(session_id) or {}
+            session["niche_id"] = niche_id
+            session["niche_name"] = n_name
+            self.sessions[session_id] = session
+
+            if not accounts:
+                no_acc_text = (
+                    f"⚠️ *No Connected Accounts in [{n_name}]*\n\n"
+                    f"You currently have *0 accounts* configured with Meta Graph API credentials for this niche.\n\n"
+                    f"👉 Please open the Dashboard (`http://localhost:8000`) and connect an Instagram Business account with a valid Access Token and User ID first."
+                )
+                retry_markup = {
+                    "inline_keyboard": [
+                        [{"text": "🔙 Back to Niches", "callback_data": f"tg_retry_niche:{session_id}"}],
+                        [{"text": "❌ Cancel", "callback_data": f"tg_cancel:{session_id}"}]
+                    ]
+                }
+                if msg_id:
+                    self.edit_text_message(msg_id, no_acc_text, reply_markup=retry_markup, target_chat_id=chat_id)
+                else:
+                    self.send_text_message(no_acc_text, reply_markup=retry_markup, target_chat_id=chat_id)
+                return
+
+            # Niche has connected accounts!
+            # Automatic in-place conversion from Slide 1 into Slide 2.
+            # NO new message is sent.
+            if async_exec:
+                threading.Thread(
+                    target=self.handle_execution,
+                    kwargs={
+                        "session_id": session_id,
+                        "niche_id": niche_id,
+                        "target": "all",
+                        "chat_id": chat_id,
+                        "notify_init": True,
+                        "status_msg_id": msg_id
+                    },
+                    daemon=True
+                ).start()
+            else:
+                self.handle_execution(
+                    session_id=session_id,
+                    niche_id=niche_id,
+                    target="all",
+                    chat_id=chat_id,
+                    notify_init=True,
+                    status_msg_id=msg_id
+                )
 
         elif data.startswith("tg_pages:") or data.startswith("tg_fanout:"):
             parts = data.split(":")
             session_id = parts[1]
             niche_id = parts[2]
             target = parts[3] if len(parts) > 3 else "all"
-            
+
             cluster = get_niche_cluster(niche_id, allow_placeholders=False)
             n_info = cluster.get("niche") or {}
             n_name = n_info.get("name") or niche_id.title()
             accounts = cluster.get("accounts", [])
             if not accounts:
                 no_acc_text = (
-                    f"⚠️ *No Accounts Connected in [{n_name}]*\n\n"
+                    f"⚠️ *No Connected Accounts in [{n_name}]*\n\n"
                     f"You currently have *0 accounts* configured with Meta Graph API credentials for this niche.\n\n"
                     f"👉 Please open the Dashboard (`http://localhost:8000`) and connect an Instagram Business account with a valid Access Token and User ID first."
                 )
-                self.send_text_message(no_acc_text, target_chat_id=chat_id)
-                return
-
-            total_pages = len(accounts)
-            if target == "all":
-                if total_pages == 1:
-                    target_desc = f"@{accounts[0]['handle']}"
+                if msg_id:
+                    self.edit_text_message(msg_id, no_acc_text, target_chat_id=chat_id)
                 else:
-                    target_desc = f"ALL ({total_pages}) Pages"
-            else:
-                target_acc = next((a for a in accounts if a["id"] == target), None)
-                target_desc = f"@{target_acc['handle']}" if target_acc else f"Account {target}"
+                    self.send_text_message(no_acc_text, target_chat_id=chat_id)
+                return
 
             session = self.sessions.get(session_id)
             if session:
                 session["niche_id"] = niche_id
                 session["niche_name"] = n_name
-
-            is_raw = niche_id in ("girls_dance", "girls", "girls_party")
-            video_type_label = "Raw format - no template" if is_raw else f"9:16 layout ({n_name} branding)"
-
-            initial_status = (
-                f"⚡ *Octopus AI Pipeline: Publishing to [{n_name}]*\n"
-                f"👥 Destination: *{target_desc}*\n\n"
-                f"🤖 *AI Pipeline running automated processing:*\n"
-                f"⏳ 1. Downloading 1080p source stream...\n"
-                f"⚪ 2. Writing bio & caption\n"
-                f"⚪ 3. Processing video ({video_type_label})\n"
-                f"⚪ 4. Publishing to Instagram ({target_desc})"
-            )
-            sent_msg = self.send_text_message(initial_status, target_chat_id=chat_id)
-            status_msg_id = sent_msg.get("message_id") if isinstance(sent_msg, dict) else None
 
             if async_exec:
                 threading.Thread(
@@ -1066,8 +1193,8 @@ class OctopusTelegramBot:
                         "niche_id": niche_id,
                         "target": target,
                         "chat_id": chat_id,
-                        "notify_init": False,
-                        "status_msg_id": status_msg_id
+                        "notify_init": True,
+                        "status_msg_id": msg_id
                     },
                     daemon=True
                 ).start()
@@ -1077,8 +1204,8 @@ class OctopusTelegramBot:
                     niche_id=niche_id,
                     target=target,
                     chat_id=chat_id,
-                    notify_init=False,
-                    status_msg_id=status_msg_id
+                    notify_init=True,
+                    status_msg_id=msg_id
                 )
 
         elif data.startswith("tg_scale_20:"):
@@ -1186,13 +1313,16 @@ class OctopusTelegramBot:
             session_id = data.split(":")[1]
             if session_id in self.sessions:
                 del self.sessions[session_id]
-            self.send_text_message("❌ Inbound reel broadcast cancelled.", target_chat_id=chat_id)
+            if msg_id:
+                self.edit_text_message(msg_id, "❌ *Broadcast Cancelled.*", target_chat_id=chat_id)
+            else:
+                self.send_text_message("❌ *Broadcast Cancelled.*", target_chat_id=chat_id)
 
         elif data.startswith("tg_retry_niche:") or data.startswith("tg_inbound_retry:"):
             session_id = data.split(":")[1]
             session = self.sessions.get(session_id)
             if session and session.get("url"):
-                self.handle_inbound_url(url=session["url"], chat_id=chat_id)
+                self.handle_inbound_url(url=session["url"], chat_id=chat_id, edit_msg_id=msg_id)
 
         elif data.startswith("broadcast_all:"):
             reel_id = data.split(":")[1]

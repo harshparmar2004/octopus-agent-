@@ -30,7 +30,7 @@ class NichePodAgent:
     """
     def __init__(self, niche_id: str):
         self.niche_id = niche_id
-        self.cluster = get_niche_cluster(niche_id)
+        self.cluster = get_niche_cluster(niche_id, allow_placeholders=True)
         self.niche_meta = self.cluster.get("niche") or {"id": niche_id, "name": niche_id.capitalize()}
         self.name = self.niche_meta.get("name", niche_id.capitalize())
         self.brand_color = self.niche_meta.get("brand_color", "#ea580c")
