@@ -1827,43 +1827,91 @@
       </section>
 
       <!-- ==================== TAB 3: INGEST & FANOUT STUDIO ==================== -->
-      <section id="view_ingest" class="space-y-6 hidden">
-        <div class="cloud-card rounded-lg p-5 space-y-4">
-          <div>
-            <h3 class="text-sm font-bold text-[#1C1917]">⚡ Multi-Account Fanout Studio</h3>
-            <p class="text-xs text-[#78716C] mt-0.5">Ingest a viral clip from Reddit, YouTube, or direct MP4. The system renders tailored 9:16 variations for each account with their specific logo and broadcasts simultaneously.</p>
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-[#1C1917]">1. Video Source Link</label>
-            <input id="fanoutUrl" type="text" placeholder="https://www.reddit.com/r/physicsgifs/... or YouTube Shorts or direct MP4..." 
-              class="w-full bg-[#FAF8F5] border border-[#E6E0D6] rounded-md px-3.5 py-2 text-xs text-[#1C1917] focus:outline-none focus:border-[#C86237]">
-          </div>
-
-          <!-- Destination Accounts Selector -->
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <label class="block text-xs font-bold text-[#1C1917]">2. Select Destination Accounts (Tentacles)</label>
-              <button onclick="selectAllFanoutCheckboxes(true)" class="text-[11px] text-[#C86237] font-semibold hover:underline">Select All</button>
+      <section id="view_ingest" class="max-w-[1200px] mx-auto space-y-8 py-2 hidden">
+        <!-- Header -->
+        <header class="space-y-1 pb-4 border-b border-[#E8DCD1]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 class="text-xl font-bold tracking-tight text-[#1C1917] flex items-center gap-2">
+                <span>Multi-Account Fanout Studio</span>
+              </h1>
+              <p class="text-xs text-[#78716C] mt-0.5">
+                Ingest any viral reel, video, or short. The engine reskins and broadcasts tailored 9:16 variations across selected niche accounts.
+              </p>
             </div>
-            <div id="fanoutAccountCheckboxes" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-[#FAF8F5] border border-[#E6E0D6] rounded-md max-h-48 overflow-y-auto">
-              <!-- Injected checkboxes -->
+            <div class="flex items-center gap-2 text-xs">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-white border border-[#E8DCD1] text-[#78716C] font-mono tabular-nums">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span id="fanoutActiveAccountsCount">4 active accounts</span>
+              </span>
             </div>
           </div>
+        </header>
 
-          <div class="flex items-center justify-between pt-3 border-t border-[#E6E0D6]">
-            <div class="flex items-center gap-3 text-xs text-[#78716C]">
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" id="fanoutAutoPublishCheck" class="rounded text-[#C86237]">
-                Auto-publish immediately after rendering
+        <!-- Step 1: Video Source Link -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-[#1C1917] uppercase tracking-wider">
+              1. Video Source Link
+            </label>
+            <span class="text-[11px] text-[#78716C]">Supports Instagram Reels, YouTube Shorts, Reddit, or direct MP4</span>
+          </div>
+          <div class="relative rounded-[6px] border border-[#E8DCD1] bg-white overflow-hidden focus-within:border-[#D97B3F] focus-within:ring-1 focus-within:ring-[#D97B3F] transition shadow-2xs">
+            <input id="fanoutUrl" type="text" placeholder="https://www.instagram.com/reel/... or YouTube Shorts or Reddit..."
+              class="w-full px-3.5 py-2.5 text-xs text-[#1C1917] bg-transparent focus:outline-hidden font-mono placeholder:text-[#A8A29E]">
+          </div>
+        </div>
+
+        <!-- Step 2: Destination Accounts Grouped by Niche -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E8DCD1]">
+            <div class="flex items-center gap-2">
+              <label class="block text-xs font-semibold text-[#1C1917] uppercase tracking-wider">
+                2. Select Destination Accounts (Tentacles)
               </label>
+              <span id="fanoutSelectionCount" class="text-xs text-[#78716C] font-mono tabular-nums bg-[#FAF8F5] px-2 py-0.5 rounded-[4px] border border-[#E8DCD1]">
+                0 / 0 Selected
+              </span>
             </div>
+            <div class="flex items-center gap-3 text-xs">
+              <button type="button" onclick="selectAllFanoutAccounts(true)" class="font-medium text-[#D97B3F] hover:underline cursor-pointer">
+                Select All
+              </button>
+              <span class="text-[#E8DCD1]">·</span>
+              <button type="button" onclick="selectAllFanoutAccounts(false)" class="font-medium text-[#78716C] hover:text-[#1C1917] hover:underline cursor-pointer">
+                Clear All
+              </button>
+            </div>
+          </div>
 
-            <button onclick="submitFanoutStudio()" class="orange-gradient-btn px-5 py-2 text-white font-bold text-xs rounded-md shadow-sm">
-              🐙 Render & Broadcast to Selected Pages
+          <!-- Niche-Grouped Sections Container -->
+          <div id="fanoutNicheSectionsContainer" class="space-y-4">
+            <!-- Dynamically populated with Niche headers, master checkboxes, and account cards -->
+            <div class="p-8 text-center text-xs text-[#78716C] border border-[#E8DCD1] rounded-[6px] bg-white">
+              Loading accounts by niche...
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Action Toolbar & Submit -->
+        <div class="pt-4 border-t border-[#E8DCD1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="fanoutAutoPublishCheck" class="w-4 h-4 rounded-[4px] border-[#E8DCD1] text-[#D97B3F] focus:ring-0 cursor-pointer">
+              <span class="text-xs font-medium text-[#1C1917]">Auto-publish immediately after rendering</span>
+            </label>
+            <span class="text-xs text-[#78716C] hidden md:inline">
+              (Will respect dry-run mode if active)
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div id="fanoutToast" class="text-xs font-medium text-[#D97B3F] hidden"></div>
+            <button type="button" id="btnSubmitFanout" onclick="submitFanoutStudio()" class="h-9 px-5 rounded-[6px] bg-[#1C1917] hover:bg-[#D97B3F] text-white text-xs font-semibold transition shadow-2xs cursor-pointer flex items-center gap-2">
+              <span>⚡</span>
+              <span>Render &amp; Broadcast to Selected Pages</span>
             </button>
           </div>
-          <div id="fanoutToast" class="text-xs hidden font-bold"></div>
         </div>
       </section>
 
@@ -3063,6 +3111,12 @@
         }
       }
 
+      if (tabKey === 'ingest') {
+        if (globalAccounts && globalAccounts.length > 0) {
+          renderFanoutCheckboxes(globalAccounts);
+        }
+      }
+
       if (tabKey === 'pipeline') {
         fetchPipelineState(true);
         loadTelegramStatus();
@@ -3916,14 +3970,163 @@
     }
 
     function renderFanoutCheckboxes(accounts) {
-      const container = document.getElementById("fanoutAccountCheckboxes");
-      container.innerHTML = accounts.map(a => `
-        <label class="flex items-center gap-2 text-xs p-2 rounded-lg bg-white border border-[#E8DCD1] cursor-pointer hover:border-[#FDBA74]">
-          <input type="checkbox" value="${a.id}" checked class="fanout-target-cb rounded text-[#C86237]">
-          <span class="font-bold text-[#1C1917]">${a.handle}</span>
-          <span class="text-[10px] text-[#78716C]">(${a.niche.split(' ')[0]})</span>
-        </label>
-      `).join("");
+      const container = document.getElementById("fanoutNicheSectionsContainer") || document.getElementById("fanoutAccountCheckboxes");
+      if (!container) return;
+
+      const activeBadge = document.getElementById("fanoutActiveAccountsCount");
+      if (activeBadge) {
+        activeBadge.innerText = `${accounts.length} active ${accounts.length === 1 ? 'account' : 'accounts'}`;
+      }
+
+      if (!accounts || accounts.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-xs text-[#78716C] border border-[#E8DCD1] rounded-[6px] bg-white">
+            No active destination accounts found. Please connect accounts in the <strong>Accounts</strong> tab.
+          </div>
+        `;
+        updateFanoutSelectionCount();
+        return;
+      }
+
+      // Build a fast lookup map for official niche details
+      const nicheMap = {};
+      if (Array.isArray(globalNiches)) {
+        globalNiches.forEach(n => {
+          if (n && n.id) nicheMap[n.id] = n;
+        });
+      }
+
+      // Group accounts by niche_id (or fallback to a.niche or 'general')
+      const grouped = {};
+      accounts.forEach(a => {
+        let key = a.niche_id || a.niche || 'general';
+        if (!nicheMap[key]) {
+          const match = Object.values(nicheMap).find(n => n.name && n.name.toLowerCase() === key.toLowerCase());
+          if (match) key = match.id;
+        }
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(a);
+      });
+
+      // Sort niche keys alphabetically, keeping general last
+      const sortedKeys = Object.keys(grouped).sort((a, b) => {
+        if (a === 'general') return 1;
+        if (b === 'general') return -1;
+        return a.localeCompare(b);
+      });
+
+      container.innerHTML = sortedKeys.map(nicheKey => {
+        const nicheInfo = nicheMap[nicheKey] || (typeof NICHE_DISPLAY_MAP !== 'undefined' ? NICHE_DISPLAY_MAP[nicheKey] : null) || {
+          name: nicheKey === 'general' ? 'General / Unassigned' : nicheKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          avatar_icon: nicheKey === 'general' ? '📁' : '🎯',
+          brand_color: '#78716C'
+        };
+        const nicheName = nicheInfo.name || nicheKey;
+        const nicheIcon = nicheInfo.avatar_icon || nicheInfo.icon || '🎯';
+        const nicheAccounts = grouped[nicheKey];
+
+        return `
+          <div class="border border-[#E8DCD1] rounded-[6px] bg-white overflow-hidden shadow-2xs">
+            <!-- Niche Section Header with Master Checkbox -->
+            <div class="px-4 py-2.5 bg-[#FAF8F5] border-b border-[#E8DCD1] flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-sm select-none">${nicheIcon}</span>
+                <span class="font-semibold text-xs text-[#1C1917] truncate">${nicheName}</span>
+                <span class="text-[11px] text-[#78716C] font-mono tabular-nums">(${nicheAccounts.length} ${nicheAccounts.length === 1 ? 'account' : 'accounts'})</span>
+              </div>
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-medium text-[#1C1917] hover:text-[#D97B3F] transition shrink-0">
+                <input type="checkbox" checked
+                  class="fanout-niche-master-cb w-4 h-4 rounded-[4px] border-[#E8DCD1] text-[#D97B3F] focus:ring-0 cursor-pointer"
+                  data-niche-id="${nicheKey}"
+                  onchange="toggleNicheMaster(this, '${nicheKey}')">
+                <span>Select entire niche</span>
+              </label>
+            </div>
+
+            <!-- Accounts Grid inside Niche -->
+            <div class="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+              ${nicheAccounts.map(a => `
+                <label class="flex items-center justify-between gap-2.5 p-2.5 rounded-[6px] border border-[#E8DCD1] bg-[#FAF8F5]/50 hover:bg-[#FAF8F5] hover:border-[#D97B3F]/60 cursor-pointer transition select-none group">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <input type="checkbox" value="${a.id}" checked
+                      class="fanout-target-cb w-4 h-4 rounded-[4px] border-[#E8DCD1] text-[#D97B3F] focus:ring-0 cursor-pointer shrink-0"
+                      data-niche="${nicheKey}"
+                      onchange="onAccountCheckboxChange('${nicheKey}')">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-xs text-[#1C1917] truncate group-hover:text-[#D97B3F] transition">${a.handle}</div>
+                      ${a.display_name && a.display_name !== a.handle ? `<div class="text-[11px] text-[#78716C] truncate">${a.display_name}</div>` : ''}
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 text-[10px] text-[#78716C] font-mono shrink-0">
+                    ${a.has_token ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live' : '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Sim'}
+                  </span>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      updateFanoutSelectionCount();
+    }
+
+    function toggleNicheMaster(masterCheckbox, nicheKey) {
+      const isChecked = masterCheckbox.checked;
+      const cbs = document.querySelectorAll(`.fanout-target-cb[data-niche="${nicheKey}"]`);
+      cbs.forEach(cb => { cb.checked = isChecked; });
+      updateFanoutSelectionCount();
+    }
+
+    function onAccountCheckboxChange(nicheKey) {
+      const master = document.querySelector(`.fanout-niche-master-cb[data-niche-id="${nicheKey}"]`);
+      const cbs = Array.from(document.querySelectorAll(`.fanout-target-cb[data-niche="${nicheKey}"]`));
+      if (cbs.length > 0 && master) {
+        const checkedCount = cbs.filter(c => c.checked).length;
+        if (checkedCount === cbs.length) {
+          master.checked = true;
+          master.indeterminate = false;
+        } else if (checkedCount === 0) {
+          master.checked = false;
+          master.indeterminate = false;
+        } else {
+          master.checked = false;
+          master.indeterminate = true;
+        }
+      }
+      updateFanoutSelectionCount();
+    }
+
+    function selectAllFanoutAccounts(selectAllBool) {
+      const accountCbs = document.querySelectorAll(".fanout-target-cb");
+      accountCbs.forEach(cb => { cb.checked = selectAllBool; });
+      const masterCbs = document.querySelectorAll(".fanout-niche-master-cb");
+      masterCbs.forEach(m => {
+        m.checked = selectAllBool;
+        m.indeterminate = false;
+      });
+      updateFanoutSelectionCount();
+    }
+
+    function selectAllFanoutCheckboxes(val) {
+      selectAllFanoutAccounts(val);
+    }
+
+    function updateFanoutSelectionCount() {
+      const all = document.querySelectorAll(".fanout-target-cb");
+      const checked = document.querySelectorAll(".fanout-target-cb:checked");
+      const countEl = document.getElementById("fanoutSelectionCount");
+      if (countEl) {
+        countEl.innerText = `${checked.length} / ${all.length} Selected`;
+      }
+      const btn = document.getElementById("btnSubmitFanout");
+      if (btn) {
+        btn.disabled = checked.length === 0;
+        if (checked.length === 0) {
+          btn.className = "h-9 px-5 rounded-[6px] bg-white border border-[#E8DCD1] text-[#78716C] text-xs font-semibold opacity-40 cursor-not-allowed transition shadow-2xs flex items-center gap-2";
+        } else {
+          btn.className = "h-9 px-5 rounded-[6px] bg-[#1C1917] hover:bg-[#D97B3F] text-white text-xs font-semibold transition shadow-2xs cursor-pointer flex items-center gap-2";
+        }
+      }
     }
 
     const NICHE_DISPLAY_MAP = {
@@ -4462,25 +4665,45 @@
     }
 
     async function submitFanoutStudio() {
-      const url = document.getElementById("fanoutUrl").value.trim();
-      const autoPub = document.getElementById("fanoutAutoPublishCheck").checked;
+      const urlInput = document.getElementById("fanoutUrl");
+      const url = urlInput ? urlInput.value.trim() : "";
+      const autoPub = document.getElementById("fanoutAutoPublishCheck") ? document.getElementById("fanoutAutoPublishCheck").checked : false;
       const checkedAccs = Array.from(document.querySelectorAll(".fanout-target-cb:checked")).map(cb => cb.value);
       const toast = document.getElementById("fanoutToast");
+      const btn = document.getElementById("btnSubmitFanout");
 
-      if (!url) return alert("Please enter a video source URL");
-      if (checkedAccs.length === 0) return alert("Select at least one destination account");
+      if (!url) return alert("Please enter a video source URL (Instagram Reel, YouTube Shorts, Reddit, or direct MP4)");
+      if (checkedAccs.length === 0) return alert("Please select at least one destination account");
 
-      toast.className = "text-xs text-[#C86237] block";
-      toast.innerText = `Deploying across ${checkedAccs.length} accounts...`;
+      if (toast) {
+        toast.className = "text-xs font-semibold text-[#D97B3F] block";
+        toast.innerText = `Deploying across ${checkedAccs.length} accounts...`;
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Broadcasting...";
+      }
 
-      await fetch("/api/ingest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, target_account_ids: checkedAccs, auto_broadcast: autoPub, dry_run: isDryRunMode() })
-      });
-
-      document.getElementById("fanoutUrl").value = "";
-      setTimeout(() => { switchTab("broadcasts"); loadDashboard(); }, 3000);
+      try {
+        const res = await fetch("/api/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, target_account_ids: checkedAccs, auto_broadcast: autoPub, dry_run: isDryRunMode() })
+        });
+        const data = await res.json();
+        if (urlInput) urlInput.value = "";
+        if (toast) {
+          toast.innerText = `✓ Broadcast queued across ${checkedAccs.length} accounts!`;
+        }
+        setTimeout(() => { switchTab("broadcasts"); loadDashboard(); }, 2500);
+      } catch (err) {
+        alert("Error during broadcast: " + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>⚡</span><span>Render &amp; Broadcast to Selected Pages</span>`;
+        }
+      }
     }
 
     async function triggerReelBroadcast(reelId) {
