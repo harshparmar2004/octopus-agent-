@@ -720,16 +720,9 @@ class VideoCompositor:
             pitch_rate = 44100 + ((account_index % 7) - 3) * 35
             audio_filter = f"aresample=48000,asetrate={pitch_rate},aresample=48000"
 
-            # 4. Rotated genuine mobile device profiles (iPhone 15 Pro, 14 Pro, Galaxy S24 Ultra, Pixel 8 Pro, etc.)
-            device = AntiShadowbanEngine.get_device_profile(account_index)
-            meta_args = [
-                "-map_metadata", "-1",
-                "-metadata", f"make={device['make']}",
-                "-metadata", f"model={device['model']}",
-                "-metadata", f"encoder={device['encoder']}",
-                "-metadata:s:v:0", f"handler_name={device['handler_name']}",
-                "-metadata", f"comment={device.get('comment', 'Shot on ' + device['model'])}"
-            ]
+            # 4. Permanent Pinned Mobile Device Profile & Realistic Past Creation Timestamp
+            account_handle = getattr(channel, "handle", "") or credit_handle or ""
+            meta_args = AntiShadowbanEngine.get_metadata_args(account_handle, account_index)
 
             cmd = [
                 "ffmpeg", "-y",
@@ -740,7 +733,7 @@ class VideoCompositor:
                 "-filter:a", audio_filter,
                 "-c:a", "aac", "-b:a", "192k",
                 "-pix_fmt", "yuv420p",
-                "-movflags", "+faststart",
+                "-movflags", "+use_metadata_tags+faststart",
                 "-shortest"
             ] + self._vcodec_args() + meta_args + [str(output_path)]
 
@@ -756,7 +749,7 @@ class VideoCompositor:
                     "-map", "[outv]", "-map", "0:a?",
                     "-c:a", "aac", "-b:a", "192k",
                     "-pix_fmt", "yuv420p",
-                    "-movflags", "+faststart",
+                    "-movflags", "+use_metadata_tags+faststart",
                     "-shortest"
                 ] + self._vcodec_args() + meta_args + [str(output_path)]
                 subprocess.run(cmd_fallback, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)

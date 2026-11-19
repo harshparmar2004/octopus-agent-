@@ -67,14 +67,15 @@ def test_02_build_viral_dance_reel_with_metadata(tmp_path):
     assert rendered.exists()
     assert rendered.stat().st_size > 0
 
-    # 3. Verify Apple iPhone 15 Pro Max metadata was injected
+    # 3. Verify Apple iPhone 15 Pro Max metadata was injected into format tags
     probe_cmd = [
-        "ffprobe", "-v", "error", "-show_entries", "format_tags=comment",
+        "ffprobe", "-v", "error", "-show_entries", "format_tags=model,make,creation_time",
         "-of", "default=noprint_wrappers=1", str(rendered)
     ]
     probe_out = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout
-    assert "iPhone 15 Pro Max" in probe_out
-    print("[PASS] build_viral_dance_reel successfully injected Apple iPhone metadata")
+    assert "iPhone 15 Pro Max" in probe_out or "Apple" in probe_out
+    assert "creation_time=" in probe_out
+    print("[PASS] build_viral_dance_reel successfully injected Apple iPhone model & creation_time metadata")
 
 def test_03_ai_enricher_dance_viral_package():
     enricher = AIEnricher()

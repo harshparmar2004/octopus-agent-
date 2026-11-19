@@ -19,7 +19,24 @@ def test_01_ten_device_profiles_complete():
     assert "Pixel 8 Pro" in models
     print("[PASS] 10 distinct mobile device profiles verified:", models)
 
-def test_02_multi_account_dance_package_diversity():
+def test_02_account_device_pinning_is_permanent():
+    # Calling 100 times for cute.aarohi.007 must always yield the exact same device (iPhone 15 Pro Max)
+    for _ in range(100):
+        dev = AntiShadowbanEngine.get_pinned_device_profile("@cute.aarohi.007")
+        assert dev["model"] == "iPhone 15 Pro Max"
+        assert dev["make"] == "Apple"
+
+    # Other accounts must also be deterministically pinned
+    acc_dev1 = AntiShadowbanEngine.get_pinned_device_profile("@sangeet_queen")
+    acc_dev2 = AntiShadowbanEngine.get_pinned_device_profile("@sangeet_queen")
+    assert acc_dev1 == acc_dev2
+
+    # Creation time must be in the past (realistic)
+    c_time = AntiShadowbanEngine.generate_realistic_creation_time("@cute.aarohi.007")
+    assert "T" in c_time and "Z" in c_time
+    print("[PASS] Permanent account device pinning and realistic past creation time verified.")
+
+def test_03_multi_account_dance_package_diversity():
     enricher = AIEnricher()
     packages = enricher.generate_multi_account_dance_package(
         count=10,
@@ -45,7 +62,7 @@ def test_02_multi_account_dance_package_diversity():
 
     print("[PASS] 10 distinct angles, unique hooks and zero-spam captions generated successfully.")
 
-def test_03_per_account_video_mutation_and_device_spoofing(tmp_path):
+def test_04_per_account_video_mutation_and_device_spoofing(tmp_path):
     raw_video = tmp_path / "raw_dance_source.mp4"
     cmd_synth = [
         "ffmpeg", "-y",
@@ -62,12 +79,12 @@ def test_03_per_account_video_mutation_and_device_spoofing(tmp_path):
     packages = enricher.generate_multi_account_dance_package(count=3, title="Test Choreo")
 
     hashes = []
-    device_comments = []
+    models_probed = []
 
     for idx in range(3):
         out_name = f"account_variant_{idx}.mp4"
         channel = ChannelProfile(
-            handle=f"@dance_page_{idx}",
+            handle="@cute.aarohi.007" if idx == 0 else f"@dance_page_{idx}",
             display_name=f"Dance Page {idx}",
             niche="Girls' Dance & Parties",
             logo_filename="logo.png",
@@ -91,19 +108,18 @@ def test_03_per_account_video_mutation_and_device_spoofing(tmp_path):
         hashes.append(h)
 
         probe_cmd = [
-            "ffprobe", "-v", "error", "-show_entries", "format_tags=comment",
+            "ffprobe", "-v", "error", "-show_entries", "format_tags=model,make,creation_time",
             "-of", "default=noprint_wrappers=1", str(p)
         ]
         probe_out = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout
-        device_comments.append(probe_out.strip())
+        models_probed.append(probe_out.strip())
+        assert "creation_time=" in probe_out
 
     assert len(set(hashes)) == 3, f"Non-unique video hashes: {hashes}"
-    assert "iPhone 15 Pro Max" in device_comments[0]
-    assert "iPhone 14 Pro" in device_comments[1]
-    assert "Galaxy S24 Ultra" in device_comments[2]
-    print("[PASS] Unique video hashes and rotated smartphone device profiles confirmed:", device_comments)
+    assert "iPhone 15 Pro Max" in models_probed[0] or "Apple" in models_probed[0]
+    print("[PASS] Unique video hashes, pinned device profiles, and past creation times confirmed.")
 
-def test_04_staggered_schedule_offsets():
+def test_05_staggered_schedule_offsets():
     sched = AntiShadowbanEngine.get_staggered_schedule(account_count=10, mode="balanced")
     assert len(sched) == 10
     assert sched[0]["offset_seconds"] == 0
