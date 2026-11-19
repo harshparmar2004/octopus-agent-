@@ -52,8 +52,8 @@ class OctopusTelegramBot:
         ]
 
     @staticmethod
-    def render_green_bar(pct: int, length: int = 10) -> str:
-        """Renders an intuitive green line progress bar [🟩🟩🟩⬜⬜] from 1% to 100%."""
+    def render_green_bar(pct: int, length: int = 8) -> str:
+        """Renders a clean, compact single-line green progress bar [🟩🟩🟩⬜⬜] from 1% to 100% without line breaks."""
         pct = max(1, min(100, int(pct)))
         filled = max(1, round((pct / 100.0) * length))
         empty = length - filled
@@ -605,11 +605,13 @@ class OctopusTelegramBot:
         def render_slide_text(step1: str, step2: str, step3: str, step4: str) -> str:
             return (
                 f"⚡ *Octopus AI Engine · Pipeline Active*\n"
-                f"🎯 *Target:* {target_desc} ({n_title})\n\n"
+                f"🎯 *Target:* `{target_desc}` · _{n_title}_\n"
+                f"────────────────────────\n"
                 f"{step1}\n"
                 f"{step2}\n"
                 f"{step3}\n"
-                f"{step4}"
+                f"{step4}\n"
+                f"────────────────────────"
             )
 
         def update_progress(step1: str, step2: str, step3: str, step4: str):
@@ -834,7 +836,7 @@ class OctopusTelegramBot:
 
         v_ready_label = "1080x1920 60fps ready (100% audio & video)" if is_raw else "1080x1920 60fps ready (Hardware NVENC GPU)"
         s3 = f"✅ 3. Video Readiness: {v_ready_label}"
-        s4 = f"⏳ 4. Publishing to Instagram ({target_desc}):\n{self.render_green_bar(1)}"
+        s4 = f"⏳ 4. Publishing to Instagram ({target_desc}):\n   {self.render_green_bar(1)}"
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
@@ -882,7 +884,7 @@ class OctopusTelegramBot:
                 last_edit_time = now
                 pct = custom_pct if custom_pct is not None else int((completed_count / max(1, total_accounts_count)) * 100)
                 bar = self.render_green_bar(max(1, pct))
-                s4_live = f"⏳ 4. Publishing to Instagram ({target_desc}):\n{bar}"
+                s4_live = f"⏳ 4. Publishing to Instagram ({target_desc}):\n   {bar}"
                 update_progress(s1, s2, s3, s4_live)
 
         def _publish_worker(acc_idx: int, acc: Dict[str, Any]):
@@ -970,11 +972,11 @@ class OctopusTelegramBot:
 
         elapsed_sec = round(time.time() - start_exec_ts, 1)
         if success_count > 0:
-            s4 = f"✅ 4. Publishing to Instagram: {self.render_green_bar(100)}"
+            s4 = f"✅ 4. Publishing to Instagram ({target_desc}):\n   {self.render_green_bar(100)}"
             update_progress(s1, s2, s3, s4)
         else:
             err = publish_results[0].get("error", "Unknown error") if publish_results else "Publishing failed"
-            s4 = f"❌ 4. Publishing failed: {err}"
+            s4 = f"❌ 4. Publishing failed ({target_desc}): {err}"
             update_progress(s1, s2, s3, s4)
 
         # Build clean dispatch log entry
