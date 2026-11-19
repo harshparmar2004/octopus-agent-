@@ -695,6 +695,10 @@ class VideoCompositor:
             )
 
             # 2. Dynamic per-account mathematical video mutation:
+            # - Temporal Truncation & Micro-Speed Warping (Breaks Meta TMK Temporal Hashing)
+            trim_start = round(0.15 + (account_index % 4) * 0.12, 3)
+            speed_factor = round(1.000 + ((account_index % 5) - 2) * 0.006, 4)
+
             # - Zoom factor ranges 1.020x to 1.042x (crop fraction 0.98 down to 0.96)
             zoom_factor = round(0.98 - (account_index % 5) * 0.005, 4)
             # - Shift crop center slightly per account
@@ -708,7 +712,8 @@ class VideoCompositor:
             gamma = round(0.985 + ((account_index * 5) % 6) * 0.005, 4)
 
             filter_complex = (
-                f"[0:v]crop=in_w*{zoom_factor}:in_h*{zoom_factor}:in_w*{x_offset}:in_h*{y_offset},"
+                f"[0:v]trim=start={trim_start},setpts=(PTS-STARTPTS)/{speed_factor},"
+                f"crop=in_w*{zoom_factor}:in_h*{zoom_factor}:in_w*{x_offset}:in_h*{y_offset},"
                 f"scale=1080:1920:force_original_aspect_ratio=increase,"
                 f"crop=1080:1920,setsar=1,"
                 f"eq=contrast={contrast}:brightness={brightness}:saturation={saturation}:gamma={gamma},"
@@ -716,9 +721,12 @@ class VideoCompositor:
                 f"[base][1:v]overlay=0:0:shortest=1[outv]"
             )
 
-            # 3. Dynamic per-account audio pitch dithering (resampled to 48kHz)
+            # 3. Dynamic per-account audio tempo, pitch dithering & 48kHz resampling
             pitch_rate = 44100 + ((account_index % 7) - 3) * 35
-            audio_filter = f"aresample=48000,asetrate={pitch_rate},aresample=48000"
+            audio_filter = (
+                f"atrim=start={trim_start},asetpts=PTS-STARTPTS,"
+                f"atempo={speed_factor},aresample=48000,asetrate={pitch_rate},aresample=48000"
+            )
 
             # 4. Permanent Pinned Mobile Device Profile & Realistic Past Creation Timestamp
             account_handle = getattr(channel, "handle", "") or credit_handle or ""

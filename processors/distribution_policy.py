@@ -16,7 +16,7 @@ Distinctness across accounts comes from exclusive content routing
 import hashlib
 import random
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -238,30 +238,36 @@ class DistributionPolicy:
         """
         Computes non-colliding staggered publish offsets for N accounts.
         Modes:
+        - 'parallel_stealth' / 'stealth': 5 to 10 minute humanized gap per account (300s to 600s)
         - 'turbo': 12-20s micro-jitter (~2-3 mins for 20 accounts)
-        - 'balanced' (Default): 30-45s natural jitter (~5-8 mins for 20 accounts)
-        - 'stealth': 120-210s extended jitter (~35-50 mins for 20 accounts)
+        - 'balanced' (Default for tests): 30-45s natural jitter (~5-8 mins for 20 accounts)
         """
-        if mode == "turbo":
+        if mode in ("parallel_stealth", "stealth"):
+            # 5 to 10 minute humanized gap per account (300 to 600 seconds)
+            base_delay = 300
+            jitter_max = 300
+        elif mode == "turbo":
             base_delay = 12
             jitter_max = 8
-        elif mode == "stealth":
-            base_delay = 120
-            jitter_max = 90
-        else:  # balanced (default)
+        else:  # balanced
             base_delay = base_delay_seconds if base_delay_seconds != 180 else 35
             jitter_max = jitter_seconds if jitter_seconds != 90 else 15
 
         schedule = []
         current_offset = 0
-        base_time = datetime.utcnow()
+        base_time = datetime.now(timezone.utc)
 
         for idx in range(account_count):
             if idx == 0:
                 current_offset = 0
             else:
-                jitter = ((idx * 17) % max(1, jitter_max))
-                step = base_delay + jitter
+                if mode in ("parallel_stealth", "stealth"):
+                    # Deterministic 5 to 10 minute natural delay (300s to 600s)
+                    jitter = ((idx * 67 + 23) % (jitter_max + 1))
+                    step = base_delay + jitter
+                else:
+                    jitter = ((idx * 17) % max(1, jitter_max))
+                    step = base_delay + jitter
                 current_offset += step
 
             scheduled_dt = base_time + timedelta(seconds=current_offset)
