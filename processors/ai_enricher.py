@@ -130,3 +130,102 @@ Respond ONLY with valid JSON in this exact schema:
             "credit": "Original Creator",
             "hashtags": hashtags_str
         }
+
+    def generate_dance_viral_package(
+        self,
+        title: str,
+        description: str,
+        channel_handle: str = "@cute.aarohi.007",
+        creator_credit: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Specialized AI viral synthesizer for Dance, Parties & Entertainment reels:
+        1. On-Screen Curiosity Hook (5-9 words): Direct, observational, curiosity-inducing about expressions, moves or style.
+        2. High-Engagement Caption:
+           - Debate / question hook
+           - Share & DM trigger (send to wedding sangeet partner / bestie)
+           - Follow CTA
+           - SEO keyword tags
+        """
+        c_handle = channel_handle if channel_handle.startswith("@") else f"@{channel_handle}"
+        credit_tag = f"Dancer / Credit: @{creator_credit.lstrip('@')}" if creator_credit else "Credit: Original Creator"
+
+        # Try Gemini / LLM synthesis first
+        api_key = getattr(settings, "GEMINI_API_KEY", None)
+        if api_key:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+                prompt = f"""
+You are the viral growth strategist for {c_handle}, an Instagram dance and party lifestyle account.
+Analyze this video context:
+Title: "{title}"
+Description: "{description[:400]}"
+
+Generate an engaging, viral package tailored to Instagram Reels:
+1. "hook_text": A short, punchy 5 to 9 word curiosity hook to overlay on the video. Examples:
+   - "Wait for her expressions at the drop ✨"
+   - "Can we talk about this lehenga twirl? 🤌"
+   - "Her energy is literally unmatched 🔥"
+   - "The cleanest choreo of the wedding season 💃"
+2. "question_line": An engaging question or debate starter for the first line of the caption.
+3. "share_prompt": A direct reason for viewers to share or DM the reel (e.g. "Send this to your sangeet dance partner who needs to see this! 👯‍♀️👇").
+4. "seo_hashtags": Array of 8-10 high-traffic, relevant search tags.
+
+Respond ONLY with valid JSON:
+{{
+  "hook_text": "...",
+  "question_line": "...",
+  "share_prompt": "...",
+  "seo_hashtags": ["#dance", "#dancereels", "#partyvibes", "#weddingdance", "#sangeetdance", "#reelsinstagram"]
+}}
+"""
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"response_mime_type": "application/json"}
+                }
+                res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12)
+                if res.status_code == 200:
+                    data = res.json()
+                    parsed = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+                    hook_text = parsed.get("hook_text", "Obsessed with this energy! ✨💃")
+                    q_line = parsed.get("question_line", "Is this the cleanest dance of the season? ✨")
+                    share_prompt = parsed.get("share_prompt", "Tag your dance partner who needs to try this choreo! 👯‍♀️👇")
+                    tags = " ".join(parsed.get("seo_hashtags", ["#dance", "#dancereels", "#partyvibes", "#weddingdance", "#sangeetdance", "#reelsinstagram"]))
+
+                    full_caption = (
+                        f"{q_line}\n\n"
+                        f"{share_prompt}\n\n"
+                        f"{credit_tag}\n\n"
+                        f"👉 Follow {c_handle} for daily trending dance & party vibes! ✨💃\n\n"
+                        f"{tags}"
+                    )
+                    return {
+                        "hook_text": hook_text,
+                        "full_caption": full_caption,
+                        "credit": credit_tag
+                    }
+            except Exception as e:
+                logger.warning(f"Gemini viral dance synthesis failed, using heuristic: {e}")
+
+        # Heuristic fallback for dance virality
+        clean_desc = re.sub(r'#\w+', '', description or title or "").strip()
+        first_line = clean_desc.split("\n")[0].strip() if clean_desc else ""
+        if len(first_line) > 10:
+            hook_text = f"Wait for this vibe ✨💃" if len(first_line.split()) > 8 else first_line
+        else:
+            hook_text = "Obsessed with this energy! ✨💃"
+
+        q_line = first_line if (first_line and len(first_line) > 5) else "Rate this choreo from 1 to 10! 👇"
+        full_caption = (
+            f"{q_line}\n\n"
+            f"Tag your dance partner who needs to see this! 👯‍♀️💃\n\n"
+            f"{credit_tag}\n\n"
+            f"👉 Follow {c_handle} for daily trending dance & party vibes! ✨💃\n\n"
+            f"#dance #dancereels #partyvibes #choreo #weddingdance #sangeetdance #reelsinstagram"
+        )
+        return {
+            "hook_text": hook_text,
+            "full_caption": full_caption,
+            "credit": credit_tag
+        }
+

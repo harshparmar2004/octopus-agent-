@@ -1064,4 +1064,67 @@ class CardRenderer:
         img.save(output_path, "PNG")
         return output_path
 
+    def render_viral_floating_hook(
+        self,
+        hook_text: str,
+        channel: ChannelProfile,
+        output_path: Path,
+        credit_handle: Optional[str] = None,
+        template: Optional[NicheTemplate] = None,
+        canvas_w: int = 1080,
+        canvas_h: int = 1920,
+    ) -> Path:
+        """
+        Renders an ultra-modern, frosted-glass floating curiosity hook pill in the top safe zone.
+        Leaves 90%+ of the vertical video completely clean while hooking viewers in the first 2-3s.
+        Also places a subtle semi-transparent corner handle badge.
+        """
+        accent = self._hex_to_rgb(getattr(template, "highlight_color", "#FF4FA3"))
+        handle = self._clean_handle(channel)
+        img = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+
+        # 1. Subtle, stylish corner handle chip (top-left safe area)
+        f_handle = self._font(self.font_bold_path, 26)
+        tw = draw.textlength(handle, font=f_handle)
+        chip_x, chip_y = 52, self.SAFE_TOP
+        draw.rounded_rectangle([chip_x, chip_y, chip_x + tw + 34, chip_y + 46], radius=12, fill=(10, 10, 15, 140))
+        draw.rectangle([chip_x, chip_y + 8, chip_x + 4, chip_y + 38], fill=accent + (255,))
+        draw.text((chip_x + 18, chip_y + 23), handle, font=f_handle, fill=(255, 255, 255, 230), anchor="lm")
+
+        # 2. Sleek Floating Frosted-Glass Curiosity Pill (Centered horizontally below chip)
+        clean_hook = (hook_text or "").strip()
+        if clean_hook:
+            f_hook = self._font(self.font_bold_path, 42)
+            lines = self._wrap(draw, clean_hook, f_hook, canvas_w - 220)[:2]
+            if lines:
+                line_h = 54
+                block_h = len(lines) * line_h + 36
+                max_line_w = max(draw.textlength(ln, font=f_hook) for ln in lines)
+                pill_w = min(canvas_w - 120, int(max_line_w) + 64)
+                pill_x1 = (canvas_w - pill_w) // 2
+                pill_x2 = pill_x1 + pill_w
+                pill_y1 = self.SAFE_TOP + 70
+                pill_y2 = pill_y1 + block_h
+
+                # Frosted glass background pill
+                draw.rounded_rectangle(
+                    [pill_x1, pill_y1, pill_x2, pill_y2],
+                    radius=24,
+                    fill=(12, 10, 18, 175),
+                    outline=(255, 255, 255, 75),
+                    width=2
+                )
+
+                # Render hook text with subtle shadow
+                text_y = pill_y1 + 18 + line_h // 2
+                for ln in lines:
+                    draw.text((canvas_w // 2 + 1, text_y + 2), ln, font=f_hook, fill=(0, 0, 0, 180), anchor="mm")
+                    draw.text((canvas_w // 2, text_y), ln, font=f_hook, fill=(255, 255, 255, 255), anchor="mm")
+                    text_y += line_h
+
+        img.save(output_path, "PNG")
+        return output_path
+
+
 

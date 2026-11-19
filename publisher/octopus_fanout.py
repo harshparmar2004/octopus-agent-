@@ -57,19 +57,32 @@ class OctopusFanoutEngine:
         template = get_template_for_niche(niche_key)
         output_filename = f"{task_id}_{account['id']}.mp4"
 
-        # Raw video niches (girls_dance, raw_full_bleed): bypass overlays, keep 100% original video & audio
+        # Viral transformation for dance & entertainment niches (bypasses duplicate hash penalty, adds micro-zoom, vibrance, audio dither & sleek floating hook)
         if (
             getattr(template, "id", "") == "girls_raw"
             or getattr(template, "render_profile", "") == "raw_full_bleed"
             or niche_key in ("girls_dance", "girls", "girls_party")
         ):
-            output_path = self.compositor.output_dir / output_filename
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            if Path(raw_video_path).resolve() != output_path.resolve():
-                import shutil
-                shutil.copy2(raw_video_path, output_path)
-            logger.info(f"Preserved clean raw video for {account.get('handle')} ({output_filename}) with 100% audio intact.")
-            return str(output_path)
+            channel_profile = ChannelProfile(
+                handle=account["handle"],
+                display_name=account["display_name"],
+                niche=account["niche"],
+                logo_filename=f"logo_{account['id']}.png",
+                subreddits=[],
+                default_hashtags=[],
+                cta_link=""
+            )
+            transformed_path = self.compositor.build_viral_dance_reel(
+                raw_video_path=raw_video_path,
+                hook_text=hook_text,
+                channel=channel_profile,
+                output_filename=output_filename,
+                credit_handle=account.get("handle"),
+                account_index=account_index,
+                template=template
+            )
+            logger.info(f"Applied viral transformation for {account.get('handle')} ({output_filename}) with GPU acceleration & iPhone metadata.")
+            return transformed_path
 
         channel_profile = ChannelProfile(
             handle=account["handle"],

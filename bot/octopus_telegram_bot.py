@@ -726,12 +726,16 @@ class OctopusTelegramBot:
         source_desc = dl.get("description", "") or dl.get("title", "")
         highlight_word = session.get("highlight_word")
         if is_raw:
-            if source_desc and len(source_desc.strip()) > 5:
-                clean_cap = source_desc.split("#")[0].strip()
-                caption = f"{clean_cap}\n\n👉 Follow {primary_handle} for daily dance & party vibes! ✨💃\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
-            else:
-                caption = f"Obsessed with this energy! ✨💃\n\nTag someone who needs to see this! 👇\n\n👉 Follow {primary_handle} for daily dance & party vibes!\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
-            hook = session.get("headline") or dl.get("title") or "Daily dance inspiration"
+            from processors.ai_enricher import AIEnricher
+            enricher = AIEnricher()
+            viral_pack = enricher.generate_dance_viral_package(
+                title=dl.get("title", ""),
+                description=source_desc,
+                channel_handle=primary_handle,
+                creator_credit=clean_handle if clean_handle != "curated_source" else None
+            )
+            caption = viral_pack["full_caption"]
+            hook = session.get("headline") or viral_pack["hook_text"]
         else:
             if not session.get("headline") or not session.get("highlight_word") or not session.get("crop_box"):
                 try:
@@ -855,11 +859,7 @@ class OctopusTelegramBot:
             if not h_clean.startswith("@"):
                 h_clean = f"@{h_clean}"
             if is_raw:
-                if source_desc and len(source_desc.strip()) > 5:
-                    clean_cap = source_desc.split("#")[0].strip()
-                    per_account_captions[acc["id"]] = f"{clean_cap}\n\n👉 Follow {h_clean} for daily dance & party vibes! ✨💃\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
-                else:
-                    per_account_captions[acc["id"]] = f"Obsessed with this energy! ✨💃\n\nTag someone who needs to see this! 👇\n\n👉 Follow {h_clean} for daily dance & party vibes!\n\n#dance #dancereels #partyvibes #choreo #reelsinstagram"
+                per_account_captions[acc["id"]] = caption.replace(primary_handle, h_clean)
             else:
                 per_account_captions[acc["id"]] = self.fanout.build_cross_network_caption(
                     base_caption=caption,
