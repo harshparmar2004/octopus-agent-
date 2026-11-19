@@ -725,17 +725,18 @@ class OctopusTelegramBot:
 
         source_desc = dl.get("description", "") or dl.get("title", "")
         highlight_word = session.get("highlight_word")
+        multi_dance_packages = []
         if is_raw:
             from processors.ai_enricher import AIEnricher
             enricher = AIEnricher()
-            viral_pack = enricher.generate_dance_viral_package(
+            multi_dance_packages = enricher.generate_multi_account_dance_package(
+                count=len(target_accs),
                 title=dl.get("title", ""),
                 description=source_desc,
-                channel_handle=primary_handle,
                 creator_credit=clean_handle if clean_handle != "curated_source" else None
             )
-            caption = viral_pack["full_caption"]
-            hook = session.get("headline") or viral_pack["hook_text"]
+            caption = multi_dance_packages[0]["full_caption"] if multi_dance_packages else source_desc
+            hook = session.get("headline") or (multi_dance_packages[0]["hook_text"] if multi_dance_packages else dl.get("title", ""))
         else:
             if not session.get("headline") or not session.get("highlight_word") or not session.get("crop_box"):
                 try:
@@ -782,7 +783,7 @@ class OctopusTelegramBot:
                 caption = f"{hook}\n\n👉 Follow {primary_handle} for daily updates!\n\n#reels #viral"
 
         s2 = f"✅ 2. Synchronize Bio: Branded with {primary_handle} CTA"
-        s3 = f"⏳ 3. Video Readiness: Processing video ({'Raw clean video' if is_raw else 'Hardware NVENC GPU'})..."
+        s3 = f"⏳ 3. Video Readiness: Processing video ({'Hardware NVENC GPU · Unique Hashes' if is_raw else 'Hardware NVENC GPU'})..."
         update_progress(s1, s2, s3, s4)
 
         # =========================================================================
@@ -813,32 +814,28 @@ class OctopusTelegramBot:
         rendered_paths: Dict[str, str] = {}
         def _render_acc_worker(item):
             idx, acc = item
-            out_file = f"{task_id}_{acc['id']}.mp4"
-            if is_raw:
-                dest_path = self.fanout.compositor.output_dir / out_file
-                dest_path.parent.mkdir(parents=True, exist_ok=True)
-                if Path(dl["filepath"]).resolve() != dest_path.resolve():
-                    import shutil
-                    shutil.copy2(dl["filepath"], dest_path)
-                return acc["id"], str(dest_path)
-            else:
-                r_path = self.fanout.generate_account_customized_reel(
-                    raw_video_path=dl["filepath"],
-                    hook_text=hook,
-                    account=acc,
-                    task_id=task_id,
-                    account_index=idx,
-                    highlight_word=highlight_word,
-                    crop_box=cached_crop_box
-                )
-                return acc["id"], r_path or str(dl["filepath"])
+            acc_hook = (
+                multi_dance_packages[idx]["hook_text"]
+                if (multi_dance_packages and idx < len(multi_dance_packages))
+                else hook
+            )
+            r_path = self.fanout.generate_account_customized_reel(
+                raw_video_path=dl["filepath"],
+                hook_text=acc_hook,
+                account=acc,
+                task_id=task_id,
+                account_index=idx,
+                highlight_word=highlight_word,
+                crop_box=cached_crop_box
+            )
+            return acc["id"], r_path or str(dl["filepath"])
 
         worker_count = min(4, max(1, len(target_accs)))
         with ThreadPoolExecutor(max_workers=worker_count) as pool:
             for acc_id, r_path in pool.map(_render_acc_worker, enumerate(target_accs)):
                 rendered_paths[acc_id] = r_path
 
-        v_ready_label = "1080x1920 60fps ready (100% audio & video)" if is_raw else "1080x1920 60fps ready (Hardware NVENC GPU)"
+        v_ready_label = "1080x1920 60fps ready (Hardware NVENC GPU · Unique Hashes)" if is_raw else "1080x1920 60fps ready (Hardware NVENC GPU)"
         s3 = f"✅ 3. Video Readiness: {v_ready_label}"
         s4 = f"⏳ 4. Publishing to Instagram ({target_desc}):\n   {self.render_green_bar(1)}"
         update_progress(s1, s2, s3, s4)
@@ -859,7 +856,10 @@ class OctopusTelegramBot:
             if not h_clean.startswith("@"):
                 h_clean = f"@{h_clean}"
             if is_raw:
-                per_account_captions[acc["id"]] = caption.replace(primary_handle, h_clean)
+                if multi_dance_packages and a_idx < len(multi_dance_packages):
+                    per_account_captions[acc["id"]] = multi_dance_packages[a_idx]["full_caption"]
+                else:
+                    per_account_captions[acc["id"]] = caption.replace(primary_handle, h_clean)
             else:
                 per_account_captions[acc["id"]] = self.fanout.build_cross_network_caption(
                     base_caption=caption,

@@ -20,33 +20,90 @@ DEVICE_SPOOF_PROFILES = [
         "model": "iPhone 15 Pro Max",
         "handler_name": "Apple Video Media Handler",
         "encoder": "QuickTime / Apple iOS 17.5.1",
-        "video_tag": "hvc1"
+        "video_tag": "hvc1",
+        "comment": "Shot on iPhone 15 Pro Max"
     },
     {
         "make": "Apple",
         "model": "iPhone 14 Pro",
         "handler_name": "Apple Video Media Handler",
-        "encoder": "QuickTime / Apple iOS 16.6",
-        "video_tag": "avc1"
+        "encoder": "QuickTime / Apple iOS 17.4.1",
+        "video_tag": "avc1",
+        "comment": "Shot on iPhone 14 Pro"
     },
     {
         "make": "Samsung",
         "model": "Galaxy S24 Ultra",
         "handler_name": "VideoHandle",
         "encoder": "Samsung Exynos Media Framework v14.0",
-        "video_tag": "avc1"
+        "video_tag": "avc1",
+        "comment": "Created with Samsung Galaxy S24 Ultra"
+    },
+    {
+        "make": "Apple",
+        "model": "iPhone 15 Plus",
+        "handler_name": "Apple Video Media Handler",
+        "encoder": "QuickTime / Apple iOS 17.5",
+        "video_tag": "hvc1",
+        "comment": "Shot on iPhone 15 Plus"
     },
     {
         "make": "Google",
         "model": "Pixel 8 Pro",
         "handler_name": "Android Camera Media",
         "encoder": "Android MediaCodec v14",
-        "video_tag": "avc1"
+        "video_tag": "avc1",
+        "comment": "Shot on Google Pixel 8 Pro"
+    },
+    {
+        "make": "Apple",
+        "model": "iPhone 13 Pro Max",
+        "handler_name": "Apple Video Media Handler",
+        "encoder": "QuickTime / Apple iOS 16.6",
+        "video_tag": "avc1",
+        "comment": "Shot on iPhone 13 Pro Max"
+    },
+    {
+        "make": "OnePlus",
+        "model": "OnePlus 12",
+        "handler_name": "VideoHandle",
+        "encoder": "OxygenOS Media Framework v14.0",
+        "video_tag": "avc1",
+        "comment": "Captured on OnePlus 12"
+    },
+    {
+        "make": "Apple",
+        "model": "iPhone 15",
+        "handler_name": "Apple Video Media Handler",
+        "encoder": "QuickTime / Apple iOS 17.3",
+        "video_tag": "hvc1",
+        "comment": "Shot on iPhone 15"
+    },
+    {
+        "make": "Samsung",
+        "model": "Galaxy S23 Ultra",
+        "handler_name": "VideoHandle",
+        "encoder": "Samsung MediaCodec v14.0",
+        "video_tag": "avc1",
+        "comment": "Created with Samsung Galaxy S23 Ultra"
+    },
+    {
+        "make": "Apple",
+        "model": "iPhone 14",
+        "handler_name": "Apple Video Media Handler",
+        "encoder": "QuickTime / Apple iOS 17.2",
+        "video_tag": "avc1",
+        "comment": "Shot on iPhone 14"
     }
 ]
 
 class AntiShadowbanEngine(DistributionPolicy):
     """Backward-compatible engine inheriting from DistributionPolicy."""
+
+    @staticmethod
+    def get_device_profile(account_index: int = 0) -> Dict[str, Any]:
+        """Returns the specific spoof profile for an account index from 0 to 9."""
+        return DEVICE_SPOOF_PROFILES[account_index % len(DEVICE_SPOOF_PROFILES)]
 
     @staticmethod
     def get_video_mutation_params(account_index: int = 0) -> Dict[str, Any]:
@@ -82,6 +139,7 @@ class AntiShadowbanEngine(DistributionPolicy):
                 "-metadata", f"model={device['model']}",
                 "-metadata", f"encoder={device['encoder']}",
                 "-metadata:s:v:0", f"handler_name={device['handler_name']}",
-                "-metadata", f"comment=Created with {device['model']}"
+                "-metadata", f"comment={device.get('comment', 'Shot on ' + device['model'])}"
             ]
         }
+

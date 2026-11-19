@@ -2,7 +2,7 @@ import os
 import re
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import requests
 
 from config import settings, ChannelProfile
@@ -147,163 +147,188 @@ Respond ONLY with valid JSON in this exact schema:
         - 3 to 4 targeted, aesthetic hashtags (no spam hashtag walls)
         - ZERO follow-begging phrases ("Follow for more", "👉 Follow @handle")
         """
-        c_handle = channel_handle if channel_handle.startswith("@") else f"@{channel_handle}"
+    def generate_dance_viral_package(
+        self,
+        title: str,
+        description: str,
+        channel_handle: str = "@cute.aarohi.007",
+        creator_credit: Optional[str] = None,
+        account_index: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Synthesizes a humanized, zero-spam viral package for dance/entertainment reels.
+        Supports account_index (0 to 9) to generate a distinct angle for multi-account networks.
+        """
+        packages = self.generate_multi_account_dance_package(
+            count=1,
+            title=title,
+            description=description,
+            channel_handles=[channel_handle],
+            creator_credit=creator_credit,
+            start_index=account_index
+        )
+        return packages[0] if packages else {
+            "hook_text": "Wait for this vibe ✨💃",
+            "full_caption": "Obsessed with this performance 🤌\n\nRate this routine from 1 to 10? 👇\n\n#danceinspo #dancereels",
+            "credit": "Original Creator"
+        }
 
-        # Clean credit handle
+    def generate_multi_account_dance_package(
+        self,
+        count: int = 10,
+        title: str = "",
+        description: str = "",
+        channel_handles: Optional[List[str]] = None,
+        creator_credit: Optional[str] = None,
+        start_index: int = 0
+    ) -> List[Dict[str, Any]]:
+        """
+        Synthesizes up to 10 completely distinct, non-overlapping viral packages for multi-account syndication.
+        Guarantees that NO TWO ACCOUNTS share identical hook text, observations, questions, or hashtag clusters.
+        Zero spam phrases allowed.
+        """
         credit_str = None
         if creator_credit and creator_credit.strip() and creator_credit not in ("curated_source", "none", "unknown"):
             clean_cr = creator_credit.strip().lstrip("@")
             credit_str = f"Dancing: @{clean_cr}"
 
-        # 1. Try Gemini AI if a valid key is set (ignore test dummy keys)
-        api_key = getattr(settings, "GEMINI_API_KEY", "") or ""
-        if api_key and not api_key.startswith("AIzaSyTest"):
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-                prompt = f"""
-You are an authentic, aesthetic dance enthusiast and curator writing natural Instagram Reels captions.
-Video Title: "{title}"
-Video Description: "{description[:400]}"
-Creator: "{creator_credit or ''}"
+        archetypes = [
+            {
+                "angle": "outfit",
+                "hooks": [
+                    "The flow in this lehenga twirl 🤌✨",
+                    "Can we talk about this outfit? 😍",
+                    "That twirl and grace is perfection ✨"
+                ],
+                "obs": "The grace and flow in this outfit are simply unreal 🤌✨\n\nWhich color combination was your favorite? 👇",
+                "tags": "#lehengatwirl #ethnicwear #weddingfashion #danceinspo"
+            },
+            {
+                "angle": "choreo",
+                "hooks": [
+                    "The cleanest footwork routine yet 💃",
+                    "Obsessed with this footwork 🔥",
+                    "The transitions are so clean 🤌✨"
+                ],
+                "obs": "The footwork and transitions here are so satisfying to watch 🤌🔥\n\nCan we talk about how clean this timing is? 👇",
+                "tags": "#choreo #dancereels #footwork #bollywooddance"
+            },
+            {
+                "angle": "expression",
+                "hooks": [
+                    "Her expressions are everything 😍✨",
+                    "Wait for her expressions at the drop ✨",
+                    "That smile makes this 10x better 😍"
+                ],
+                "obs": "The expressions and smile at the drop make this 10x better 🤌✨\n\nRate these expressions from 1 to 10? 👇",
+                "tags": "#danceexpressions #dancevideo #graceful #reelsindia"
+            },
+            {
+                "angle": "energy",
+                "hooks": [
+                    "Her energy on this beat is unmatched 🔥",
+                    "Unmatched energy from start to finish 💫",
+                    "Wait for the beat drop ⚡✨"
+                ],
+                "obs": "The energy and pure vibe in this routine are unmatched 🔥✨\n\nCan’t stop watching this loop! Rate it 1–10? 👇",
+                "tags": "#energydance #dancereels #partyvibes #viralchoreo"
+            },
+            {
+                "angle": "sangeet",
+                "hooks": [
+                    "Setting sangeet goals with this routine ✨",
+                    "The cleanest sangeet choreo yet 💃",
+                    "Sangeet dance goals right here 👯‍♀️"
+                ],
+                "obs": "Setting the bar for sangeet season with this routine ✨💃\n\nWho’s learning this hook step next? 👇",
+                "tags": "#sangeetdance #weddingchoreography #shaadiseason #sangeetinspo"
+            },
+            {
+                "angle": "transition",
+                "hooks": [
+                    "Can we talk about this transition? 🤌💫",
+                    "The smoothest transition on the beat 💫",
+                    "Wait for the timing at the drop ⚡"
+                ],
+                "obs": "The transition on the beat drop is so smooth you have to watch twice 💫\n\nDid you catch that timing? 👇",
+                "tags": "#transitionreels #visualflow #dancereel #trendingaudio"
+            },
+            {
+                "angle": "music_vibe",
+                "hooks": [
+                    "Obsessed with the rhythm on this track 🎶",
+                    "The rhythm on this track is unmatched 💃",
+                    "Can't get this beat out of my head 🤌"
+                ],
+                "obs": "The rhythm and musicality on this choreography are pure art 💫\n\nWhat song should be covered next? 👇",
+                "tags": "#trendingbeats #bollywoodmusic #rhythmdance #dancevibes"
+            },
+            {
+                "angle": "learning_steps",
+                "hooks": [
+                    "Learning this hook step for wedding season 👯‍♀️",
+                    "Learning this for wedding season ✨",
+                    "Save this for your next dance practice 💫"
+                ],
+                "obs": "Obsessed with this choreography! Bookmark this for your upcoming wedding practice! 💫\n\nWho are you dancing this with? 👇",
+                "tags": "#dancepractice #hookstep #sangeetprep #dancetutorial"
+            },
+            {
+                "angle": "festive",
+                "hooks": [
+                    "Pure festive celebration vibes ✨🎉",
+                    "That grace and twirl is pure perfection ✨",
+                    "Festive season energy done right 💃"
+                ],
+                "obs": "The joy and festive energy in this dance are so infectious 🤌✨\n\nWhich part was your favorite? 👇",
+                "tags": "#festivedance #celebrationvibes #ethnicdance #indiandance"
+            },
+            {
+                "angle": "viral_loop",
+                "hooks": [
+                    "Wait for the drop at the end ⚡💃",
+                    "Can't stop rewatching this choreo 💃",
+                    "Rate this routine from 1 to 10? 🤌"
+                ],
+                "obs": "Unmatched confidence and rhythm from the very first second ⚡💃\n\nRate this dance from 1 to 10? 👇",
+                "tags": "#viralreels #danceloop #choreography #trendingreels"
+            }
+        ]
 
-Write a genuinely authentic, non-spammy caption:
-Rules:
-- Sound 100% human, casual, and aesthetic.
-- NEVER use spam phrases like '👉 Follow @handle', 'Follow for more', 'Daily vibes', or 'Tag someone'.
-- Keep caption short (2 to 3 lines maximum).
-- Include an observation about the specific dance/outfit/energy, followed by a natural question for viewers.
-- Strictly 3 to 4 clean, focused hashtags.
-
-Respond ONLY with valid JSON:
-{{
-  "hook_text": "5-8 words on-screen hook (e.g. That lehenga twirl at the end 🤌✨)",
-  "observation": "1-2 lines natural observation and question",
-  "hashtags": ["#tag1", "#tag2", "#tag3"]
-}}
-"""
-                payload = {
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"response_mime_type": "application/json"}
-                }
-                res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=10)
-                if res.status_code == 200:
-                    data = res.json()
-                    parsed = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
-                    hook = parsed.get("hook_text", "Obsessed with this energy! ✨💃")
-                    obs = parsed.get("observation", "").strip()
-                    tags = " ".join(parsed.get("hashtags", ["#danceinspo", "#weddingseason", "#choreo"]))
-
-                    caption_parts = [obs] if obs else []
-                    if credit_str:
-                        caption_parts.append(credit_str)
-                    caption_parts.append(tags)
-
-                    return {
-                        "hook_text": hook,
-                        "full_caption": "\n\n".join(caption_parts),
-                        "credit": credit_str or "Original Creator"
-                    }
-            except Exception as e:
-                logger.warning(f"Gemini caption generation error: {e}")
-
-        # 2. Dynamic, Context-Aware Humanized Synthesizer (Zero-Spam Fallback)
+        # Context relevance priority
         raw_text = f"{title} {description}".lower()
-        clean_desc = re.sub(r'#\w+', '', description or "").strip()
-        first_line = clean_desc.split("\n")[0].strip() if clean_desc else ""
+        if any(w in raw_text for w in ["sangeet", "wedding", "shaadi"]):
+            # Rotate sangeet to front
+            archetypes = archetypes[4:5] + archetypes[:4] + archetypes[5:]
+        elif any(w in raw_text for w in ["lehenga", "saree", "outfit", "twirl"]):
+            pass  # outfit is already first
+        elif any(w in raw_text for w in ["choreo", "footwork", "steps"]):
+            archetypes = archetypes[1:2] + archetypes[:1] + archetypes[2:]
 
-        # Context detection
-        is_lehenga_outfit = any(w in raw_text for w in ["lehenga", "twirl", "saree", "outfit", "dress", "fit", "transition"])
-        is_sangeet_wedding = any(w in raw_text for w in ["sangeet", "wedding", "shaadi", "bride", "bridesmaid", "festive"])
-        is_footwork_choreo = any(w in raw_text for w in ["choreo", "choreography", "steps", "footwork", "routine", "tutorial"])
-        is_energy_party = any(w in raw_text for w in ["energy", "party", "drop", "beat", "vibe", "fire", "hype"])
+        results: List[Dict[str, Any]] = []
+        seed = sum(ord(c) for c in (title + description)) if (title or description) else 1337
 
-        if is_lehenga_outfit:
-            hooks = [
-                "The flow in this lehenga twirl 🤌✨",
-                "Can we talk about this outfit transition? 😍",
-                "That grace and twirl is pure perfection ✨",
-                "Outfit details on another level 💫"
-            ]
-            observations = [
-                "The grace and flow in this outfit are simply unreal 🤌✨\n\nWhich color combination was your favorite? 👇",
-                "That twirl at the drop was absolute perfection ✨\n\nNeed this outfit saved for the next wedding season! 💃",
-                "The outfit transition is so smooth you have to watch twice 💫\n\nRate this look from 1 to 10? 👇"
-            ]
-            tags = "#lehengatwirl #weddingseason #ethnicwear #danceinspo"
-        elif is_sangeet_wedding:
-            hooks = [
-                "The cleanest sangeet choreo yet 💃",
-                "Learning this for wedding season ✨",
-                "Her energy on this track is unmatched 🔥",
-                "Sangeet dance goals right here 👯‍♀️"
-            ]
-            observations = [
-                "Setting the bar for sangeet season with this routine ✨💃\n\nWho’s learning this hook step next? 👇",
-                "The joy and energy in this dance are so infectious 🤌\n\nSave this for your upcoming wedding choreography! 💫",
-                "The cleanest sangeet choreography of the season 🔥\n\nRate this routine from 1 to 10? 👇"
-            ]
-            tags = "#sangeetdance #weddingchoreography #bollywooddance #danceinspo"
-        elif is_footwork_choreo:
-            hooks = [
-                "Obsessed with this footwork 🔥",
-                "The transitions are so clean 🤌✨",
-                "Wait for the footwork at the drop ⚡",
-                "The rhythm on this track is unmatched 💃"
-            ]
-            observations = [
-                "The footwork and transitions here are so satisfying to watch 🤌🔥\n\nCan we talk about how clean this timing is? 👇",
-                "Obsessed with the rhythm and musicality on this choreography ✨\n\nWhich section was your favorite? 💃",
-                "The timing and sync on this beat are pure art 💫\n\nRate this choreo from 1 to 10? 👇"
-            ]
-            tags = "#choreo #dancereels #footwork #danceinspiration"
-        elif is_energy_party:
-            hooks = [
-                "Her energy is literally unmatched 🔥",
-                "Wait for the beat drop ⚡✨",
-                "That smile at the drop makes this 10x better 😍",
-                "Unmatched energy from start to finish 💫"
-            ]
-            observations = [
-                "The energy and pure vibe in this routine are unmatched 🔥✨\n\nCan’t stop watching this loop! Rate it 1–10? 👇",
-                "That expression at the drop makes the whole dance 10x better 🤌\n\nWhat song should be next? 👇",
-                "Unmatched confidence and rhythm from the very first second ⚡💃\n\nWhich move was your favorite? 👇"
-            ]
-            tags = "#dancereels #viralchoreo #festivevibes #dance"
-        else:
-            hooks = [
-                "Wait for the drop ✨💃",
-                "Her expressions are everything 😍",
-                "Can we talk about this choreo? 🤌",
-                "The energy here is infectious 🔥"
-            ]
-            if first_line and len(first_line) > 6 and not first_line.startswith("@"):
-                observations = [
-                    f"{first_line} ✨\n\nRate this routine from 1 to 10? 👇",
-                    f"Obsessed with this performance 🤌\n\nCan we talk about how clean this routine is? 👇",
-                    f"The rhythm and grace here are so good ✨\n\nWhich part was your favorite? 👇"
-                ]
-            else:
-                observations = [
-                    "The grace and rhythm here are simply unreal 🤌✨\n\nRate this dance from 1 to 10? 👇",
-                    "Obsessed with the expressions and energy on this track 🔥\n\nCan’t stop rewatching this routine! 💃",
-                    "The timing and footwork here are so clean 💫\n\nWhich part was your favorite? 👇"
-                ]
-            tags = "#danceinspo #dancereels #choreo #festive"
+        for i in range(count):
+            idx = (start_index + i) % len(archetypes)
+            arch = archetypes[idx]
+            hook = arch["hooks"][(seed + i) % len(arch["hooks"])]
+            obs = arch["obs"]
+            tags = arch["tags"]
 
-        # Deterministic but diverse selection based on title/desc hash
-        seed = sum(ord(c) for c in (title + description)) if (title or description) else 42
-        selected_hook = hooks[seed % len(hooks)]
-        selected_obs = observations[seed % len(observations)]
+            caption_blocks = [obs]
+            if credit_str:
+                caption_blocks.append(credit_str)
+            caption_blocks.append(tags)
 
-        caption_blocks = [selected_obs]
-        if credit_str:
-            caption_blocks.append(credit_str)
-        caption_blocks.append(tags)
+            results.append({
+                "account_index": start_index + i,
+                "angle": arch["angle"],
+                "hook_text": hook,
+                "full_caption": "\n\n".join(caption_blocks),
+                "credit": credit_str or "Original Creator"
+            })
 
-        return {
-            "hook_text": selected_hook,
-            "full_caption": "\n\n".join(caption_blocks),
-            "credit": credit_str or "Original Creator"
-        }
+        return results
+
 
 

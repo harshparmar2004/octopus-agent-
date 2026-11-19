@@ -239,15 +239,40 @@ class OctopusFanoutEngine:
         is_pre_rendered = bool(master_rendered and Path(master_rendered).exists())
         staggered_schedule = AntiShadowbanEngine.get_staggered_schedule(len(target_accounts), mode=fanout_mode)
 
+        # Pre-synthesize multi-account distinct angles and hooks for dance/entertainment
+        is_dance_niche = any(
+            (a.get("niche_id") or a.get("niche", "")) in ("girls_dance", "girls", "girls_party")
+            for a in target_accounts
+        )
+        dance_packages = []
+        if is_dance_niche:
+            try:
+                from processors.ai_enricher import AIEnricher
+                enricher = AIEnricher()
+                dance_packages = enricher.generate_multi_account_dance_package(
+                    count=len(target_accounts),
+                    title=reel.get("hook_text", "") or reel.get("caption", ""),
+                    description=reel.get("caption", ""),
+                    creator_credit=reel.get("source_author") or reel.get("creator_credit")
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate multi-account dance packages: {e}")
+
         tasks: List[Dict[str, Any]] = []
         for idx, account in enumerate(target_accounts):
             raw_input = reel.get("raw_video_path") or (master_rendered if is_pre_rendered else None)
+
+            per_account_hook = (
+                dance_packages[idx]["hook_text"]
+                if (dance_packages and idx < len(dance_packages))
+                else reel.get("hook_text", "")
+            )
 
             # Account-customised reel with perceptual video/audio mutation & metadata spoofing
             if raw_input and Path(raw_input).exists():
                 rendered_path = self.generate_account_customized_reel(
                     raw_video_path=raw_input,
-                    hook_text=reel.get("hook_text", ""),
+                    hook_text=per_account_hook,
                     account=account,
                     task_id=f"{reel_id}_{account['id']}",
                     account_index=idx,
@@ -263,13 +288,16 @@ class OctopusFanoutEngine:
             rendered_filename = Path(rendered_path).name
 
             # Unique hook variant + transitional synonyms + dynamic CTA + unique hashtags
-            caption = AntiShadowbanEngine.mutate_caption(
-                base_caption=reel["caption"] or reel["hook_text"],
-                hook_headline=reel.get("hook_text", ""),
-                account_handle=account["handle"],
-                niche=account.get("niche", "information"),
-                account_index=idx
-            )
+            if dance_packages and idx < len(dance_packages):
+                caption = dance_packages[idx]["full_caption"]
+            else:
+                caption = AntiShadowbanEngine.mutate_caption(
+                    base_caption=reel["caption"] or reel["hook_text"],
+                    hook_headline=reel.get("hook_text", ""),
+                    account_handle=account["handle"],
+                    niche=account.get("niche", "information"),
+                    account_index=idx
+                )
 
             file_hash = AntiShadowbanEngine.compute_file_sha256(rendered_path) if Path(rendered_path).exists() else f"sha256_{account['id'][:6]}_{idx}"
             sched = staggered_schedule[idx] if idx < len(staggered_schedule) else {"offset_seconds": 0, "offset_display": "+0m 00s", "scheduled_iso": "immediate"}

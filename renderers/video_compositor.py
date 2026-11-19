@@ -9,6 +9,7 @@ from config import settings, ChannelProfile
 from renderers.card_renderer import CardRenderer
 from renderers.niche_templates import NicheTemplate, get_template_for_niche, get_template_by_id
 from processors.video_vision import VideoVisionInspector
+from processors.anti_shadowban import AntiShadowbanEngine
 
 logger = logging.getLogger("Compositor")
 
@@ -693,30 +694,41 @@ class VideoCompositor:
                 template=template
             )
 
-            # 2. Filter complex:
-            # - Zoom in 1.02x to strip borders/watermarks and alter spatial hash
-            # - Scale to 1080x1920 full bleed
-            # - Color enhancement curve
-            # - Overlay floating hook
+            # 2. Dynamic per-account mathematical video mutation:
+            # - Zoom factor ranges 1.020x to 1.042x (crop fraction 0.98 down to 0.96)
+            zoom_factor = round(0.98 - (account_index % 5) * 0.005, 4)
+            # - Shift crop center slightly per account
+            x_offset = round(0.01 + ((account_index * 3) % 7) * 0.002, 4)
+            y_offset = round(0.01 + ((account_index * 2) % 5) * 0.002, 4)
+
+            # - Unique color grading matrix per account
+            contrast = round(1.02 + ((account_index * 2) % 6) * 0.008, 4)
+            saturation = round(1.04 + ((account_index * 3) % 7) * 0.008, 4)
+            brightness = round(-0.01 + ((account_index * 4) % 5) * 0.005, 4)
+            gamma = round(0.985 + ((account_index * 5) % 6) * 0.005, 4)
+
             filter_complex = (
-                "[0:v]crop=in_w*0.98:in_h*0.98:in_w*0.01:in_h*0.01,"
-                "scale=1080:1920:force_original_aspect_ratio=increase,"
-                "crop=1080:1920,setsar=1,"
-                "eq=contrast=1.03:brightness=0.01:saturation=1.06:gamma=0.99[base];"
-                "[base][1:v]overlay=0:0:shortest=1[outv]"
+                f"[0:v]crop=in_w*{zoom_factor}:in_h*{zoom_factor}:in_w*{x_offset}:in_h*{y_offset},"
+                f"scale=1080:1920:force_original_aspect_ratio=increase,"
+                f"crop=1080:1920,setsar=1,"
+                f"eq=contrast={contrast}:brightness={brightness}:saturation={saturation}:gamma={gamma},"
+                f"noise=c0s=1:c0f=u[base];"
+                f"[base][1:v]overlay=0:0:shortest=1[outv]"
             )
 
-            # 3. Audio filter: micro-pitch dither (0.15% shift) & 48kHz resampling
-            audio_filter = "aresample=48000,asetrate=44166,aresample=48000"
+            # 3. Dynamic per-account audio pitch dithering (resampled to 48kHz)
+            pitch_rate = 44100 + ((account_index % 7) - 3) * 35
+            audio_filter = f"aresample=48000,asetrate={pitch_rate},aresample=48000"
 
-            # 4. Device metadata: Apple iPhone 15 Pro Max iOS 17.5
+            # 4. Rotated genuine mobile device profiles (iPhone 15 Pro, 14 Pro, Galaxy S24 Ultra, Pixel 8 Pro, etc.)
+            device = AntiShadowbanEngine.get_device_profile(account_index)
             meta_args = [
                 "-map_metadata", "-1",
-                "-metadata", "make=Apple",
-                "-metadata", "model=iPhone 15 Pro Max",
-                "-metadata", "encoder=QuickTime / Apple iOS 17.5.1",
-                "-metadata:s:v:0", "handler_name=Apple Video Media Handler",
-                "-metadata", "comment=Shot on iPhone 15 Pro Max"
+                "-metadata", f"make={device['make']}",
+                "-metadata", f"model={device['model']}",
+                "-metadata", f"encoder={device['encoder']}",
+                "-metadata:s:v:0", f"handler_name={device['handler_name']}",
+                "-metadata", f"comment={device.get('comment', 'Shot on ' + device['model'])}"
             ]
 
             cmd = [
