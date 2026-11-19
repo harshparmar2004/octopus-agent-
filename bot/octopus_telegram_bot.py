@@ -1439,6 +1439,35 @@ class OctopusTelegramBot:
                     target_chat_id=chat_id
                 )
 
+        elif text.startswith("/gemini") or text.startswith("/ai_key") or text.startswith("/key"):
+            parts = text.split(maxsplit=1)
+            if len(parts) > 1 and parts[1].strip():
+                new_key = parts[1].strip().strip('"').strip("'")
+                env_path = settings.BASE_DIR / ".env"
+                if env_path.exists():
+                    env_text = env_path.read_text(encoding="utf-8")
+                    if "GEMINI_API_KEY=" in env_text:
+                        env_text = re.sub(r'GEMINI_API_KEY=.*', f'GEMINI_API_KEY={new_key}', env_text)
+                    else:
+                        env_text += f"\nGEMINI_API_KEY={new_key}\n"
+                    env_path.write_text(env_text, encoding="utf-8")
+                settings.GEMINI_API_KEY = new_key
+                os.environ["GEMINI_API_KEY"] = new_key
+                self.send_text_message(
+                    "🤖 *Gemini AI API Key Configured!*\n\n"
+                    "✨ Octopus Agent will now synthesize completely bespoke, dynamic viral captions using Gemini 1.5 Flash for every video published!\n\n"
+                    "👉 Send any Reel link now to generate custom viral hooks & captions.",
+                    target_chat_id=chat_id
+                )
+            else:
+                self.send_text_message(
+                    "🤖 *How to add your Gemini API Key:*\n\n"
+                    "1. Get a free API key at `https://aistudio.google.com/app/apikey`\n"
+                    "2. Send it here as: `/gemini <your_api_key>`\n\n"
+                    "Octopus uses Gemini to generate bespoke viral hooks and captions with zero spam!",
+                    target_chat_id=chat_id
+                )
+
         elif text.startswith("/quick") or text.startswith("/post") or text.startswith("/publish") or text.startswith("/fast"):
             url_match = re.search(r'(https?://[^\s]+)', text)
             if url_match:

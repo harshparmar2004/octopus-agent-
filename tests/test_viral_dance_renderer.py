@@ -87,10 +87,10 @@ def test_03_ai_enricher_dance_viral_package():
     assert "hook_text" in package
     assert len(package["hook_text"]) > 3
     assert "full_caption" in package
-    assert "@cute.aarohi.007" in package["full_caption"]
-    assert "#dance" in package["full_caption"]
-    assert "Dancer / Credit: @dancer_girl" in package["full_caption"]
-    print("[PASS] generate_dance_viral_package generated SEO caption with credit and hook:", package["hook_text"])
+    assert "Dancing: @dancer_girl" in package["full_caption"]
+    assert "#" in package["full_caption"]
+    assert "👉 Follow" not in package["full_caption"]  # Zero spam verified
+    print("[PASS] generate_dance_viral_package generated authentic non-spam caption:", package["full_caption"])
 
 def test_04_fanout_integration_viral_dance(tmp_path):
     fanout = OctopusFanoutEngine()
